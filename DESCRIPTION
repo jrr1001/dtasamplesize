@@ -1,0 +1,37 @@
+Package: dtasamplesize
+Type: Package
+Title: Simulation-Based Sample Size Estimation for Diagnostic Accuracy Studies
+Version: 0.1.0
+Authors@R: c(
+    person("Jes\u00fas D.", "Rojas", role = c("aut", "cre"),
+           email = "jrojasrivero@gmail.com",
+           comment = c(ORCID = "0000-0003-0912-490X")),
+    person("Rafael", "Pichardo-Rodriguez", role = "aut")
+    )
+Description: Provides simulation-based (Monte Carlo) methods for sample size
+    estimation in diagnostic test accuracy (DTA) studies. Implements Bayesian
+    assurance (Wilson et al. 2022 <doi:10.1002/sim.9393>), joint optimization
+    of sensitivity, specificity, and AUC, adjustment for imperfect reference
+    standards (Staquet et al. 1981 <doi:10.1016/0021-9681(81)90059-X>),
+    adaptive prevalence re-estimation (Stark & Zapf 2020
+    <doi:10.1177/0962280220913588>), sample size for time-dependent ROC
+    curves, and sample size for net benefit (decision curve analysis).
+    Addresses limitations of classical formulas (Buderer 1996
+    <doi:10.1111/j.1553-2712.1996.tb03538.x>) demonstrated via Monte Carlo
+    validation. Includes a unified framework that integrates all approaches.
+License: MIT + file LICENSE
+Encoding: UTF-8
+RoxygenNote: 7.3.3
+Depends: R (>= 4.1.0)
+Imports: stats
+Suggests:
+    timeROC,
+    survival,
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown,
+    shiny
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+URL: https://github.com/jrr1001/dtasamplesize
+BugReports: https://github.com/jrr1001/dtasamplesize/issues

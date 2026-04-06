@@ -1,0 +1,87 @@
+---
+title: "Introduction to dtasamplesize: Beyond Classical Sample Size Formulas for Diagnostic Accuracy Studies"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to dtasamplesize}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+## Why classical formulas are insufficient
+
+The Buderer (1996) formula is the most widely used method for computing
+sample sizes in diagnostic accuracy studies. However, Monte Carlo
+simulation reveals it achieves the target precision only about 57% of
+the time:
+
+```{r buderer-validation}
+library(dtasamplesize)
+result <- mc_validate_buderer(Se = 0.85, d = 0.07, B = 500, seed = 2026)
+result$results[, c("ci_method", "P_width_target", "coverage")]
+```
+
+With Se = 0.85 and desired half-width d = 0.07, Buderer yields
+n = `r result$n_diseased` diseased subjects. Yet the probability that
+the CI width actually falls within the target is only ~57%, far below
+the 95% one might expect.
+
+## Bayesian Assurance Method
+
+The BAM (Wilson et al. 2022) incorporates prior information and searches
+for the sample size achieving a specified assurance probability:
+
+```{r bam}
+bam_result <- bam_sample_size(
+  prior_se = c(17, 3), delta_se = 0.14,
+  B = 500, seed = 2026, n_range = 20:200
+)
+cat("BAM n_diseased:", bam_result$n_diseased, "\n")
+cat("Assurance Se:", round(bam_result$assurance_se, 3), "\n")
+```
+
+## Joint optimization of Se, Sp, and AUC
+
+In practice, investigators need adequate precision for sensitivity,
+specificity, and AUC simultaneously. The joint approach finds the
+minimum N satisfying all three constraints:
+
+```{r joint}
+joint_result <- joint_sample_size(
+  B = 500, seed = 2026, N_range = seq(100, 700, by = 50)
+)
+cat("Joint N:", joint_result$n_total,
+    "vs Buderer N:", joint_result$buderer_N, "\n")
+```
+
+## Imperfect reference standard
+
+When the reference standard is imperfect, the Staquet correction inflates
+the required sample size via a variance inflation factor (VIF):
+
+```{r imperfect}
+imp_result <- ss_imperfect_ref(B = 0)
+imp_result$sensitivity_table[, c("Se_ref", "Sp_ref", "VIF", "N_adj")]
+```
+
+## Comparison across methods
+
+```{r comparison}
+comparison <- data.frame(
+  Method = c("Buderer (classical)", "BAM (Bayesian)",
+             "Joint (Se+Sp+AUC)", "Imperfect ref"),
+  N = c(
+    ceiling(buderer_n(0.85, 0.07) / 0.30),
+    bam_result$N_total_median,
+    joint_result$n_total,
+    imp_result$N_adjusted_loss
+  )
+)
+comparison
+```
+
+The unified framework (`ss_unified()`) integrates all sources of
+uncertainty into a single simulation. See `?ss_unified` for details.
