@@ -24,9 +24,9 @@ sensitivity. Default \code{c(17, 3)} (E[Se]=0.85, ~20 pseudo-observations).}
 \item{prior_sp}{Numeric vector \code{c(alpha, beta)} for Beta prior on
 specificity. Default \code{c(2, 2)} (vague).}
 
-\item{delta_se}{Target width for Se credible interval. Default 0.14.}
+\item{delta_se}{Target full width for Se credible interval. Default 0.14.}
 
-\item{delta_sp}{Target width for Sp credible interval. Default 0.10.}
+\item{delta_sp}{Target full width for Sp credible interval. Default 0.10.}
 
 \item{target_assurance}{Minimum assurance probability. Default 0.80.}
 
@@ -59,6 +59,12 @@ Object of class \code{"dtasamplesize"} with additional elements:
 Finds the minimum number of diseased (and non-diseased) individuals
 such that the probability of the posterior credible interval achieving
 the target width is at least \code{target_assurance}.
+}
+\details{
+The parameters \code{delta_se} and \code{delta_sp} are the
+  \strong{full width} of the posterior credible interval (not half-width).
+  For example, \code{delta_se = 0.14} corresponds to a half-width of 0.07.
+  This differs from other functions in this package that use half-width.
 }
 \examples{
 result <- bam_sample_size(B = 500, n_range = 20:500)

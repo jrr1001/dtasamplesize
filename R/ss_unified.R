@@ -6,6 +6,10 @@
 #' uncertainty, reference standard misclassification, and optionally
 #' AUC and net benefit constraints.
 #'
+#' @details The parameters \code{delta_se}, \code{delta_sp}, and
+#'   \code{delta_auc} are \strong{half-widths} of the confidence interval.
+#'   The target full CI width checked internally is \code{2 * delta}.
+#'
 #' @param prior_se Beta prior for Se: \code{c(alpha, beta)}.
 #'   Default \code{c(17, 3)}.
 #' @param prior_sp Beta prior for Sp: \code{c(alpha, beta)}.

@@ -53,6 +53,11 @@ Simulates a two-stage adaptive design where prevalence is estimated
 at an interim stage and the sample size is adjusted upward if the
 observed prevalence is lower than initially assumed.
 }
+\details{
+The parameters \code{d_se} and \code{d_sp} are
+  \strong{half-widths} of the confidence interval. The full CI width
+  target is \code{2 * d}.
+}
 \examples{
 result <- ss_adaptive_prevalence(B = 500, prev_true_range = c(0.20, 0.30))
 print(result)

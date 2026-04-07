@@ -72,3 +72,8 @@ Simulates the full data-generating process including prevalence
 uncertainty, reference standard misclassification, and optionally
 AUC and net benefit constraints.
 }
+\details{
+The parameters \code{delta_se}, \code{delta_sp}, and
+  \code{delta_auc} are \strong{half-widths} of the confidence interval.
+  The target full CI width checked internally is \code{2 * delta}.
+}

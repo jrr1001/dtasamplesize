@@ -4,12 +4,17 @@
 #' such that the probability of the posterior credible interval achieving
 #' the target width is at least \code{target_assurance}.
 #'
+#' @details The parameters \code{delta_se} and \code{delta_sp} are the
+#'   \strong{full width} of the posterior credible interval (not half-width).
+#'   For example, \code{delta_se = 0.14} corresponds to a half-width of 0.07.
+#'   This differs from other functions in this package that use half-width.
+#'
 #' @param prior_se Numeric vector \code{c(alpha, beta)} for Beta prior on
 #'   sensitivity. Default \code{c(17, 3)} (E[Se]=0.85, ~20 pseudo-observations).
 #' @param prior_sp Numeric vector \code{c(alpha, beta)} for Beta prior on
 #'   specificity. Default \code{c(2, 2)} (vague).
-#' @param delta_se Target width for Se credible interval. Default 0.14.
-#' @param delta_sp Target width for Sp credible interval. Default 0.10.
+#' @param delta_se Target full width for Se credible interval. Default 0.14.
+#' @param delta_sp Target full width for Sp credible interval. Default 0.10.
 #' @param target_assurance Minimum assurance probability. Default 0.80.
 #' @param prior_prev Numeric vector \code{c(alpha, beta)} for Beta prior on
 #'   prevalence. Default \code{c(6, 14)} (E[prev]=0.30).

@@ -24,9 +24,9 @@ ss_imperfect_ref(
 
 \item{Sp}{Expected specificity of index test. Default 0.90.}
 
-\item{d_se}{Desired precision for Se. Default 0.07.}
+\item{d_se}{Desired precision for Se (half-width). Default 0.07.}
 
-\item{d_sp}{Desired precision for Sp. Default 0.05.}
+\item{d_sp}{Desired precision for Sp (half-width). Default 0.05.}
 
 \item{prev}{Disease prevalence. Default 0.30.}
 
@@ -65,6 +65,11 @@ Object of class \code{"dtasamplesize"} with additional elements:
 Inflates the Buderer sample size to account for misclassification by
 an imperfect reference standard, using the variance inflation factor
 derived from the Staquet correction.
+}
+\details{
+The parameters \code{d_se} and \code{d_sp} are
+  \strong{half-widths} of the confidence interval. The Buderer formula
+  uses these directly; the full CI width is \code{2 * d}.
 }
 \note{
 The Staquet correction assumes conditional independence between

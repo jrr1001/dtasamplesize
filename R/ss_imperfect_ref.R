@@ -4,10 +4,14 @@
 #' an imperfect reference standard, using the variance inflation factor
 #' derived from the Staquet correction.
 #'
+#' @details The parameters \code{d_se} and \code{d_sp} are
+#'   \strong{half-widths} of the confidence interval. The Buderer formula
+#'   uses these directly; the full CI width is \code{2 * d}.
+#'
 #' @param Se Expected sensitivity of index test. Default 0.85.
 #' @param Sp Expected specificity of index test. Default 0.90.
-#' @param d_se Desired precision for Se. Default 0.07.
-#' @param d_sp Desired precision for Sp. Default 0.05.
+#' @param d_se Desired precision for Se (half-width). Default 0.07.
+#' @param d_sp Desired precision for Sp (half-width). Default 0.05.
 #' @param prev Disease prevalence. Default 0.30.
 #' @param Se_ref Sensitivity of reference standard. Default 0.90.
 #' @param Sp_ref Specificity of reference standard. Default 0.95.

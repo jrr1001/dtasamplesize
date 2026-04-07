@@ -2,7 +2,7 @@
 title: "Introduction to dtasamplesize: Beyond Classical Sample Size Formulas for Diagnostic Accuracy Studies"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Introduction to dtasamplesize}
+  %\VignetteIndexEntry{Introduction to dtasamplesize: Beyond Classical Sample Size Formulas for Diagnostic Accuracy Studies}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

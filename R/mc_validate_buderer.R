@@ -4,6 +4,10 @@
 #' Buderer formula and evaluates how often the resulting confidence
 #' interval achieves the planned precision.
 #'
+#' @details The parameter \code{d} is the \strong{half-width} of the
+#'   confidence interval. The target full CI width checked internally is
+#'   \code{2 * d}. For example, \code{d = 0.07} targets a CI width of 0.14.
+#'
 #' @param Se Expected sensitivity (0 < Se < 1). Default 0.85.
 #' @param d Desired precision (half-width of CI). Default 0.07.
 #' @param n_diseased Number of diseased individuals. If \code{NULL}

@@ -49,6 +49,11 @@ Generates simulated datasets under the exact assumptions of the
 Buderer formula and evaluates how often the resulting confidence
 interval achieves the planned precision.
 }
+\details{
+The parameter \code{d} is the \strong{half-width} of the
+  confidence interval. The target full CI width checked internally is
+  \code{2 * d}. For example, \code{d = 0.07} targets a CI width of 0.14.
+}
 \examples{
 result <- mc_validate_buderer(Se = 0.85, d = 0.07, B = 1000)
 print(result)

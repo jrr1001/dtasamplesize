@@ -6,6 +6,10 @@
 #' computed deterministically via the Hanley-McNeil variance approximation,
 #' while Se and Sp are evaluated via Monte Carlo simulation.
 #'
+#' @details The parameters \code{delta_se}, \code{delta_sp}, and
+#'   \code{delta_auc} are \strong{half-widths} of the confidence interval.
+#'   The target full CI width checked internally is \code{2 * delta}.
+#'
 #' @param Se Expected sensitivity. Default 0.85.
 #' @param Sp Expected specificity. Default 0.90.
 #' @param AUC Expected AUC. Default 0.80.
@@ -67,6 +71,7 @@ joint_sample_size <- function(Se = 0.85,
 
   optimal_N <- NA_integer_
   joint_prob_achieved <- NA_real_
+  joint_prob <- 0
 
   for (N in N_range) {
     n_d <- floor(N * prev)

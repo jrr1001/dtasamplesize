@@ -4,5 +4,6 @@
 ^README\.Rmd$
 ^\.github$
 ^CLAUDE\.md$
+^audit_report\.md$
 ^doc$
 ^Meta$

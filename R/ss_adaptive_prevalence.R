@@ -4,6 +4,10 @@
 #' at an interim stage and the sample size is adjusted upward if the
 #' observed prevalence is lower than initially assumed.
 #'
+#' @details The parameters \code{d_se} and \code{d_sp} are
+#'   \strong{half-widths} of the confidence interval. The full CI width
+#'   target is \code{2 * d}.
+#'
 #' @param Se Expected sensitivity. Default 0.85.
 #' @param Sp Expected specificity. Default 0.90.
 #' @param d_se Precision for Se (half-width). Default 0.07.

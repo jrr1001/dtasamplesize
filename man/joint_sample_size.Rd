@@ -58,6 +58,11 @@ joint probability at least \code{target_prob}. AUC precision is
 computed deterministically via the Hanley-McNeil variance approximation,
 while Se and Sp are evaluated via Monte Carlo simulation.
 }
+\details{
+The parameters \code{delta_se}, \code{delta_sp}, and
+  \code{delta_auc} are \strong{half-widths} of the confidence interval.
+  The target full CI width checked internally is \code{2 * delta}.
+}
 \note{
 AUC CI width is computed using the Hanley-McNeil variance
   approximation rather than empirical Mann-Whitney statistics,
