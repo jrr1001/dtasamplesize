@@ -1,0 +1,11 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^LICENSE\.md$
+^README\.Rmd$
+^\.github$
+^audit_report\.md$
+^REPORT_software_paper\.md$
+^validation_report\.md$
+^validation$
+^doc$
+^Meta$
