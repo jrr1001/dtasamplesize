@@ -1,0 +1,14 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+inst/doc
+/doc/
+/Meta/
+REPORT_software_paper.md
+
+# audit backups
+*.orig.*
+CORRECTIONS.md
+audit_report.md
+validation_report.md
