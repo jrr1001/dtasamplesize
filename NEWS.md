@@ -1,6 +1,6 @@
 # dtasamplesize 0.3.0
 
-**Statistical-validity release.** An independent audit of version 0.2.0 found a
+**Statistical-validity release.** An independent review of version 0.2.0 found a
 **validity error** in `ss_net_benefit()` and `ss_adaptive_prevalence()`, plus a
 geometrically impossible default in `joint_sample_size()`. These were not
 cosmetic: they made the package **understate the required sample size** and, in
@@ -166,7 +166,7 @@ users may have planned studies with the old numbers.
 
 # dtasamplesize 0.2.0
 
-Statistical-audit release. Several functions were corrected for
+Statistical-correctness release. Several functions were corrected for
 statistical coherence and robustness. The most consequential change is to
 `ss_net_benefit()`, whose results differ materially from 0.1.0.
 
