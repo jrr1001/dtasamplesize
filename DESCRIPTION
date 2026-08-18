@@ -1,7 +1,7 @@
 Package: dtasamplesize
 Type: Package
 Title: Simulation-Based Sample Size Estimation for Diagnostic Accuracy Studies
-Version: 0.3.0
+Version: 0.4.0
 Authors@R: c(
     person("Jes\u00fas D.", "Rojas", role = c("aut", "cre"),
            email = "jrojasrivero@gmail.com",
@@ -32,7 +32,8 @@ Suggests:
     testthat (>= 3.0.0),
     knitr,
     rmarkdown,
-    shiny
+    shiny,
+    ggplot2
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 URL: https://github.com/jrr1001/dtasamplesize

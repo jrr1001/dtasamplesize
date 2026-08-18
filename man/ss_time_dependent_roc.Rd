@@ -38,7 +38,10 @@ Default \code{c(0.10, 0.20, 0.30)}.}
 
 \item{N_range}{Range of N to search. Default \code{seq(100, 500, by = 20)}.}
 
-\item{B}{MC replications. Default 500 (lower due to timeROC cost).}
+\item{B}{MC replications. Default 500 (lower due to timeROC cost). A
+warning is issued when \code{0 < B < 1000}, since the Monte Carlo error
+of the reported probabilities may then be substantial; silence it with
+\code{options(dtasamplesize.warn_small_B = FALSE)}.}
 
 \item{seed}{Random seed. Default 2026. The RNG state of the calling
 session is restored on exit.}
@@ -63,7 +66,20 @@ Parameters in the default example are HYPOTHETICAL. No published
 }
 \examples{
 \donttest{
-result <- ss_time_dependent_roc(B = 50, N_range = seq(100, 300, by = 50))
+# B kept small here for a fast example; see @param B.
+result <- suppressWarnings(
+  ss_time_dependent_roc(B = 50, N_range = seq(100, 300, by = 50))
+)
 print(result)
 }
+}
+\references{
+Heagerty PJ, Lumley T, Pepe MS (2000). Time-dependent ROC curves for
+censored survival data and a diagnostic marker. \emph{Biometrics}
+56:337-344. \doi{10.1111/j.0006-341X.2000.00337.x}
+
+Blanche P, Dartigues J-F, Jacqmin-Gadda H (2013). Estimating and
+comparing time-dependent areas under receiver operating characteristic
+curves for censored event times with competing risks. \emph{Stat Med}
+32:5381-5397. \doi{10.1002/sim.5958}
 }

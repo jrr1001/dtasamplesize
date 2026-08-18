@@ -110,3 +110,21 @@ test_that("ss_imperfect_ref returns dtasamplesize class", {
   result <- ss_imperfect_ref(B = 0)
   expect_s3_class(result, "dtasamplesize")
 })
+
+# --- delta_se / delta_sp aliases of d_se / d_sp -------------------------
+
+test_that("delta_se/delta_sp are equivalent aliases of d_se/d_sp", {
+  by_d <- ss_imperfect_ref(d_se = 0.07, d_sp = 0.05, B = 0)
+  by_delta <- ss_imperfect_ref(delta_se = 0.07, delta_sp = 0.05, B = 0)
+  expect_identical(by_d$n_diseased_adjusted, by_delta$n_diseased_adjusted)
+  expect_identical(by_d$n_nondiseased_adjusted, by_delta$n_nondiseased_adjusted)
+  expect_identical(by_d$N_adjusted, by_delta$N_adjusted)
+})
+
+test_that("delta_se/delta_sp take precedence over d_se/d_sp when both are supplied", {
+  result <- ss_imperfect_ref(d_se = 0.20, d_sp = 0.20,
+                             delta_se = 0.07, delta_sp = 0.05, B = 0)
+  expected <- ss_imperfect_ref(d_se = 0.07, d_sp = 0.05, B = 0)
+  expect_identical(result$n_diseased_adjusted, expected$n_diseased_adjusted)
+  expect_identical(result$n_nondiseased_adjusted, expected$n_nondiseased_adjusted)
+})

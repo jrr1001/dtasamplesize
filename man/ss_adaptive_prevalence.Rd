@@ -37,7 +37,10 @@ Default \code{c(0.18, 0.25, 0.30, 0.35, 0.42)}.}
 are simulated: the analysed sample is the recruited sample minus a
 random binomial number of losses. See \code{Details}.}
 
-\item{B}{MC replications. Default 5000.}
+\item{B}{MC replications. Default 5000. A warning is issued when
+\code{0 < B < 1000}, since the Monte Carlo error of
+\code{precision_achieved} may then be substantial; silence it with
+\code{options(dtasamplesize.warn_small_B = FALSE)}.}
 
 \item{seed}{Random seed. Default 2026. The RNG state of the calling
 session is restored on exit.}
@@ -99,7 +102,10 @@ The parameters \code{d_se} and \code{d_sp} are
   rounding the inflated sample size up to an integer.
 }
 \examples{
-result <- ss_adaptive_prevalence(B = 500, prev_true_range = c(0.20, 0.30))
+# B kept small here for a fast example; see @param B.
+result <- suppressWarnings(
+  ss_adaptive_prevalence(B = 500, prev_true_range = c(0.20, 0.30))
+)
 print(result)
 }
 \references{

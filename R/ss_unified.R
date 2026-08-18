@@ -65,15 +65,43 @@
 #'   Default \code{c(0.15, 0.40)}.
 #' @param target_assurance Joint assurance target. Default 0.80.
 #' @param N_range Search range for total N. Default \code{seq(200, 1000, by = 20)}.
-#' @param B MC replications. Default 5000.
+#' @param B MC replications. Default 5000. A warning is issued when
+#'   \code{0 < B < 1000}, since the Monte Carlo error of the reported joint
+#'   assurance may then be substantial; silence it with
+#'   \code{options(dtasamplesize.warn_small_B = FALSE)}.
 #' @param seed Random seed. Default 2026. The RNG state of the calling
 #'   session is restored on exit.
+#' @param full_grid Logical. Default \code{FALSE}, which stops the search
+#'   over \code{N_range} at the first N that reaches \code{target_assurance}
+#'   -- identical behaviour and cost to versions <= 0.3.0. If \code{TRUE},
+#'   the search does not stop early: every N in \code{N_range} is evaluated
+#'   so that \code{grid_results} holds the complete assurance curve.
+#'   \code{optimal_N} and \code{joint_assurance} are unaffected by this
+#'   switch -- they always refer to the \strong{first} N that reached
+#'   \code{target_assurance}, never the last.
 #' @return Object of class \code{"dtasamplesize"} with additional elements:
 #'   \describe{
-#'     \item{joint_assurance}{Achieved joint assurance at optimal N. The
-#'       denominator is \code{B}: degenerate replications count as
-#'       failures.}
+#'     \item{joint_assurance}{Achieved joint assurance at \code{N_effective}:
+#'       the probability that \strong{all} active targets -- Se, Sp, AUC
+#'       (when \code{delta_auc > 0}) and net benefit (when
+#'       \code{check_nb = TRUE}) -- are reached \strong{simultaneously} in
+#'       the same replication, not the probability that each is reached
+#'       marginally. The denominator is \code{B}: degenerate replications
+#'       count as failures.}
 #'     \item{comparison}{Data frame comparing methods.}
+#'     \item{N_buderer}{Total N from the classical Buderer formula, i.e.
+#'       the "Buderer (classical)" row of \code{comparison}.}
+#'     \item{N_imperfect}{Total N from the Rogan-Gladen imperfect-reference
+#'       inflation, i.e. the "Imperfect ref" row of \code{comparison}.}
+#'     \item{seed}{The \code{seed} argument used for the search.}
+#'     \item{target_assurance}{The \code{target_assurance} argument used for
+#'       the search, echoed back for downstream use (e.g. by
+#'       \code{\link{plot_assurance_curve}}).}
+#'     \item{grid_results}{Data frame with columns \code{N} and
+#'       \code{assurance}, one row per N evaluated while searching
+#'       \code{N_range}. With the default \code{full_grid = FALSE} the
+#'       search stops at \code{N_effective}, so the grid is truncated there;
+#'       set \code{full_grid = TRUE} for the full curve over \code{N_range}.}
 #'   }
 #' @note \strong{The sensitivity being sized is the \emph{apparent}
 #'   sensitivity.} This framework estimates Se and Sp against the imperfect
@@ -88,16 +116,31 @@
 #'   additionally requires a bias correction or a latent-class analysis at
 #'   the analysis stage. See \code{\link{ss_imperfect_ref}}, whose
 #'   \code{mc_validation} table quantifies the gap.
+#' @references
+#' O'Hagan A, Stevens JW, Campbell MJ (2005). Assurance in clinical trial
+#' design. \emph{Pharm Stat} 4:187-201. \doi{10.1002/pst.175}
+#'
+#' Wilson KJ et al. (2022). Bayesian sample size determination for
+#' diagnostic accuracy studies. \emph{Stat Med} 41:2908-2922.
+#' \doi{10.1002/sim.9393}
+#'
+#' Rogan WJ, Gladen B (1978). Estimating prevalence from the results of a
+#' screening test. \emph{Am J Epidemiol} 107:71-76.
+#' \doi{10.1093/oxfordjournals.aje.a112510}
+#'
+#' Hanley JA, McNeil BJ (1982). The meaning and use of the area under a
+#' receiver operating characteristic (ROC) curve. \emph{Radiology}
+#' 143:29-36. \doi{10.1148/radiology.143.1.7063747}
 #' @examples
 #' \donttest{
 #' # Unified, assurance-based sample size (small B and coarse grid for speed;
 #' # delta_auc = 0 skips the AUC constraint).
-#' result <- ss_unified(
+#' result <- suppressWarnings(ss_unified(
 #'   prior_se = c(17, 3), prior_sp = c(18, 2),
 #'   Se_ref = 0.95, Sp_ref = 0.98,
 #'   delta_se = 0.07, delta_sp = 0.06, delta_auc = 0,
 #'   N_range = seq(300, 900, by = 100), B = 100
-#' )
+#' ))
 #' print(result)
 #' result$comparison
 #' }
@@ -117,7 +160,8 @@ ss_unified <- function(prior_se = c(17, 3),
                        target_assurance = 0.80,
                        N_range = seq(200, 1000, by = 20),
                        B = 5000,
-                       seed = 2026) {
+                       seed = 2026,
+                       full_grid = FALSE) {
   # --- preserve the caller's RNG state -------------------------------
   if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
     old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
@@ -140,6 +184,7 @@ ss_unified <- function(prior_se = c(17, 3),
   stopifnot(all(pt_range > 0 & pt_range < 1))
   stopifnot(target_assurance > 0, target_assurance < 1)
   stopifnot(B >= 1)
+  warn_small_B(B)
 
   z <- stats::qnorm(0.975)
   target_se_width <- 2 * delta_se
@@ -154,6 +199,13 @@ ss_unified <- function(prior_se = c(17, 3),
   optimal_N <- NA_integer_
   joint_assurance_achieved <- NA_real_
   joint_assurance <- 0  # defensive init (in case N_range is degenerate)
+
+  # one (N, assurance) pair per N evaluated; with the default
+  # full_grid = FALSE the loop below still breaks at the optimum, so this
+  # is only as long as the grid actually searched (see @param full_grid).
+  grid_N <- vector("integer", length(N_range))
+  grid_assurance <- vector("numeric", length(N_range))
+  grid_idx <- 0L
 
   for (N in N_range) {
     set.seed(seed)
@@ -283,12 +335,24 @@ ss_unified <- function(prior_se = c(17, 3),
     # denominator is B, not the number of non-degenerate replications.
     joint_assurance <- pass_count / B
 
-    if (joint_assurance >= target_assurance) {
+    grid_idx <- grid_idx + 1L
+    grid_N[grid_idx] <- N
+    grid_assurance[grid_idx] <- joint_assurance
+
+    # optimal_N is always the FIRST N to reach the target: once set, later
+    # N (only reachable with full_grid = TRUE) must not overwrite it.
+    if (is.na(optimal_N) && joint_assurance >= target_assurance) {
       optimal_N <- as.integer(N)
       joint_assurance_achieved <- joint_assurance
-      break
+      if (!isTRUE(full_grid)) break
     }
   }
+
+  grid_results <- data.frame(
+    N = grid_N[seq_len(grid_idx)],
+    assurance = grid_assurance[seq_len(grid_idx)],
+    stringsAsFactors = FALSE
+  )
 
   if (is.na(optimal_N)) {
     warning("No N in N_range achieved target assurance. ",
@@ -330,6 +394,11 @@ ss_unified <- function(prior_se = c(17, 3),
       N_enrolled = N_enrolled,
       joint_assurance = joint_assurance_achieved,
       comparison = comparison,
+      N_buderer = buderer_N_total,
+      N_imperfect = imperfect_res$N_adjusted_loss,
+      seed = seed,
+      target_assurance = target_assurance,
+      grid_results = grid_results,
       B = B,
       call = match.call()
     ),

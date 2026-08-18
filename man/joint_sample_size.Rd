@@ -41,7 +41,10 @@ Default 0.80. See \code{Details}.}
 
 \item{N_range}{Range of total N to search. Default \code{seq(100, 800, by = 10)}.}
 
-\item{B}{MC replications. Default 5000.}
+\item{B}{MC replications. Default 5000. A warning is issued when
+\code{0 < B < 1000}, since the Monte Carlo error of the reported joint
+probability may then be substantial; silence it with
+\code{options(dtasamplesize.warn_small_B = FALSE)}.}
 
 \item{seed}{Random seed. Default 2026. The RNG state of the calling
 session is restored on exit.}

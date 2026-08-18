@@ -20,7 +20,10 @@
 #'   prevalence. Default \code{c(6, 14)} (E[prev]=0.30).
 #' @param n_range Integer vector of candidate n values to search.
 #'   Default \code{20:500}.
-#' @param B Number of MC replications. Default 5000.
+#' @param B Number of MC replications. Default 5000. A warning is issued
+#'   when \code{0 < B < 1000}, since the Monte Carlo error of the reported
+#'   assurance may then be substantial; silence it with
+#'   \code{options(dtasamplesize.warn_small_B = FALSE)}.
 #' @param alpha_ci Credible interval level. Default 0.95.
 #' @param seed Random seed. Default 2026. The RNG state of the calling
 #'   session is restored on exit.
@@ -42,7 +45,8 @@
 #' diagnostic accuracy studies. \emph{Stat Med} 41:2908-2922.
 #' \doi{10.1002/sim.9393}
 #' @examples
-#' result <- bam_sample_size(B = 500, n_range = 20:500)
+#' # B kept small here for a fast example; see @param B.
+#' result <- suppressWarnings(bam_sample_size(B = 500, n_range = 20:500))
 #' print(result)
 #' @export
 bam_sample_size <- function(prior_se = c(17, 3),
@@ -72,6 +76,7 @@ bam_sample_size <- function(prior_se = c(17, 3),
   stopifnot(delta_se > 0, delta_sp > 0)
   stopifnot(target_assurance > 0, target_assurance < 1)
   stopifnot(B >= 1)
+  warn_small_B(B)
 
   a_se <- prior_se[1]
   b_se <- prior_se[2]

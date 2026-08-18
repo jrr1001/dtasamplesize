@@ -46,7 +46,10 @@
 #' @param loss_rate Expected loss-to-follow-up rate. Default 0.10. Losses
 #'   are simulated: the analysed sample is the recruited sample minus a
 #'   random binomial number of losses. See \code{Details}.
-#' @param B MC replications. Default 5000.
+#' @param B MC replications. Default 5000. A warning is issued when
+#'   \code{0 < B < 1000}, since the Monte Carlo error of
+#'   \code{precision_achieved} may then be substantial; silence it with
+#'   \code{options(dtasamplesize.warn_small_B = FALSE)}.
 #' @param seed Random seed. Default 2026. The RNG state of the calling
 #'   session is restored on exit.
 #' @return Object of class \code{"dtasamplesize"} with additional elements:
@@ -71,7 +74,10 @@
 #' \emph{Stat Methods Med Res} 29:2958-2971.
 #' \doi{10.1177/0962280220913588}
 #' @examples
-#' result <- ss_adaptive_prevalence(B = 500, prev_true_range = c(0.20, 0.30))
+#' # B kept small here for a fast example; see @param B.
+#' result <- suppressWarnings(
+#'   ss_adaptive_prevalence(B = 500, prev_true_range = c(0.20, 0.30))
+#' )
 #' print(result)
 #' @export
 ss_adaptive_prevalence <- function(Se = 0.85,
@@ -103,6 +109,7 @@ ss_adaptive_prevalence <- function(Se = 0.85,
   stopifnot(fraction_stage1 > 0, fraction_stage1 < 1)
   stopifnot(loss_rate >= 0, loss_rate < 1)
   stopifnot(B >= 1)
+  warn_small_B(B)
 
   # Required sample sizes for Se and Sp (Buderer)
   n_se <- buderer_n(Se, d_se)

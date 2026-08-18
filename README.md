@@ -1,7 +1,7 @@
 # dtasamplesize
 
 Simulation-based sample size estimation for diagnostic test accuracy
-(DTA) studies. Version 0.3.0.
+(DTA) studies. Version 0.4.0.
 
 Every simulation function takes a `seed`, is exactly reproducible, and
 restores the caller's random-number state on exit, so calling it never
@@ -49,6 +49,10 @@ time-to-event outcomes, and multiple accuracy metrics simultaneously.
 | `ss_adaptive_prevalence()` | Adaptive prevalence re-estimation |
 | `ss_net_benefit()` | Net Benefit / Decision Curve Analysis (`design = "cohort"` or `"fixed"`) |
 | `ss_unified()` | Unified framework combining all methods |
+| `sensitivity_analysis()` | Recompute sample size across a grid of alternative prior scenarios |
+| `plot_assurance_curve()` | Plot achieved assurance vs. sample size from a unified search (requires ggplot2) |
+| `plot_inflation_heatmap()` | Plot the imperfect-reference variance inflation heatmap (requires ggplot2) |
+| `plot_method_comparison()` | Plot required sample size by method from a unified search (requires ggplot2) |
 
 ## References
 

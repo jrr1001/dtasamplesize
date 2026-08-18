@@ -1,3 +1,98 @@
+# dtasamplesize 0.4.0
+
+**Usability release.** No published number changes: every quantity reported
+in the manuscript and reproduced by `validation/reproduce_manuscript.R` is
+identical to 0.3.0. This release adds a sensitivity-analysis helper, plotting
+functions, several fields that were previously computable only by re-deriving
+them by hand, backward-compatible naming aliases, and an opt-out advisory
+warning for under-powered Monte Carlo runs.
+
+## New features
+
+* **`sensitivity_analysis()`** runs `ss_unified()` once for each of a set of
+  prior scenarios (e.g. optimistic / neutral / pessimistic assumptions about
+  Se, Sp, and prevalence) and collects the resulting sample sizes into a
+  single data frame (`scenario`, `N_total`, `joint_assurance`, `N_buderer`,
+  `n_diseased`). Scenarios can be supplied as a named list or as a data
+  frame with one row per scenario. Replaces the hand-written `lapply()` loop
+  this comparison otherwise requires.
+* **Three plotting functions**, all requiring `ggplot2` (in `Suggests`,
+  never `Imports`; each fails with an informative message if it is not
+  installed):
+  * `plot_assurance_curve()` plots achieved joint assurance against total
+    sample size from an `ss_unified()` result's `grid_results`, with the
+    target assurance and the optimal N marked.
+  * `plot_inflation_heatmap()` plots the variance inflation factor from an
+    `ss_imperfect_ref()` result's `sensitivity_table` as a heatmap over
+    reference-standard sensitivity and specificity.
+  * `plot_method_comparison()` plots the required total N by method from an
+    `ss_unified()` result's `comparison` table.
+* **`ss_unified()` gains `full_grid`** (default `FALSE`, preserving current
+  behaviour and cost). The search over `N_range` normally stops at the first
+  N that reaches `target_assurance`; with `full_grid = TRUE` it evaluates
+  every N in `N_range` instead, so that the new `grid_results` element (a
+  data frame of every `(N, assurance)` pair evaluated) holds the complete
+  assurance curve rather than one truncated at the optimum.
+* **`ss_unified()` also returns `N_buderer`, `N_imperfect`, `seed`, and
+  `target_assurance`**, so the classical and imperfect-reference comparison
+  values, the search seed, and the assurance target no longer have to be
+  re-read out of the `comparison` table or the call.
+* **A small-`B` advisory warning.** Every exported function that runs a
+  Monte Carlo search (`mc_validate_buderer()`, `bam_sample_size()`,
+  `joint_sample_size()`, `ss_net_benefit()`, `ss_adaptive_prevalence()`,
+  `ss_imperfect_ref()` when `B > 0`, `ss_time_dependent_roc()`, and
+  `ss_unified()`) now warns when `0 < B < 1000`, since the Monte Carlo error
+  of the reported assurance can be substantial at low `B`. The warning is
+  controlled by the `dtasamplesize.warn_small_B` option (default `TRUE`);
+  set `options(dtasamplesize.warn_small_B = FALSE)` to silence it, e.g. for
+  scripts that deliberately use a small `B` for speed.
+
+## Backward-compatible aliases
+
+* `ss_imperfect_ref()` accepts `delta_se` / `delta_sp` as aliases of
+  `d_se` / `d_sp`, matching the `delta_*` naming used elsewhere in the
+  package.
+* `ss_net_benefit()` accepts `target_assurance` as an alias of
+  `target_prob`, matching the `target_assurance` naming used in
+  `ss_unified()` and `bam_sample_size()`.
+* All aliases are non-breaking: the original argument names keep working
+  unchanged, and when both an old and a new name are supplied the new name
+  takes precedence.
+
+## Enhancements
+
+* `print.dtasamplesize()` now also shows `joint_assurance`, `N_buderer`,
+  `N_imperfect`, `seed`, and `B` when the object carries them.
+* `ss_imperfect_ref()`'s `sensitivity_table` gains an `inflation_factor`
+  column, an identically-valued but more descriptive alias of `VIF`; both
+  are kept so existing code reading `VIF` still works.
+* `ss_unified()` and `ss_time_dependent_roc()` gain `@references` (O'Hagan
+  et al. 2005, Wilson et al. 2022, Rogan & Gladen 1978, and Hanley & McNeil
+  1982 for the former; Heagerty et al. 2000 and Blanche et al. 2013 for the
+  latter), bringing every exported sample-size function up to the same
+  documentation standard.
+
+## Documentation
+
+* New vignette section, "Sensitivity analysis across prior scenarios",
+  demonstrating `sensitivity_analysis()` over an optimistic / neutral /
+  pessimistic set of priors and showing how to read the resulting table.
+* `@param B` across all Monte Carlo functions now documents the small-`B`
+  warning and how to silence it.
+
+## Tests
+
+* New tests for `grid_results` and `full_grid` (row counts, and that
+  `N_effective` / `n_total` / `joint_assurance` are unaffected by
+  `full_grid`), for the new `ss_unified()` fields and their coherence with
+  `comparison`, for the `delta_se` / `delta_sp` and `target_assurance`
+  aliases, for `sensitivity_analysis()` (both scenario formats, column
+  names and row order, and its error messages), for the small-`B` warning
+  (on and off), and for the three plotting functions.
+* `tests/testthat/setup.R` sets `dtasamplesize.warn_small_B = FALSE` for the
+  suite, since many tests deliberately use a small `B` for speed; the
+  warning itself is tested explicitly with the option restored to `TRUE`.
+
 # dtasamplesize 0.3.0
 
 **Statistical-validity release.** An independent review of version 0.2.0 found a

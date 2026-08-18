@@ -62,7 +62,10 @@
 #' @param target_prob Minimum joint probability \strong{for Se and Sp}.
 #'   Default 0.80. See \code{Details}.
 #' @param N_range Range of total N to search. Default \code{seq(100, 800, by = 10)}.
-#' @param B MC replications. Default 5000.
+#' @param B MC replications. Default 5000. A warning is issued when
+#'   \code{0 < B < 1000}, since the Monte Carlo error of the reported joint
+#'   probability may then be substantial; silence it with
+#'   \code{options(dtasamplesize.warn_small_B = FALSE)}.
 #' @param seed Random seed. Default 2026. The RNG state of the calling
 #'   session is restored on exit.
 #' @return Object of class \code{"dtasamplesize"} with additional elements:
@@ -135,6 +138,7 @@ joint_sample_size <- function(Se = 0.85,
   stopifnot(prev > 0, prev < 1)
   stopifnot(target_prob > 0, target_prob < 1)
   stopifnot(B >= 1)
+  warn_small_B(B)
 
   # --- (a): AUC must be geometrically compatible with (Se, Sp) ---------
   # Minimum area of a concave ROC through the operating point (1 - Sp, Se):

@@ -88,12 +88,20 @@
 #'   Default \code{seq(0.10, 0.50, 0.05)}.
 #' @param target_prob Assurance: probability that the lower confidence
 #'   limit excludes the competing default strategies. Default 0.80.
+#' @param target_assurance Alias for \code{target_prob}, matching the
+#'   \code{target_assurance} naming used elsewhere in the package (e.g.
+#'   \code{\link{ss_unified}}, \code{\link{bam_sample_size}}). If supplied
+#'   (non-\code{NULL}), it takes precedence over \code{target_prob}.
+#'   Default \code{NULL} (use \code{target_prob}).
 #' @param alpha Confidence-interval significance level. Default 0.05. The
 #'   lower limit of the two-sided \code{(1 - alpha)} interval is used, i.e.
 #'   a one-sided test at level \code{alpha / 2}.
 #' @param N_range Range of total N to search.
 #'   Default \code{seq(50, 2500, by = 10)}.
-#' @param B MC replications. Default 5000.
+#' @param B MC replications. Default 5000. A warning is issued when
+#'   \code{0 < B < 1000}, since the Monte Carlo error of the reported
+#'   assurance may then be substantial; silence it with
+#'   \code{options(dtasamplesize.warn_small_B = FALSE)}.
 #' @param seed Random seed. Default 2026. The RNG state of the calling
 #'   session is restored on exit.
 #' @return Object of class \code{"dtasamplesize"} with additional elements:
@@ -132,15 +140,16 @@
 #' \emph{Diagn Progn Res} 3:18. \doi{10.1186/s41512-019-0064-7}
 #' @examples
 #' \donttest{
-#' # N_range is bounded here to keep the example fast; the default search
-#' # range is seq(50, 2500, by = 10).
-#' result <- ss_net_benefit(pt_range = c(0.10, 0.30),
-#'                          N_range = seq(50, 400, by = 10), B = 500)
+#' # N_range and B are bounded here to keep the example fast; the default
+#' # search range is seq(50, 2500, by = 10) and default B is 5000 (see
+#' # @param B).
+#' result <- suppressWarnings(ss_net_benefit(pt_range = c(0.10, 0.30),
+#'                          N_range = seq(50, 400, by = 10), B = 500))
 #' print(result)
 #'
 #' # Legacy fixed-margin design (not valid for a prospective cohort)
-#' old <- ss_net_benefit(pt_range = 0.30, design = "fixed",
-#'                       N_range = seq(50, 400, by = 10), B = 500)
+#' old <- suppressWarnings(ss_net_benefit(pt_range = 0.30, design = "fixed",
+#'                       N_range = seq(50, 400, by = 10), B = 500))
 #' }
 #' @export
 ss_net_benefit <- function(Se = 0.85,
@@ -152,7 +161,12 @@ ss_net_benefit <- function(Se = 0.85,
                            alpha = 0.05,
                            N_range = seq(50, 2500, by = 10),
                            B = 5000,
-                           seed = 2026) {
+                           seed = 2026,
+                           target_assurance = NULL) {
+  # target_assurance is an alias of target_prob, matching the naming used
+  # elsewhere in the package; default behaviour (NULL) is unchanged.
+  if (!is.null(target_assurance)) target_prob <- target_assurance
+
   # --- preserve the caller's RNG state -------------------------------
   if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
     old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
@@ -172,6 +186,7 @@ ss_net_benefit <- function(Se = 0.85,
   stopifnot(target_prob > 0, target_prob < 1)
   stopifnot(alpha > 0, alpha < 1)
   stopifnot(B >= 1)
+  warn_small_B(B)
 
   z <- stats::qnorm(1 - alpha / 2)
   results_list <- vector("list", length(pt_range))

@@ -33,7 +33,10 @@
 #' @param loss_rate Expected loss-to-follow-up rate. Default 0.10.
 #' @param alpha Significance level. Default 0.05.
 #' @param B MC replications for validation. Default 5000. Set to 0 to
-#'   skip MC validation.
+#'   skip MC validation. A warning is issued when \code{0 < B < 1000},
+#'   since the Monte Carlo error of the validation probabilities may then
+#'   be substantial; silence it with
+#'   \code{options(dtasamplesize.warn_small_B = FALSE)}.
 #' @param seed Random seed. Default 2026. The RNG state of the calling
 #'   session is restored on exit.
 #' @param sensitivity_table Logical. If \code{TRUE} (default), compute a
@@ -51,6 +54,13 @@
 #'   error suggesting a smaller \code{B} or \code{B = 0}. This guard also
 #'   catches an extreme \code{prev}, which inflates \code{N_adjusted}
 #'   without touching the Youden index.
+#' @param delta_se Alias for \code{d_se}, matching the \code{delta_*}
+#'   naming used elsewhere in the package. If supplied (non-\code{NULL}),
+#'   it takes precedence over \code{d_se}. Default \code{NULL} (use
+#'   \code{d_se}).
+#' @param delta_sp Alias for \code{d_sp}. If supplied (non-\code{NULL}),
+#'   it takes precedence over \code{d_sp}. Default \code{NULL} (use
+#'   \code{d_sp}).
 #' @return Object of class \code{"dtasamplesize"} with additional elements:
 #'   \describe{
 #'     \item{inflation_factor_se}{Variance inflation factor for Se.}
@@ -58,10 +68,20 @@
 #'     \item{n_diseased_adjusted}{Corrected n for Se.}
 #'     \item{n_nondiseased_unadjusted}{Buderer n for Sp without correction.}
 #'     \item{n_nondiseased_adjusted}{Corrected n for Sp.}
-#'     \item{N_unadjusted}{Total N without correction.}
+#'     \item{N_unadjusted}{Total N without correction, i.e. the classical
+#'       Buderer total (same value as \code{N_buderer}).}
+#'     \item{N_buderer}{Alias of \code{N_unadjusted}: the classical Buderer
+#'       total N before the Rogan-Gladen inflation is applied. The
+#'       inflation factor actually realised on the total N is
+#'       \code{N_adjusted / N_unadjusted} (not exactly \code{VIF}, because
+#'       of the separate ceiling/prevalence-weighting steps on the Se and
+#'       Sp arms).}
 #'     \item{N_adjusted}{Total N with correction.}
 #'     \item{N_adjusted_loss}{Total N with correction and loss adjustment.}
-#'     \item{sensitivity_table}{Data frame of VIF values (if requested).}
+#'     \item{sensitivity_table}{Data frame of VIF values (if requested),
+#'       with both a \code{VIF} column and an identical \code{inflation_factor}
+#'       column (the latter is the more descriptive name; both are kept for
+#'       backward compatibility).}
 #'     \item{mc_validation}{Data frame (if \code{B > 0}) with, for the
 #'       unadjusted and adjusted sample sizes, the probability that the
 #'       \strong{apparent} sensitivity CI achieves the target width
@@ -110,7 +130,15 @@ ss_imperfect_ref <- function(Se = 0.85,
                              seed = 2026,
                              sensitivity_table = TRUE,
                              min_youden = 0.5,
-                             max_mc_cells = 2e7) {
+                             max_mc_cells = 2e7,
+                             delta_se = NULL,
+                             delta_sp = NULL) {
+  # delta_se/delta_sp are aliases of d_se/d_sp, matching the delta_*
+  # naming used elsewhere in the package; when supplied they take
+  # precedence, but default behaviour (both NULL) is unchanged.
+  if (!is.null(delta_se)) d_se <- delta_se
+  if (!is.null(delta_sp)) d_sp <- delta_sp
+
   # --- preserve the caller's RNG state -------------------------------
   if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
     old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
@@ -131,6 +159,7 @@ ss_imperfect_ref <- function(Se = 0.85,
   stopifnot(loss_rate >= 0, loss_rate < 1)
   stopifnot(min_youden > 0, min_youden <= 1)
   stopifnot(max_mc_cells > 0)
+  warn_small_B(B)
 
   # Youden index of the reference standard and the Rogan-Gladen VIF
   youden_ref <- Se_ref + Sp_ref - 1
@@ -198,6 +227,9 @@ ss_imperfect_ref <- function(Se = 0.85,
     grid <- expand.grid(Se_ref = se_ref_grid, Sp_ref = sp_ref_grid)
     grid <- grid[grid$Se_ref + grid$Sp_ref > 1, , drop = FALSE]
     grid$VIF <- 1 / (grid$Se_ref + grid$Sp_ref - 1)^2
+    # inflation_factor is a same-value, more descriptive alias of VIF;
+    # VIF is kept so existing code that reads that column still works.
+    grid$inflation_factor <- grid$VIF
     grid$n_adj_se <- ceiling(n_unadj_se * grid$VIF)
     grid$N_adj <- ceiling(pmax(grid$n_adj_se / prev,
                                ceiling(n_unadj_sp * grid$VIF) / (1 - prev)))
@@ -288,6 +320,7 @@ ss_imperfect_ref <- function(Se = 0.85,
       n_nondiseased_unadjusted = n_unadj_sp,
       n_nondiseased_adjusted = n_adj_sp,
       N_unadjusted = N_unadj,
+      N_buderer = N_unadj,
       N_adjusted = N_adj,
       N_adjusted_loss = N_adj_loss,
       Se_ref = Se_ref,

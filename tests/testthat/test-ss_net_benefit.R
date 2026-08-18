@@ -59,6 +59,22 @@ test_that("Criterion is non-trivial: extreme thresholds need more N", {
   expect_true(ns["0.5"] > min(ns))  # not all pinned to the search floor
 })
 
+test_that("target_assurance is an equivalent alias of target_prob", {
+  by_prob <- ss_net_benefit(pt_range = 0.30, target_prob = 0.75,
+                            B = 1000, seed = 1)
+  by_assurance <- ss_net_benefit(pt_range = 0.30, target_assurance = 0.75,
+                                 B = 1000, seed = 1)
+  expect_identical(by_prob$N_by_pt, by_assurance$N_by_pt)
+})
+
+test_that("target_assurance takes precedence over target_prob when both are supplied", {
+  result <- ss_net_benefit(pt_range = 0.30, target_prob = 0.99,
+                           target_assurance = 0.75, B = 1000, seed = 1)
+  expected <- ss_net_benefit(pt_range = 0.30, target_prob = 0.75,
+                             B = 1000, seed = 1)
+  expect_identical(result$N_by_pt, expected$N_by_pt)
+})
+
 test_that("Required N grows as assurance target increases", {
   lo <- ss_net_benefit(pt_range = 0.50, target_prob = 0.70,
                        B = 3000, seed = 2026)

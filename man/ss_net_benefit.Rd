@@ -14,7 +14,8 @@ ss_net_benefit(
   alpha = 0.05,
   N_range = seq(50, 2500, by = 10),
   B = 5000,
-  seed = 2026
+  seed = 2026,
+  target_assurance = NULL
 )
 }
 \arguments{
@@ -47,10 +48,19 @@ a one-sided test at level \code{alpha / 2}.}
 \item{N_range}{Range of total N to search.
 Default \code{seq(50, 2500, by = 10)}.}
 
-\item{B}{MC replications. Default 5000.}
+\item{B}{MC replications. Default 5000. A warning is issued when
+\code{0 < B < 1000}, since the Monte Carlo error of the reported
+assurance may then be substantial; silence it with
+\code{options(dtasamplesize.warn_small_B = FALSE)}.}
 
 \item{seed}{Random seed. Default 2026. The RNG state of the calling
 session is restored on exit.}
+
+\item{target_assurance}{Alias for \code{target_prob}, matching the
+\code{target_assurance} naming used elsewhere in the package (e.g.
+\code{\link{ss_unified}}, \code{\link{bam_sample_size}}). If supplied
+(non-\code{NULL}), it takes precedence over \code{target_prob}.
+Default \code{NULL} (use \code{target_prob}).}
 }
 \value{
 Object of class \code{"dtasamplesize"} with additional elements:
@@ -157,15 +167,16 @@ For each threshold probability \code{pt} (write
 }
 \examples{
 \donttest{
-# N_range is bounded here to keep the example fast; the default search
-# range is seq(50, 2500, by = 10).
-result <- ss_net_benefit(pt_range = c(0.10, 0.30),
-                         N_range = seq(50, 400, by = 10), B = 500)
+# N_range and B are bounded here to keep the example fast; the default
+# search range is seq(50, 2500, by = 10) and default B is 5000 (see
+# @param B).
+result <- suppressWarnings(ss_net_benefit(pt_range = c(0.10, 0.30),
+                         N_range = seq(50, 400, by = 10), B = 500))
 print(result)
 
 # Legacy fixed-margin design (not valid for a prospective cohort)
-old <- ss_net_benefit(pt_range = 0.30, design = "fixed",
-                      N_range = seq(50, 400, by = 10), B = 500)
+old <- suppressWarnings(ss_net_benefit(pt_range = 0.30, design = "fixed",
+                      N_range = seq(50, 400, by = 10), B = 500))
 }
 }
 \references{

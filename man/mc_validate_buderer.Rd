@@ -22,7 +22,10 @@ mc_validate_buderer(
 \item{n_diseased}{Number of diseased individuals. If \code{NULL}
 (default), computed from the Buderer formula.}
 
-\item{B}{Number of Monte Carlo replications. Default 5000.}
+\item{B}{Number of Monte Carlo replications. Default 5000. A warning is
+issued when \code{0 < B < 1000}, since the Monte Carlo error of the
+reported probabilities may then be substantial; silence it with
+\code{options(dtasamplesize.warn_small_B = FALSE)}.}
 
 \item{ci_method}{CI method: \code{"wald"}, \code{"wilson"}, or
 \code{"both"} (default).}

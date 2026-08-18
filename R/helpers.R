@@ -113,6 +113,34 @@ buderer_total_N <- function(Se, Sp, d_se, d_sp, prev, alpha = 0.05) {
               buderer_n(Sp, d_sp, alpha) / (1 - prev)))
 }
 
+#' Warn When B Is Small
+#'
+#' Issues a warning when the number of Monte Carlo replications \code{B} is
+#' small enough that the Monte Carlo error of the reported assurance /
+#' probability may be substantial. The warning is controlled by the
+#' \code{dtasamplesize.warn_small_B} option (default \code{TRUE}), so that
+#' scripts, tests, and examples that deliberately use a small \code{B} for
+#' speed can silence it with
+#' \code{options(dtasamplesize.warn_small_B = FALSE)}.
+#'
+#' @param B Number of Monte Carlo replications.
+#' @return \code{invisible(NULL)}. Called for its warning side effect.
+#' @keywords internal
+#' @noRd
+warn_small_B <- function(B) {
+  if (B > 0 && B < 1000 &&
+        isTRUE(getOption("dtasamplesize.warn_small_B", TRUE))) {
+    warning(
+      "B = ", B, " is small; Monte Carlo error in the assurance estimate ",
+      "may be substantial. B >= 1000 (ideally 5000) is recommended for ",
+      "final results. Set options(dtasamplesize.warn_small_B = FALSE) to ",
+      "silence this.",
+      call. = FALSE
+    )
+  }
+  invisible(NULL)
+}
+
 #' Width of the Wilson Score Interval
 #'
 #' Convenience wrapper returning only the width of the Wilson score

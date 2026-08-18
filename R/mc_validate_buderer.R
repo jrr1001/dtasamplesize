@@ -12,7 +12,10 @@
 #' @param d Desired precision (half-width of CI). Default 0.07.
 #' @param n_diseased Number of diseased individuals. If \code{NULL}
 #'   (default), computed from the Buderer formula.
-#' @param B Number of Monte Carlo replications. Default 5000.
+#' @param B Number of Monte Carlo replications. Default 5000. A warning is
+#'   issued when \code{0 < B < 1000}, since the Monte Carlo error of the
+#'   reported probabilities may then be substantial; silence it with
+#'   \code{options(dtasamplesize.warn_small_B = FALSE)}.
 #' @param ci_method CI method: \code{"wald"}, \code{"wilson"}, or
 #'   \code{"both"} (default).
 #' @param alpha Significance level. Default 0.05.
@@ -65,6 +68,7 @@ mc_validate_buderer <- function(Se = 0.85,
   stopifnot(B >= 1)
   stopifnot(ci_method %in% c("wald", "wilson", "both"))
   stopifnot(alpha > 0, alpha < 1)
+  warn_small_B(B)
 
   # Compute n_diseased from Buderer if not supplied
   if (is.null(n_diseased)) {

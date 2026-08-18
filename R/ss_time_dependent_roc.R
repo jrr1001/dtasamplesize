@@ -15,7 +15,10 @@
 #' @param delta_auc Target precision (half-width) for AUC(t). Default 0.06.
 #' @param target_prob Probability of achieving precision. Default 0.80.
 #' @param N_range Range of N to search. Default \code{seq(100, 500, by = 20)}.
-#' @param B MC replications. Default 500 (lower due to timeROC cost).
+#' @param B MC replications. Default 500 (lower due to timeROC cost). A
+#'   warning is issued when \code{0 < B < 1000}, since the Monte Carlo error
+#'   of the reported probabilities may then be substantial; silence it with
+#'   \code{options(dtasamplesize.warn_small_B = FALSE)}.
 #' @param seed Random seed. Default 2026. The RNG state of the calling
 #'   session is restored on exit.
 #' @return Object of class \code{"dtasamplesize"} with additional elements:
@@ -26,9 +29,21 @@
 #' @note Parameters in the default example are HYPOTHETICAL. No published
 #'   AUC values exist for ctDNA as a continuous discriminator in DLBCL.
 #'   Requires the \pkg{timeROC} package (listed in Suggests).
+#' @references
+#' Heagerty PJ, Lumley T, Pepe MS (2000). Time-dependent ROC curves for
+#' censored survival data and a diagnostic marker. \emph{Biometrics}
+#' 56:337-344. \doi{10.1111/j.0006-341X.2000.00337.x}
+#'
+#' Blanche P, Dartigues J-F, Jacqmin-Gadda H (2013). Estimating and
+#' comparing time-dependent areas under receiver operating characteristic
+#' curves for censored event times with competing risks. \emph{Stat Med}
+#' 32:5381-5397. \doi{10.1002/sim.5958}
 #' @examples
 #' \donttest{
-#' result <- ss_time_dependent_roc(B = 50, N_range = seq(100, 300, by = 50))
+#' # B kept small here for a fast example; see @param B.
+#' result <- suppressWarnings(
+#'   ss_time_dependent_roc(B = 50, N_range = seq(100, 300, by = 50))
+#' )
 #' print(result)
 #' }
 #' @export
@@ -67,6 +82,7 @@ ss_time_dependent_roc <- function(mu_case = 4.5,
   stopifnot(all(censoring_rates >= 0 & censoring_rates < 1))
   stopifnot(delta_auc > 0, target_prob > 0, target_prob < 1)
   stopifnot(B >= 1)
+  warn_small_B(B)
 
   # Attach survival so timeROC can find Surv() in formula evaluation
   if (!("package:survival" %in% search())) {

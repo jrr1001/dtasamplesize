@@ -108,3 +108,50 @@ comparison
 
 The unified framework (`ss_unified()`) integrates all sources of
 uncertainty into a single simulation. See `?ss_unified` for details.
+
+## Sensitivity analysis across prior scenarios
+
+The prior beliefs about Se and Sp that go into `ss_unified()` are rarely known
+with certainty at the design stage. `sensitivity_analysis()` runs
+`ss_unified()` once per named scenario and collects the results into a single
+table, replacing a hand-written loop over scenarios. Below, an optimistic, a
+neutral, and a pessimistic scenario vary only in how confident (and how high)
+the assumed Se and Sp are; the disease-prevalence prior is held fixed so that
+the comparison isolates the effect of the accuracy assumptions.
+
+```{r sensitivity}
+scenarios <- list(
+  optimistic = list(prior_se = c(18, 2), prior_sp = c(19, 1),
+                     prior_prev = c(5, 15)),
+  neutral = list(prior_se = c(17, 3), prior_sp = c(2, 2),
+                  prior_prev = c(5, 15)),
+  pessimistic = list(prior_se = c(14, 6), prior_sp = c(16, 4),
+                      prior_prev = c(5, 15))
+)
+
+# B and N_range are kept small here for a fast vignette build; see
+# ?sensitivity_analysis and the 'B' argument of ss_unified() for guidance
+# on the B recommended for a final analysis.
+sens_result <- suppressWarnings(sensitivity_analysis(
+  scenarios,
+  delta_se = 0.07, delta_sp = 0.05, delta_auc = 0,
+  N_range = seq(300, 1200, by = 100), B = 300, seed = 2026
+))
+sens_result
+```
+
+Reading the table: `N_total` is the loss-adjusted total sample size the
+unified framework recommends for that scenario, and `joint_assurance` is the
+probability actually achieved at that N (at or above the 0.80 target).
+`N_buderer` is the classical Buderer total for the same scenario, included so
+the gap between the assurance-based and classical requirements can be seen
+at a glance for each set of assumptions.
+
+The pattern is the one intuition predicts: the pessimistic scenario, which
+assumes lower and less certain Se and Sp, needs the largest sample size,
+while the optimistic scenario needs the smallest. What the table adds is the
+*size* of that gap -- here several hundred subjects between the two extremes
+-- which is exactly the information a protocol needs when the "expected"
+accuracy is a guess rather than a certainty: it shows how much the required
+sample size would grow if the study turns out to be in the harder-to-detect
+regime, rather than reporting a single N that is silent about that risk.

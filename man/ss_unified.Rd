@@ -19,7 +19,8 @@ ss_unified(
   target_assurance = 0.8,
   N_range = seq(200, 1000, by = 20),
   B = 5000,
-  seed = 2026
+  seed = 2026,
+  full_grid = FALSE
 )
 }
 \arguments{
@@ -55,18 +56,47 @@ Default \code{c(0.15, 0.40)}.}
 
 \item{N_range}{Search range for total N. Default \code{seq(200, 1000, by = 20)}.}
 
-\item{B}{MC replications. Default 5000.}
+\item{B}{MC replications. Default 5000. A warning is issued when
+\code{0 < B < 1000}, since the Monte Carlo error of the reported joint
+assurance may then be substantial; silence it with
+\code{options(dtasamplesize.warn_small_B = FALSE)}.}
 
 \item{seed}{Random seed. Default 2026. The RNG state of the calling
 session is restored on exit.}
+
+\item{full_grid}{Logical. Default \code{FALSE}, which stops the search
+over \code{N_range} at the first N that reaches \code{target_assurance}
+-- identical behaviour and cost to versions <= 0.3.0. If \code{TRUE},
+the search does not stop early: every N in \code{N_range} is evaluated
+so that \code{grid_results} holds the complete assurance curve.
+\code{optimal_N} and \code{joint_assurance} are unaffected by this
+switch -- they always refer to the \strong{first} N that reached
+\code{target_assurance}, never the last.}
 }
 \value{
 Object of class \code{"dtasamplesize"} with additional elements:
   \describe{
-    \item{joint_assurance}{Achieved joint assurance at optimal N. The
-      denominator is \code{B}: degenerate replications count as
-      failures.}
+    \item{joint_assurance}{Achieved joint assurance at \code{N_effective}:
+      the probability that \strong{all} active targets -- Se, Sp, AUC
+      (when \code{delta_auc > 0}) and net benefit (when
+      \code{check_nb = TRUE}) -- are reached \strong{simultaneously} in
+      the same replication, not the probability that each is reached
+      marginally. The denominator is \code{B}: degenerate replications
+      count as failures.}
     \item{comparison}{Data frame comparing methods.}
+    \item{N_buderer}{Total N from the classical Buderer formula, i.e.
+      the "Buderer (classical)" row of \code{comparison}.}
+    \item{N_imperfect}{Total N from the Rogan-Gladen imperfect-reference
+      inflation, i.e. the "Imperfect ref" row of \code{comparison}.}
+    \item{seed}{The \code{seed} argument used for the search.}
+    \item{target_assurance}{The \code{target_assurance} argument used for
+      the search, echoed back for downstream use (e.g. by
+      \code{\link{plot_assurance_curve}}).}
+    \item{grid_results}{Data frame with columns \code{N} and
+      \code{assurance}, one row per N evaluated while searching
+      \code{N_range}. With the default \code{full_grid = FALSE} the
+      search stops at \code{N_effective}, so the grid is truncated there;
+      set \code{full_grid = TRUE} for the full curve over \code{N_range}.}
   }
 }
 \description{
@@ -135,15 +165,31 @@ The parameters \code{delta_se}, \code{delta_sp}, and
 \donttest{
 # Unified, assurance-based sample size (small B and coarse grid for speed;
 # delta_auc = 0 skips the AUC constraint).
-result <- ss_unified(
+result <- suppressWarnings(ss_unified(
   prior_se = c(17, 3), prior_sp = c(18, 2),
   Se_ref = 0.95, Sp_ref = 0.98,
   delta_se = 0.07, delta_sp = 0.06, delta_auc = 0,
   N_range = seq(300, 900, by = 100), B = 100
-)
+))
 print(result)
 result$comparison
 }
+}
+\references{
+O'Hagan A, Stevens JW, Campbell MJ (2005). Assurance in clinical trial
+design. \emph{Pharm Stat} 4:187-201. \doi{10.1002/pst.175}
+
+Wilson KJ et al. (2022). Bayesian sample size determination for
+diagnostic accuracy studies. \emph{Stat Med} 41:2908-2922.
+\doi{10.1002/sim.9393}
+
+Rogan WJ, Gladen B (1978). Estimating prevalence from the results of a
+screening test. \emph{Am J Epidemiol} 107:71-76.
+\doi{10.1093/oxfordjournals.aje.a112510}
+
+Hanley JA, McNeil BJ (1982). The meaning and use of the area under a
+receiver operating characteristic (ROC) curve. \emph{Radiology}
+143:29-36. \doi{10.1148/radiology.143.1.7063747}
 }
 \seealso{
 \code{\link{ss_net_benefit}}, \code{\link{ss_imperfect_ref}}

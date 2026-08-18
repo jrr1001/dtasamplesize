@@ -36,7 +36,10 @@ prevalence. Default \code{c(6, 14)} (E[prev]=0.30).}
 \item{n_range}{Integer vector of candidate n values to search.
 Default \code{20:500}.}
 
-\item{B}{Number of MC replications. Default 5000.}
+\item{B}{Number of MC replications. Default 5000. A warning is issued
+when \code{0 < B < 1000}, since the Monte Carlo error of the reported
+assurance may then be substantial; silence it with
+\code{options(dtasamplesize.warn_small_B = FALSE)}.}
 
 \item{alpha_ci}{Credible interval level. Default 0.95.}
 
@@ -70,7 +73,8 @@ The parameters \code{delta_se} and \code{delta_sp} are the
   This differs from other functions in this package that use half-width.
 }
 \examples{
-result <- bam_sample_size(B = 500, n_range = 20:500)
+# B kept small here for a fast example; see @param B.
+result <- suppressWarnings(bam_sample_size(B = 500, n_range = 20:500))
 print(result)
 }
 \references{
