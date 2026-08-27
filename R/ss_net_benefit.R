@@ -12,11 +12,32 @@
 #'   \deqn{NB = prev \cdot Se - (1 - prev)(1 - Sp)\,w,}
 #'   \deqn{NB_{all} = prev - (1 - prev)\,w.}
 #'   The treat-none strategy has \eqn{NB = 0} by definition. A test is
-#'   useful at \code{pt} only when \eqn{NB > 0} \strong{and}
-#'   \eqn{NB > NB_{all}}. When the test is \strong{not} useful at a
-#'   threshold under the assumed parameters, no sample size can demonstrate
-#'   superiority; the threshold is flagged \code{feasible = FALSE} and
-#'   \code{N_required = NA}.
+#'   useful at \code{pt} only when \eqn{NB > 0} (\code{feasible_vs_none})
+#'   \strong{and} \eqn{NB > NB_{all}}, equivalently
+#'   \eqn{D = NB - NB_{all} > 0} (\code{feasible_vs_all}). When the test is
+#'   \strong{not} useful at a threshold under the assumed parameters, no
+#'   sample size can demonstrate superiority; the threshold is flagged
+#'   \code{feasible = FALSE} and \code{N_required = NA}.
+#'
+#'   \strong{This is a deterministic ceiling, computed in closed form, not a
+#'   search-range problem.} \code{NB} and \code{D} are exactly the
+#'   population-level (\eqn{N \to \infty}) limits of the point estimates
+#'   the CI-based search below tests: as \code{N} grows the confidence
+#'   half-widths shrink to 0, so the lower confidence limit converges to
+#'   the point estimate, which converges to \code{NB_true} (resp.
+#'   \code{D_true}). When \code{NB_true <= 0} or \code{D_true <= 0} at a
+#'   threshold, \strong{no} \code{N}, however large, can ever push the
+#'   corresponding lower confidence limit above 0, and expanding
+#'   \code{N_range} cannot help. This is different from, and takes
+#'   precedence over, the ordinary case where a threshold \emph{is}
+#'   feasible in the limit but the search did not reach \code{target_prob}
+#'   within \code{N_range} -- there, and only there, expanding
+#'   \code{N_range} is the right advice. The function warns in both cases,
+#'   but with different guidance: a structurally infeasible threshold names
+#'   the failing comparison(s) and the limiting value(s) they converge to
+#'   (see \code{feasible_vs_none}, \code{feasible_vs_all}, \code{NB_true},
+#'   \code{NB_treat_all} and \code{D_true} in \code{N_by_pt}), and states
+#'   plainly that expanding the search will not help.
 #'
 #'   The sample-size criterion is \strong{inference-based}: a simulated
 #'   study is a "success" when the lower confidence limit of the relevant
@@ -108,8 +129,15 @@
 #'   \describe{
 #'     \item{design}{The sampling design used.}
 #'     \item{N_by_pt}{Data frame with columns \code{pt}, \code{feasible},
-#'       \code{N_required}, \code{prob_achieved}, \code{NB_true},
-#'       \code{NB_treat_all}.}
+#'       \code{feasible_vs_none} (is \eqn{NB > 0} achievable as
+#'       \eqn{N \to \infty}?), \code{feasible_vs_all} (is
+#'       \eqn{NB > NB_{all}} achievable as \eqn{N \to \infty}?),
+#'       \code{N_required}, \code{prob_achieved}, \code{NB_true} (the
+#'       \eqn{N \to \infty} limit of \eqn{NB}), \code{NB_treat_all}, and
+#'       \code{D_true} (the \eqn{N \to \infty} limit of
+#'       \eqn{D = NB - NB_{all}}; \code{feasible_vs_all} is
+#'       \code{D_true > 0}). \code{feasible} is
+#'       \code{feasible_vs_none \& feasible_vs_all}.}
 #'     \item{N_conservative}{Maximum required N across feasible thresholds
 #'       (\code{NA} if none feasible, or if a feasible threshold did not
 #'       converge within \code{N_range}).}
@@ -167,16 +195,17 @@ ss_net_benefit <- function(Se = 0.85,
   # elsewhere in the package; default behaviour (NULL) is unchanged.
   if (!is.null(target_assurance)) target_prob <- target_assurance
 
-  # --- preserve the caller's RNG state -------------------------------
-  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-    on.exit(assign(".Random.seed", old_seed, envir = .GlobalEnv), add = TRUE)
-  } else {
-    on.exit(
-      suppressWarnings(rm(".Random.seed", envir = .GlobalEnv)),
-      add = TRUE
-    )
-  }
+  # --- preserve the caller's RNG state (kind AND seed) ------------------
+  # See save_rng_state()/restore_rng_state(): restoring only .Random.seed's
+  # VALUE is not enough, because set.seed() called later by unrelated code
+  # with no explicit `kind` argument reuses whichever kind is CURRENTLY
+  # ACTIVE. The set.seed() call below names its kind explicitly
+  # (Mersenne-Twister, R's own default), so the reported N_required /
+  # prob_achieved figures -- including the manuscript's published N = 240
+  # -- reproduce the same numbers regardless of the caller's own RNG
+  # configuration.
+  old_rng_state <- save_rng_state()
+  on.exit(restore_rng_state(old_rng_state), add = TRUE)
 
   # Validate inputs
   design <- match.arg(design)
@@ -197,9 +226,23 @@ ss_net_benefit <- function(Se = 0.85,
     NB_true <- prev * Se - (1 - prev) * (1 - Sp) * odds_pt
     NB_treat_all <- prev - (1 - prev) * odds_pt
 
-    # A test can only be shown superior if it is genuinely useful:
-    # NB > 0 (beats treat-none) and NB > NB_treat_all (beats treat-all).
-    feasible <- (NB_true > 0) && (NB_true > NB_treat_all)
+    # A test can only be shown superior if it is genuinely useful. The two
+    # comparisons the criterion requires are checked SEPARATELY -- NB > 0
+    # (beats treat-none) and NB > NB_treat_all, equivalently
+    # D_true = NB_true - NB_treat_all > 0 (beats treat-all) -- so that a
+    # failing threshold can be named accurately below. Both are the
+    # population-level (N -> Inf) limits of the CI-based estimators used
+    # by the search: as N grows the confidence-interval half-widths shrink
+    # to 0, so the lower confidence limit converges to the point estimate,
+    # which converges to NB_true (resp. D_true). A non-positive limit is
+    # therefore a DETERMINISTIC ceiling -- no N, however large, can push
+    # the corresponding lower confidence limit above 0 -- and is a
+    # structural property of Se, Sp, prev and pt, not a search-range
+    # problem.
+    D_true <- NB_true - NB_treat_all
+    feasible_vs_none <- NB_true > 0
+    feasible_vs_all <- D_true > 0
+    feasible <- feasible_vs_none && feasible_vs_all
 
     found_N <- NA_integer_
     found_prob <- NA_real_
@@ -207,7 +250,7 @@ ss_net_benefit <- function(Se = 0.85,
 
     if (feasible) {
       for (N in N_range) {
-        set.seed(seed)
+        set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rejection")
 
         if (design == "cohort") {
           # Disease status is RANDOM: (TP, FN, FP, TN) ~ Multinomial(N, .)
@@ -281,15 +324,44 @@ ss_net_benefit <- function(Se = 0.85,
                 "). Consider expanding N_range.")
         found_prob <- best_prob
       }
+    } else {
+      # Structurally infeasible: name which comparison fails and report the
+      # deterministic (N -> Inf) limit it converges to, so the caller is not
+      # left with a silent NA. This is NOT a search-range problem -- the
+      # for-loop above was never entered -- so, unlike the "not reached
+      # within N_range" warning above, expanding N_range cannot help.
+      reasons <- character(0)
+      if (!feasible_vs_none) {
+        reasons <- c(reasons, sprintf(
+          "never beats the treat-none strategy (as N -> Inf, NB -> %.4f, not > 0)",
+          NB_true))
+      }
+      if (!feasible_vs_all) {
+        reasons <- c(reasons, sprintf(
+          "never beats the treat-all strategy (as N -> Inf, NB -> %.4f vs treat-all's %.4f, difference -> %.4f, not > 0)",
+          NB_true, NB_treat_all, D_true))
+      }
+      warning(
+        "Threshold pt = ", pt, " is not achievable at ANY N: the test ",
+        paste(reasons, collapse = "; and "), ". This is a structural ",
+        "consequence of Se = ", Se, ", Sp = ", Sp, ", prev = ", prev,
+        " at this threshold, not a search-range problem -- expanding ",
+        "N_range cannot help. See feasible_vs_none / feasible_vs_all / ",
+        "NB_true / NB_treat_all / D_true in the returned N_by_pt.",
+        call. = FALSE
+      )
     }
 
     results_list[[i]] <- data.frame(
       pt = pt,
       feasible = feasible,
+      feasible_vs_none = feasible_vs_none,
+      feasible_vs_all = feasible_vs_all,
       N_required = found_N,
       prob_achieved = if (feasible) found_prob else NA_real_,
       NB_true = NB_true,
       NB_treat_all = NB_treat_all,
+      D_true = D_true,
       stringsAsFactors = FALSE
     )
   }
@@ -304,7 +376,22 @@ ss_net_benefit <- function(Se = 0.85,
   feas <- N_by_pt$feasible
   unmet_feasible <- any(feas & is.na(N_by_pt$N_required))
   achievable <- N_by_pt$N_required[feas & !is.na(N_by_pt$N_required)]
-  if (unmet_feasible) {
+  if (!any(feas)) {
+    # None of the requested thresholds is even structurally reachable; each
+    # one already warned above with its own failing comparison and limit.
+    # This is a stronger statement than "search too short" (unmet_feasible,
+    # below), so it takes precedence and does NOT suggest expanding N_range.
+    warning(
+      "N_conservative is NA: none of the thresholds in pt_range are ",
+      "structurally achievable at any N under Se = ", Se, ", Sp = ", Sp,
+      ", prev = ", prev, ". See the per-threshold warning(s) above, and ",
+      "feasible_vs_none / feasible_vs_all in N_by_pt, for which comparison ",
+      "fails and its limiting value at each threshold. Expanding N_range ",
+      "cannot help; reconsider Se, Sp, prev or pt_range.",
+      call. = FALSE
+    )
+    N_conservative <- NA_integer_
+  } else if (unmet_feasible) {
     warning("At least one feasible threshold did not reach target ",
             "assurance within N_range; N_conservative is reported as NA. ",
             "Expand N_range for a finite worst-case sample size.")

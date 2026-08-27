@@ -39,9 +39,12 @@ test_that("print works for ss_net_benefit", {
 test_that("print works for ss_unified", {
   # N_range widened: the real N is ~700, so seq(200, 400, 100) exercised
   # the non-converged fallback branch.
-  result <- ss_unified(B = 50, seed = 1,
-                       N_range = seq(200, 1000, by = 100),
-                       delta_auc = 0, check_nb = FALSE)
+  # B is deliberately small for speed, so the Monte Carlo advisory fires.
+  result <- suppressWarnings(
+    ss_unified(B = 50, seed = 1,
+               N_range = seq(200, 1000, by = 100),
+               delta_auc = 0, check_nb = FALSE)
+  )
   expect_output(print(result), "Unified")
 })
 

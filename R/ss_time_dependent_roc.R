@@ -10,8 +10,13 @@
 #' @param sigma SD of biomarker (both groups). Default 2.5.
 #' @param lambda_event Event rate per year (exponential). Default 0.25.
 #' @param t_horizon Time point for AUC(t) evaluation in years. Default 2.
-#' @param censoring_rates Numeric vector of censoring proportions.
-#'   Default \code{c(0.10, 0.20, 0.30)}.
+#' @param censoring_rates Numeric vector giving, for each scenario, the
+#'   target marginal probability that the \emph{censoring time} precedes
+#'   \code{t_horizon}, i.e. \eqn{P(C < t\_horizon)}. Each entry calibrates
+#'   an exponential censoring-time model with rate
+#'   \code{-log(1 - censoring_rates) / t_horizon}; it is \strong{not} the
+#'   fraction of subjects who will actually be observed as censored. See
+#'   Details. Default \code{c(0.10, 0.20, 0.30)}.
 #' @param delta_auc Target precision (half-width) for AUC(t). Default 0.06.
 #' @param target_prob Probability of achieving precision. Default 0.80.
 #' @param N_range Range of N to search. Default \code{seq(100, 500, by = 20)}.
@@ -21,9 +26,40 @@
 #'   \code{options(dtasamplesize.warn_small_B = FALSE)}.
 #' @param seed Random seed. Default 2026. The RNG state of the calling
 #'   session is restored on exit.
+#' @details \code{censoring_rates} parameterizes the exponential model for
+#'   the censoring time \eqn{C} alone: each entry \code{cens_rate} sets
+#'   \eqn{P(C < t\_horizon) = cens\_rate} exactly, via
+#'   \code{lambda_censor <- -log(1 - cens_rate) / t_horizon}. It does
+#'   \strong{not} equal the proportion of subjects observed as censored in
+#'   the simulated data, because censoring competes with the event: a
+#'   subject is recorded as censored only when \eqn{C} occurs before both
+#'   the event time \eqn{T} and \code{t_horizon}. Since some subjects who
+#'   would have been censored experience the event first, the observed
+#'   censoring proportion is systematically \strong{lower} than
+#'   \code{censoring_rates}.
+#'
+#'   For the package defaults (\code{lambda_event = 0.25},
+#'   \code{t_horizon = 2}, under which the event alone would be observed
+#'   before the horizon for 39.35\% of subjects), Monte Carlo simulation
+#'   (2,000,000 subjects per scenario) gives:
+#'   \tabular{lll}{
+#'     \code{censoring_rates} \tab \eqn{P(C < t\_horizon)} \tab observed censoring proportion \cr
+#'     0.10 \tab 0.0996 \tab 0.0787 \cr
+#'     0.20 \tab 0.2002 \tab 0.1591 \cr
+#'     0.30 \tab 0.3000 \tab 0.2396 \cr
+#'     0.50 \tab 0.5003 \tab 0.4054 \cr
+#'   }
+#'   The observed proportion runs at roughly 80\% of the nominal
+#'   \code{censoring_rates} value across this range; the ratio is not
+#'   universal and shifts with \code{lambda_event} and \code{t_horizon}
+#'   (a higher event rate leaves less "room" for censoring to be
+#'   observed, which lowers the ratio further). Treat 80\% as a rough
+#'   guide for the package defaults, not a general conversion factor.
 #' @return Object of class \code{"dtasamplesize"} with additional elements:
 #'   \describe{
-#'     \item{results}{Data frame with columns \code{censoring_rate},
+#'     \item{results}{Data frame with columns \code{censoring_rate} (the
+#'       nominal \eqn{P(C < t\_horizon)} value from \code{censoring_rates},
+#'       not the observed censoring proportion; see Details),
 #'       \code{N_required}, \code{prob_achieved}.}
 #'   }
 #' @note Parameters in the default example are HYPOTHETICAL. No published
@@ -58,15 +94,24 @@ ss_time_dependent_roc <- function(mu_case = 4.5,
                                   N_range = seq(100, 500, by = 20),
                                   B = 500,
                                   seed = 2026) {
-  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-    on.exit(assign(".Random.seed", old_seed, envir = .GlobalEnv), add = TRUE)
-  } else {
-    on.exit(
-      suppressWarnings(rm(".Random.seed", envir = .GlobalEnv)),
-      add = TRUE
-    )
-  }
+  # --- preserve the caller's RNG state (kind AND seed) ------------------
+  # See save_rng_state()/restore_rng_state(): restoring only .Random.seed's
+  # VALUE is not enough, because set.seed() called later by unrelated code
+  # with no explicit `kind` argument reuses whichever kind is CURRENTLY
+  # ACTIVE. The set.seed() call below names ALL THREE kinds explicitly
+  # (Mersenne-Twister / Inversion / Rejection, R's own defaults) -- not
+  # just the uniform generator. This function is the one place in the
+  # package that draws from the NORMAL generator (stats::rnorm(), for the
+  # simulated biomarker below), so naming `kind` alone was not enough: a
+  # caller on a different `normal.kind` (e.g. "Box-Muller" instead of the
+  # default "Inversion") got different simulated biomarker values, and
+  # therefore a different N_required, from the identical seed and
+  # arguments -- e.g. N_total = 420 under Inversion vs 400 under
+  # Box-Muller for otherwise identical calls. Naming all three kinds makes
+  # the simulated AUC(t) precision reproduce the same numbers regardless
+  # of the caller's own RNG configuration.
+  old_rng_state <- save_rng_state()
+  on.exit(restore_rng_state(old_rng_state), add = TRUE)
 
   if (!requireNamespace("timeROC", quietly = TRUE)) {
     stop("Package 'timeROC' is required. Install with: ",
@@ -109,7 +154,7 @@ ss_time_dependent_roc <- function(mu_case = 4.5,
     prob <- NA_real_  # assurance at the largest N tried (set in the loop)
 
     for (N in N_range) {
-      set.seed(seed)
+      set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rejection")
       success_count <- 0L
 
       for (b in seq_len(B)) {
@@ -169,7 +214,7 @@ ss_time_dependent_roc <- function(mu_case = 4.5,
     }
 
     if (is.na(found_N)) {
-      warning("Censoring rate ", cens_rate, ": target precision not ",
+      warning("Nominal censoring rate ", cens_rate, ": target precision not ",
               "reached within N_range (best = ", round(best_prob, 3),
               "). Consider expanding N_range or increasing B.")
       # Report the largest N tried together with the assurance achieved

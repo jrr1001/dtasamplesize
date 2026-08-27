@@ -2,7 +2,8 @@
 % Please edit documentation in R/ss_imperfect_ref.R
 \name{ss_imperfect_ref}
 \alias{ss_imperfect_ref}
-\title{Sample Size Adjustment for Imperfect Reference Standard}
+\title{Sample Size for a Diagnostic Accuracy Study With an Imperfect Reference
+Standard}
 \usage{
 ss_imperfect_ref(
   Se = 0.85,
@@ -14,6 +15,7 @@ ss_imperfect_ref(
   Sp_ref = 0.95,
   loss_rate = 0.1,
   alpha = 0.05,
+  estimand = c("apparent", "corrected"),
   B = 5000,
   seed = 2026,
   sensitivity_table = TRUE,
@@ -42,6 +44,15 @@ ss_imperfect_ref(
 
 \item{alpha}{Significance level. Default 0.05.}
 
+\item{estimand}{Which target quantity to size the primary \code{N} for:
+\code{"apparent"} (default) sizes for \eqn{P(T+\,|\,R+)} /
+\eqn{P(T-\,|\,R-)}, the quantity a naive (uncorrected) analysis
+against the imperfect reference estimates; \code{"corrected"} sizes
+for the true, misclassification-corrected \eqn{Se}/\eqn{Sp}. Both are
+always computed and returned regardless of this choice (see Value);
+\code{estimand} only selects which pair populates the generic
+\code{N_adjusted}/\code{n_total} slots. See Details.}
+
 \item{B}{MC replications for validation. Default 5000. Set to 0 to
 skip MC validation. A warning is issued when \code{0 < B < 1000},
 since the Monte Carlo error of the validation probabilities may then
@@ -52,22 +63,25 @@ be substantial; silence it with
 session is restored on exit.}
 
 \item{sensitivity_table}{Logical. If \code{TRUE} (default), compute a
-table of inflation factors for varying Se_ref and Sp_ref.}
+table of \code{N_apparent}/\code{N_corrected} (and the informative
+\code{VIF}) for varying \code{Se_ref} and \code{Sp_ref}.}
 
 \item{min_youden}{Minimum acceptable Youden index of the reference
-standard, \eqn{Se_{ref} + Sp_{ref} - 1}. Default 0.5, which caps the
-variance inflation factor at 4. A reference standard below this is
-too weak for the Rogan-Gladen inflation to give a usable sample size;
-the function stops with an informative error. Lower it deliberately
-(and expect a very large \code{N}) if you really intend to plan
-against such a reference. See \code{Details}.}
+standard, \eqn{Se_{ref} + Sp_{ref} - 1}. Default 0.5. A reference
+standard below this is too weak for either estimand's correction to
+be usable, and the function stops with an informative error. This
+guards near-non-identification; it does \strong{not} bound how large
+the realised sample-size multiplier can be above the threshold. See
+\code{Details}. Lower it deliberately (and expect a very large
+\code{N}) if you really intend to plan against such a reference.}
 
 \item{max_mc_cells}{Upper bound on \code{B * N_adjusted}, the number of
 cells the Monte Carlo validation allocates. Default \code{2e7}
 (roughly a few hundred MB). Exceeding it stops with an informative
 error suggesting a smaller \code{B} or \code{B = 0}. This guard also
-catches an extreme \code{prev}, which inflates \code{N_adjusted}
-without touching the Youden index.}
+catches an extreme \code{prev}, which for \code{estimand = "corrected"}
+can inflate \code{N_adjusted} by several orders of magnitude even with
+a fine reference standard (see Details).}
 
 \item{delta_se}{Alias for \code{d_se}, matching the \code{delta_*}
 naming used elsewhere in the package. If supplied (non-\code{NULL}),
@@ -81,85 +95,198 @@ it takes precedence over \code{d_sp}. Default \code{NULL} (use
 \value{
 Object of class \code{"dtasamplesize"} with additional elements:
   \describe{
-    \item{inflation_factor_se}{Variance inflation factor for Se.}
-    \item{n_diseased_unadjusted}{Buderer n for Se without correction.}
-    \item{n_diseased_adjusted}{Corrected n for Se.}
-    \item{n_nondiseased_unadjusted}{Buderer n for Sp without correction.}
-    \item{n_nondiseased_adjusted}{Corrected n for Sp.}
-    \item{N_unadjusted}{Total N without correction, i.e. the classical
-      Buderer total (same value as \code{N_buderer}).}
-    \item{N_buderer}{Alias of \code{N_unadjusted}: the classical Buderer
-      total N before the Rogan-Gladen inflation is applied. The
-      inflation factor actually realised on the total N is
-      \code{N_adjusted / N_unadjusted} (not exactly \code{VIF}, because
-      of the separate ceiling/prevalence-weighting steps on the Se and
-      Sp arms).}
-    \item{N_adjusted}{Total N with correction.}
-    \item{N_adjusted_loss}{Total N with correction and loss adjustment.}
-    \item{sensitivity_table}{Data frame of VIF values (if requested),
-      with both a \code{VIF} column and an identical \code{inflation_factor}
-      column (the latter is the more descriptive name; both are kept for
-      backward compatibility).}
+    \item{estimand}{The \code{estimand} argument actually used.}
+    \item{n_diseased, n_total}{Generic slots (read by
+      \code{print.dtasamplesize} and by \code{\link{ss_unified}}):
+      alias of whichever \code{estimand} was selected.}
+    \item{n_diseased_unadjusted, n_nondiseased_unadjusted, N_unadjusted,
+      N_buderer}{The classical Buderer numbers, i.e. as if the
+      reference standard were perfect. \code{N_buderer} is an alias of
+      \code{N_unadjusted}.}
+    \item{n_diseased_adjusted, n_nondiseased_adjusted, N_adjusted,
+      N_adjusted_loss}{Aliases of the \code{estimand}-selected numbers
+      below (apparent or corrected), kept for backward compatibility
+      with code that reads these generic names.}
+    \item{Se_apparent, Sp_apparent, P_ref_pos, P_ref_neg,
+      n_refpos_apparent, n_refneg_apparent, N_apparent,
+      N_apparent_loss}{The \code{"apparent"}-estimand quantities:
+      \eqn{P(T+\,|\,R+)}, \eqn{P(T-\,|\,R-)}, the marginal probabilities
+      of a reference-positive/negative result, the required
+      reference-positive/negative subsample sizes, and the resulting
+      total \code{N} (with and without \code{loss_rate}).}
+    \item{NVar_se_corrected, NVar_sp_corrected, n_se_corrected,
+      n_sp_corrected, N_corrected, N_corrected_loss}{The
+      \code{"corrected"}-estimand quantities: \code{N * Var} of the
+      misclassification-corrected Se/Sp (the per-arm sample size these
+      imply, which -- unlike the apparent/Buderer arms -- is already a
+      total-\code{N} quantity, not a diseased/ref-positive subsample
+      size), and the resulting total \code{N} (with and without
+      \code{loss_rate}).}
+    \item{youden_ref}{Youden index of the reference standard,
+      \code{Se_ref + Sp_ref - 1}.}
+    \item{VIF}{The Rogan-Gladen \strong{prevalence} variance-inflation
+      factor, \code{1 / youden_ref^2}. Informative only -- see Details.
+      Does not multiply any sample size here.}
+    \item{multiplier_se_corrected, multiplier_sp_corrected,
+      multiplier_se_apparent, multiplier_sp_apparent}{The actual ratio
+      of the real Se/Sp variance (corrected or apparent) to Buderer's
+      naive variance, for comparison against \code{VIF}.}
+    \item{sensitivity_table}{Data frame (if requested) with
+      \code{N_apparent} and \code{N_corrected} (and the informative
+      \code{VIF}/\code{inflation_factor}) over a grid of \code{Se_ref}
+      and \code{Sp_ref}.}
     \item{mc_validation}{Data frame (if \code{B > 0}) with, for the
-      unadjusted and adjusted sample sizes, the probability that the
-      \strong{apparent} sensitivity CI achieves the target width
-      (\code{P_width_target}), the mean apparent sensitivity
-      \eqn{P(index+\,|\,ref+)} (\code{se_apparent}), the true Se
-      (\code{se_true}) and the verification \code{bias}
-      (\code{se_apparent - se_true}).}
+      unadjusted (Buderer) and adjusted (\code{estimand}-selected)
+      sample sizes: the probability that the \strong{apparent}
+      sensitivity CI achieves the target width (\code{P_width_target}),
+      the mean apparent sensitivity \eqn{P(T+\,|\,R+)}
+      (\code{se_apparent}) and its \code{bias} against the true Se, and
+      the mean \strong{corrected} sensitivity estimator
+      (\code{se_corrected}) and its \code{bias_corrected} -- which
+      should be close to zero, in contrast to \code{bias}.}
+    \item{results}{Data frame summarising both estimands side by side
+      (\code{N}, \code{N_with_loss}, and which one \code{estimand}
+      selected), printed automatically by \code{print.dtasamplesize}.}
   }
 }
 \description{
-Inflates the Buderer sample size to account for misclassification by
-an imperfect reference standard, using the Rogan-Gladen variance
-inflation factor \eqn{1 / (Se_{ref} + Sp_{ref} - 1)^2}.
+Computes the sample size needed to estimate the sensitivity and
+specificity of an index test to a target precision when the reference
+standard used to verify disease status is itself imperfect (known
+\code{Se_ref}, \code{Sp_ref}), under conditional independence of the
+index test and the reference standard given true disease status. Two
+different target quantities (\code{estimand}) can be sized for; both are
+always reported (see Details and Value).
 }
 \details{
-The parameters \code{d_se} and \code{d_sp} are
-  \strong{half-widths} of the confidence interval. The Buderer formula
-  uses these directly; the full CI width is \code{2 * d}.
+\strong{Two estimands, two different sample sizes.} An imperfect
+reference standard forces a choice of what quantity the study is
+actually powered to estimate precisely:
+\itemize{
+  \item \code{estimand = "apparent"} (default): the study targets
+    precision for the \emph{apparent} sensitivity and specificity,
+    \eqn{Se_{app} = P(T+\,|\,R+)} and \eqn{Sp_{app} = P(T-\,|\,R-)},
+    i.e. what a standard 2x2-table analysis against the imperfect
+    reference actually estimates. Under conditional independence of the
+    index test \eqn{T} and the reference \eqn{R} given true disease
+    status \eqn{D}, \eqn{Se_{app}} and \eqn{P(R+)} have an exact closed
+    form (see below), so sizing for this estimand needs \strong{no
+    inflation factor at all}: it is the ordinary Buderer calculation
+    with \eqn{Se_{app}}/\eqn{Sp_{app}} in place of \eqn{Se}/\eqn{Sp} and
+    \eqn{P(R+)}/\eqn{P(R-)} in place of prevalence.
+  \item \code{estimand = "corrected"}: the study targets precision for
+    the index test's \emph{true} sensitivity and specificity, recovered
+    from the observed 2x2 table via the closed-form, exactly-identified
+    misclassification correction (below). This is the quantity a
+    bias-corrected analysis or a latent-class model would report, and
+    it removes the verification bias -- but its sampling variance is
+    driven by the whole 2x2 table, not by a ref-positive/negative
+    subsample, and can be \strong{far} larger than either the naive
+    Buderer variance or the apparent-estimand variance (see the worked
+    example below). Both \eqn{N} are always computed and returned
+    (elements \code{N_apparent}/\code{N_apparent_loss} and
+    \code{N_corrected}/\code{N_corrected_loss}); \code{estimand} only
+    selects which one is echoed in the generic \code{N_adjusted} /
+    \code{n_total} slots, so a caller who reads only those cannot
+    silently under-power a bias-corrected analysis by relying on the
+    default.
+}
 
-  \strong{How weak a reference standard is too weak.} The inflation
-  factor is \eqn{VIF = 1 / J_{ref}^2} where \eqn{J_{ref} = Se_{ref} +
-  Sp_{ref} - 1} is the Youden index of the reference standard. \eqn{VIF}
-  diverges as \eqn{J_{ref} \to 0}: a reference with
-  \code{Se_ref = Sp_ref = 0.51} has \eqn{J_{ref} = 0.02} and
-  \eqn{VIF = 2500}, which multiplies the required sample size by 2500 and
-  (in versions <= 0.2.0) made the Monte Carlo validation try to allocate
-  several gigabytes before failing. Two guards now bound this:
-  \code{min_youden} refuses a reference standard that is barely better
-  than a coin flip, and \code{max_mc_cells} bounds the memory of the
-  Monte Carlo validation (which allocates \code{B * N_adjusted} cells).
-  Both raise an informative error naming the offending quantities rather
-  than failing obscurely.
+\strong{Identification.} Given \code{Se_ref} and \code{Sp_ref} known and
+\eqn{T \perp R \mid D}, the model \eqn{(\pi, Se, Sp)} is exactly
+identified from the observed cell probabilities
+\eqn{p_{11}, p_{10}, p_{01}, p_{00}} of the \eqn{T \times R} table:
+\deqn{\widehat{Se} = \frac{Sp_{ref}\,p_{11} - (1-Sp_{ref})\,p_{10}}
+  {p_{11} + p_{01} - (1-Sp_{ref})}}
+\deqn{\widehat{Sp} = \frac{Se_{ref}\,p_{00} - (1-Se_{ref})\,p_{01}}
+  {p_{00} + p_{10} - (1-Se_{ref})}}
+Its sampling variance is obtained by the delta method applied to the
+cell-count multinomial (\code{N * Var(theta_hat) = g' (diag(p) - p p') g}
+for the appropriate gradient \code{g}); this matches an independent
+Fisher-information derivation and Monte Carlo simulation to within
+Monte Carlo error. \eqn{Se_{app} = p_{11}/(p_{11}+p_{01})} and
+\eqn{P(R+) = p_{11}+p_{01}} follow directly from the same model.
+
+\strong{Worked example (package defaults with \code{prev = 0.20}).}
+At \code{Se = .85, Sp = .90, prev = .20, Se_ref = .90, Sp_ref = .95,
+d_se = .07, d_sp = .05}: the classical Buderer \eqn{N} (ignoring
+misclassification entirely) is 500; sizing for the apparent estimand
+gives \eqn{N \approx} 732; sizing for the corrected estimand gives
+\eqn{N \approx} 1235. A single scalar "variance inflation factor"
+cannot represent both of these at once, because they answer different
+questions -- which is why \code{VIF} (below) is retained only as an
+informative, prevalence-specific quantity and no longer multiplies any
+sample size.
+
+\strong{The retired \code{VIF}.} \eqn{VIF = 1/J_{ref}^2}, with
+\eqn{J_{ref} = Se_{ref} + Sp_{ref} - 1} the Youden index of the
+reference standard, is the classical Rogan-Gladen variance-inflation
+factor for a \emph{prevalence} estimated from an imperfect screening
+test (Rogan & Gladen 1978). It is still computed and reported (element
+\code{VIF}) because it is a correct and citable quantity in its own
+right, but versions <= 0.5.0 of this function multiplied the Buderer
+\eqn{Se}/\eqn{Sp} sample size by it, which silently substitutes the
+prevalence problem's variance ratio for the (different) Se/Sp problem's
+variance ratio. Measured against the exact formulas above, that
+substitution is wrong by up to two orders of magnitude for the
+\code{estimand = "corrected"} sample size, and by a smaller but still
+material amount for \code{estimand = "apparent"} (which, unlike the old
+\code{VIF} path, needs no inflation factor to begin with). Do not
+multiply any sample size by \code{VIF}; it is kept purely as a
+diagnostic of how informative the reference standard is about
+prevalence. \code{multiplier_se_corrected}, \code{multiplier_sp_corrected},
+\code{multiplier_se_apparent} and \code{multiplier_sp_apparent} report
+the \emph{actual} ratio of the real Se/Sp variance to Buderer's naive
+variance, for comparison against \code{VIF}.
+
+\strong{\code{min_youden} guards near-non-identification, not the size
+of the multiplier.} Both gradients above scale as \code{1/J_ref}, so a
+reference standard with \eqn{J_{ref}} near 0 is only weakly informative
+about \eqn{(Se, Sp)} and both corrected-estimand variances blow up; this
+is what \code{min_youden} (default 0.5) guards against, exactly as
+before. What changed is what passing the guard tells you: previously
+the documentation claimed \code{min_youden = 0.5} "caps the variance
+inflation factor at 4", which is no longer (and, given the defect this
+version fixes, was never accurately) a bound on the sample-size
+multiplier actually realised for either estimand. It is not: a
+reference standard with \eqn{J_{ref} = 0.65} (comfortably above the
+default threshold) can still require a \code{"corrected"}-estimand
+multiplier above 100x at low prevalence, because that multiplier also
+depends on prevalence and on the true Se/Sp, not on \eqn{J_{ref}} alone.
+\code{min_youden} is therefore a floor against outright non-identification,
+not a usability guarantee; check \code{multiplier_se_corrected} /
+\code{multiplier_sp_corrected} (or just the resulting \code{N_corrected})
+for that.
 }
 \note{
-The variance inflation factor \eqn{1/(Se_{ref} + Sp_{ref} - 1)^2}
-  is the variance multiplier of the Rogan-Gladen misclassification
-  correction, applied here as an approximation to the loss of precision
-  incurred when an imperfect reference standard is used. It assumes
-  conditional independence between the index test and the reference
-  standard given true disease status; this may be violated when both
-  measure the same construct.
-
-  \strong{Important:} the factor restores the \emph{precision} of the
-  estimator but does not remove its \emph{bias}. The apparent
-  sensitivity \eqn{P(index+\,|\,ref+)} estimated against an imperfect
-  reference converges to a value below the true Se (reported as
-  \code{bias} in \code{mc_validation}); recovering an unbiased estimate
-  additionally requires a bias-correction or latent-class analysis at
-  the analysis stage.
+\strong{Misclassification bias persists under \code{"apparent"}.}
+  Sizing for the apparent estimand gives an exact, uninflated CI for
+  \eqn{P(T+\,|\,R+)} -- but that quantity is \strong{not} the index
+  test's true sensitivity when the reference standard is imperfect.
+  \eqn{P(T+\,|\,R+)} converges to a value below the true Se whenever
+  \code{Sp_ref < 1} (reported as \code{bias} in \code{mc_validation});
+  precision under \code{"apparent"} does not remove this bias. Recovering
+  an unbiased estimate of the true Se/Sp requires either sizing for
+  \code{estimand = "corrected"} and applying the corresponding
+  misclassification correction at the analysis stage (or an equivalent
+  latent-class analysis), which needs the (typically much larger)
+  \code{N_corrected}, or accepting \eqn{P(T+\,|\,R+)} as the reported
+  estimand and being explicit that it is not the true Se. Both
+  assume conditional independence between the index test and the
+  reference standard given true disease status; this may be violated
+  when both measure the same construct.
 }
 \examples{
 result <- ss_imperfect_ref(B = 0)
 print(result)
 }
 \references{
-Staquet M et al. (1981). Methodology for the assessment of new
-dichotomous diagnostic tests. \emph{J Chronic Dis} 34:599-610.
-\doi{10.1016/0021-9681(81)90059-X}
-
 Rogan WJ, Gladen B (1978). Estimating prevalence from the results of a
 screening test. \emph{Am J Epidemiol} 107:71-76.
 \doi{10.1093/oxfordjournals.aje.a112510}
+
+Buderer NMF (1996). Statistical methodology: I. Incorporating the
+prevalence of disease into the sample size calculation for sensitivity
+and specificity. \emph{Acad Emerg Med} 3:895-900.
+\doi{10.1111/j.1553-2712.1996.tb03538.x}
 }

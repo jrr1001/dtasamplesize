@@ -1,3 +1,566 @@
+# dtasamplesize 0.6.2
+
+**Validity release.** Continued adversarial verification of `ss_unified()`
+found nine further defects: how its three `decision` rules handle a
+candidate-N grid that is not already sorted ascending or that contains
+repeated values, an unvalidated `N_range`, a small-`B` gap in the isotonic
+margin's block-pooling, an unsupported precision claim for the `check_nb`
+ceiling, and a gap in 0.6.1's own RNG-generator fix that left the *normal*
+generator (as opposed to the uniform one) still inherited from the caller.
+None of this release's fixes move the manuscript's headline sample sizes
+computed under the package's own default RNG configuration, realistic `B`,
+and `N_range` given already sorted ascending -- the calling pattern used
+throughout `validation/make_manuscript_assets.R` and
+`validation/reproduce_manuscript.R` -- for every affected function.
+
+## Validity fixes (results change for affected callers)
+
+* **`ss_unified()`'s `decision \%in\% c("point", "lower_bound")` accepted
+  whichever N reached `target_assurance` FIRST IN `N_range`'s OWN ORDER,
+  not the smallest N that did.** The search loop evaluated `N_range` in
+  the order given and stopped (or, under `full_grid = TRUE`, still
+  recorded only the first acceptance) at the first N to pass -- correct
+  only when `N_range` happens to already be ascending. Reproduced directly
+  (identical priors, `B`, `seed`, and *set* of 17 candidate N throughout):
+  the same search returned `N_effective = 850` (the true minimum) with
+  `N_range` given ascending, `1200` (+41\%) given descending, and a third,
+  different value given shuffled -- with no warning of any kind. Both
+  rules now traverse the DISTINCT candidate N in ascending order
+  internally (via the same value-keyed RNG-stream lookup already used to
+  make the simulated data itself order-invariant), regardless of how
+  `N_range` was arranged, so the smallest N reaching `target_assurance` is
+  always the one returned. `decision = "isotonic"` (the default since
+  0.5.1) already evaluated the complete range and sorted before fitting,
+  so it was already invariant to `N_range`'s order and is unaffected. See
+  `?ss_unified`, `@param full_grid`.
+
+* **`ss_unified()`'s "did not converge" fallback reported the assurance of
+  whichever N the search loop happened to evaluate LAST, not of the N it
+  actually returns (`max(N_range)`).** When no N in `N_range` reached
+  `target_assurance`, `optimal_N` is set to `max(N_range)`, but
+  `joint_assurance`/`assurance_mcse`/`assurance_lower` were carried over
+  from local variables left by the search loop's final iteration -- the
+  last element of `N_range` IN THE ORDER GIVEN, not necessarily its
+  largest value. Reproduced directly (identical non-converging search,
+  same seed/`B`/priors/*set* of candidate N, `decision = "isotonic"`): the
+  same returned `N_effective = 400` was reported with `joint_assurance =
+  0.37850` given `N_range` ascending, `0.06400` given descending (the true
+  assurance at N = 200, the smallest candidate, not at N = 400), and
+  `0.30000` given shuffled -- three different numbers attached to the same
+  N, none of them wrong in isolation but only one of them actually
+  describing the N returned. The reported quantities are now always looked
+  up from `grid_results` AT `N = max(N_range)` specifically, for every
+  `decision` rule, regardless of the order `N_range` was searched in.
+
+* **`ss_unified()`'s `decision = "isotonic"` let a duplicated N in
+  `N_range` fabricate precision it did not have.** A repeated N always
+  replays the identical L'Ecuyer-CMRG stream (by design, so that asking
+  about the same design twice gives the same answer), so its assurance
+  estimate is byte-identical to the first copy's -- zero new information.
+  The margin's block-pooling step, however, counted each repeated N as an
+  additional independent observation when computing a pooled block's
+  effective sample size (`B * block_len`), so replicating grid points
+  fabricated statistical precision from nothing. Reproduced directly (a
+  16-point base grid, otherwise identical `B = 4000`, seed, and priors,
+  each point replicated 1x/2x/3x/5x/10x): `N_effective` fell from 857 to
+  835 as the replication count rose, with `assurance_lower` correspondingly
+  -- and wrongly -- INCREASING (0.800163 to 0.800275), purely from
+  re-counting the same evidence. The grid is now deduplicated by N value
+  before the isotonic fit is computed, so a repeated N changes nothing
+  about the result (as it should not, carrying no new evidence), and only
+  genuinely distinct N contribute to a pooled block's effective sample
+  size.
+
+* **`ss_unified()`'s `decision = "isotonic"` margin could report a
+  deceptively strong lower bound from a minimal `B`.** The block-pooling
+  step (previous item) cannot distinguish a block that `isoreg()`
+  genuinely pooled to enforce monotonicity from a run of already-distinct,
+  non-duplicated N whose RAW assurance simply happened to coincide -- both
+  look like an identical run of fitted values. At a realistic `B` this
+  distinction rarely matters (raw assurance is close to continuous, so
+  coincidental ties are negligible), but at a very small `B` raw assurance
+  can only take `B + 1` possible values -- at `B = 1`, just `{0, 1}` -- so
+  long flat runs of DISTINCT N arise routinely by chance, not because the
+  underlying curve is genuinely flat there. Reproduced directly: a
+  generous scenario at `B = 1`, one pass/fail replicate per N and no
+  duplicated N anywhere in a wide `N_range`, pooled dozens of consecutive,
+  genuinely distinct N into single blocks and reported `assurance_lower`
+  near 0.81 -- built from exactly one bit of information per contributing
+  N, with no non-convergence warning. The pooling multiplier is now capped
+  at `min(block_len, B)`: at `B = 1` no block's effective sample size can
+  exceed `1 * 1 = 1`, so `assurance_lower` cannot exceed roughly 0.27
+  regardless of how wide a spurious flat run happens to be. The cap only
+  bites when `block_len` exceeds `B`, which requires more grid points
+  pooled together than `B` itself -- every scenario in this package's own
+  tests and the manuscript uses a `B` in the hundreds to tens of thousands
+  against grids of well under 150 points, so the cap is a complete no-op
+  there.
+
+* **A gap in 0.6.1's own RNG-generator fix: `set.seed(..., kind =
+  "Mersenne-Twister")` fixes the UNIFORM generator but not the NORMAL or
+  discrete-sampling ones.** `RNGkind()` selects three independent
+  generators (uniform, normal, discrete-sampling); naming only `kind`
+  leaves `normal.kind`/`sample.kind` inherited from the caller, exactly
+  the class of defect 0.6.1 set out to close. `ss_time_dependent_roc()` is
+  the only function in the package that draws from the normal generator
+  (`stats::rnorm()`, for the simulated biomarker) and was therefore the
+  only one practically affected: reproduced directly, identical arguments
+  and seed gave `n_total = 420` under the caller's `normal.kind =
+  "Inversion"` (R's default) but `400` under `"Box-Muller"`, with no
+  warning. `ss_imperfect_ref()` has the same gap independently of this
+  release's other fixes (it predates 0.6.1's RNG work and was not part of
+  it): reproduced directly with the exact call used in
+  `validation/reproduce_manuscript.R` (`B = 6000`, `seed = 2026`), the
+  manuscript's published apparent sensitivity of 0.764 (bias -0.086)
+  reproduces exactly under Mersenne-Twister but rounds to 0.765 under
+  Wichmann-Hill. Every `set.seed()` call that seeds a generator in this
+  package now names `kind`, `normal.kind` and `sample.kind` explicitly
+  (`"Mersenne-Twister"`/`"Inversion"`/`"Rejection"`, or, for
+  `ss_unified()`'s own per-N streams, `"L'Ecuyer-CMRG"`/`"Inversion"`/
+  `"Rejection"`), including in the five functions that do not themselves
+  draw from the normal or discrete-sampling generators (`bam_sample_size()`,
+  `joint_sample_size()`, `mc_validate_buderer()`,
+  `ss_adaptive_prevalence()`, `ss_net_benefit()`, and the internal
+  `nb_assurance_ceiling()` and `ss_unified()` search itself) -- a no-op for
+  their own results, but it makes the reproducibility guarantee general
+  rather than dependent on which generator a given function happens to
+  consume. `ss_imperfect_ref()`'s RNG-state restoration is also upgraded
+  from restoring only `.Random.seed`'s value (its previous, pre-0.6.1-style
+  mechanism) to the full `save_rng_state()`/`restore_rng_state()` used
+  elsewhere, so the caller's complete RNG configuration -- not just the
+  seed -- is restored on exit, including on error. Verified: `0.76430`
+  (rounds to 0.764) and bias `-0.08570` reproduce identically across
+  Mersenne-Twister, Wichmann-Hill, Marsaglia-Multicarry, Super-Duper,
+  Knuth-TAOCP-2002 and L'Ecuyer-CMRG; `ss_time_dependent_roc()`'s
+  `n_total = 420` reproduces identically across Inversion, Box-Muller,
+  Kinderman-Ramage and Ahrens-Dieter.
+
+* **`nb_assurance_ceiling()`'s precision claim rested on an observation,
+  not a bound.** The previous default, `B_ceiling = 30000000`, was
+  justified by the largest error OBSERVED in a six-scenario cross-check
+  against an independently derived (Gauss-Legendre quadrature) reference --
+  a sample statistic from six data points, not a guarantee that covers the
+  next call. Measured directly for the package's own default `pt_range =
+  c(0.15, 0.40)`: the true ceiling there (Gauss-Legendre reference,
+  0.879606) sits only `1.06e-4` above `0.8795`, the boundary at which the
+  value published to three decimals flips from 0.879 to 0.880, while the
+  Monte Carlo standard error of the estimator at the previous default is
+  close to `5.6e-05` there -- under two standard errors from that
+  boundary, putting an estimated 3\% of seeds on the wrong side of the
+  published rounding. `B_ceiling` is now 200000000 (2e8), which keeps the
+  standard error (a real bound on the estimator, `sqrt(p(1-p)/B_ceiling)`,
+  not an observation) below `2.6e-05` across the typical 0.7-0.95 ceiling
+  range, pushing the same boundary more than four standard errors away.
+  This does not move the published `nb_ceiling` table (0.880, 0.969, 0.956,
+  0.695, 0.753, 0.000 to three decimals): the new default's value for the
+  package's own `pt_range` is 0.8795889, 1.71e-05 from the Gauss-Legendre
+  reference and still comfortably on the 0.880 side of the rounding
+  boundary. The added precision costs roughly two minutes per call on
+  ordinary hardware (draws are fully vectorized, so this does not scale
+  with `B` or `N_range`), against a few seconds at the previous default;
+  a caller who only needs an approximate ceiling can still pass a smaller
+  `nb_B_ceiling`/`B_ceiling` for speed.
+
+## Bug fixes (published numbers unaffected)
+
+* **`ss_unified()` did not validate `N_range` at all.** A negative, `NA`,
+  infinite, or non-integer element was not rejected up front; it instead
+  reached `rbinom()`/`rmultinom()` deep inside the search loop and died
+  with a generic, uninformative `"missing value where TRUE/FALSE needed"` --
+  a crash identifying neither the offending argument nor which of its
+  elements was at fault. `N_range` is now validated on entry, with a
+  message naming the specific problem (and, where useful, the offending
+  position or value) for each of: not numeric / zero-length, containing
+  `NA`, containing a non-finite value, containing a value below 1, and
+  containing a non-integer value. Separately, an `N_range` extended with a
+  degenerate value such as `0` (previously accepted, contributing to the
+  same block-pooling mechanism as the duplicated-N defect above) is now
+  rejected outright rather than silently shifting `N_effective`.
+
+## Documentation
+
+* `man/ss_unified.Rd` and `R/ss_unified.R` claimed that under
+  `decision = "isotonic"` both `assurance_mcse` AND `assurance_lower` are
+  reported as `NA`. Only `assurance_mcse` is; `assurance_lower` is the
+  margin-adjusted (block-pooled Wilson) curve actually inverted to select
+  `N_effective`, and is always a real number when `N_effective` is found.
+  Only the documentation changes; the returned values were already
+  correct.
+
+# dtasamplesize 0.6.1
+
+**Validity release.** Five further defects were found: four downstream of how
+0.6.0 seeded its Monte Carlo draws or bounded a small-sample estimate, and one
+in how `decision = "isotonic"` (new in 0.6.0) paired `stats::isoreg()`'s
+fitted curve back up with the candidate N it belonged to. None of this
+release's fixes move the manuscript's headline sample sizes (the
+Buderer/BAM/joint/imperfect-reference/unified comparisons, Figure 4's nested
+sequence, or `ss_net_benefit()`'s N = 240) computed under the package's own
+default RNG configuration and realistic `B`; the `nb_ceiling` table's values
+do change, becoming more accurate (see below).
+
+## Validity fixes (results change for affected callers)
+
+* **`ss_unified()`'s `decision = "isotonic"` silently paired each N with the
+  wrong fitted assurance whenever `N_range` was not already sorted
+  ascending.** `stats::isoreg()` returns `$x` in the ORIGINAL order of its
+  input but `$yf` in the SORTED order -- an internal detail of its
+  implementation, not part of its documented contract. The fit was built
+  directly from `grid_results$N`/`grid_results$assurance`, which follow
+  `N_range`'s own order, and `$x`/`$yf` were then read off positionally, so
+  every N was silently paired with a fitted value belonging to a
+  *different* N whenever `N_range` was given in any order other than
+  already-increasing (descending, shuffled, a hand-typed `c()` not given in
+  order, ...). On one reproducible scenario (`prior_prev = c(4, 16)`,
+  `delta_auc = 0`, `check_nb = FALSE`, `target_assurance = 0.80`, identical
+  `B`, `seed` and *set* of candidate N throughout) this selected
+  `N_effective = 729` (`joint_assurance = 0.8104`) given `N_range` ascending,
+  `677` given descending, and, given a shuffled order, `415` with
+  `joint_assurance = 0.4156` and `assurance_lower = 0.4041` -- **below**
+  `target_assurance = 0.80` -- with no warning of any kind. The fit is now
+  built from an explicitly pre-sorted grid (`order(grid_results$N)` applied
+  before calling `isoreg()`), which removes the ambiguity entirely: once the
+  input is already increasing, `isoreg()`'s "original order" and "sorted
+  order" coincide by construction, so `$x` and `$yf` come back aligned no
+  matter what order `N_range` itself was in. New defensive checks abort
+  outright (rather than warn) if this alignment is ever violated, since the
+  original failure mode was itself a warning-free silent mismatch. This is
+  the most serious defect of this release: unlike the four below, it could
+  select an N whose true assurance falls *under* the target with no
+  diagnostic at all. The manuscript's own `N_range` arguments are always
+  given already sorted ascending, so none of its published numbers were
+  affected.
+
+* **`ss_unified()`'s internal `nb_assurance_ceiling()` helper inherited the
+  caller's active RNG generator.** It saved and restored `.Random.seed` but
+  called `set.seed(seed)` with no `kind`, so the draws behind the
+  `check_nb` ceiling -- and therefore whether the grid search was skipped
+  as unreachable -- silently depended on whatever generator the calling
+  session had active, the same class of defect 0.6.0 fixed in
+  `ss_unified()` itself but left uncorrected in this helper. With
+  identical arguments and seed, the reported ceiling ranged from 0.28253
+  (Marsaglia-Multicarry) to 0.28539 (Knuth-TAOCP-2002) across generators;
+  near a ceiling boundary, some generators let the search run while others
+  correctly skipped it as unreachable. `set.seed()` now fixes the kind
+  explicitly to `"Mersenne-Twister"` (R's own default) and both the kind
+  and the seed are restored on exit, including on error.
+
+* **Six other exported functions had the same generator-inheritance
+  defect: `bam_sample_size()`, `joint_sample_size()`,
+  `mc_validate_buderer()`, `ss_adaptive_prevalence()`, `ss_net_benefit()`,
+  and `ss_time_dependent_roc()`.** Each saved and restored
+  `.Random.seed`'s value but called `set.seed(seed)` with no `kind`, so
+  their results depended on the caller's active generator rather than on
+  `seed` alone -- for a package whose stated purpose is reproducibility,
+  the published numbers were not actually reproducible by a reader whose
+  session had a different default generator active. Measured with the
+  manuscript's own arguments and seed, `ss_net_benefit()`'s conservative N
+  ranged from 230 (Wichmann-Hill, Knuth-TAOCP-2002) to 240
+  (Mersenne-Twister, L'Ecuyer-CMRG), and `mc_validate_buderer()`'s
+  `P_width_target` (the 57% figure in Figure 1) ranged from 0.56625 to
+  0.57575. Every `set.seed()` call in these six functions now fixes
+  `kind = "Mersenne-Twister"` explicitly, and each function restores both
+  the caller's RNG kind and `.Random.seed` on exit (not just the seed
+  value, as before), via the same mechanism `ss_unified()` already used
+  (new internal `save_rng_state()` / `restore_rng_state()`). Because
+  Mersenne-Twister is R's own default generator, **every number in the
+  manuscript and in this package's examples is unchanged** by this fix.
+  Naming `kind` fixes the *uniform* generator only; five of these six
+  functions draw only from it (`stats::rbeta()`/`rbinom()`/`rmultinom()`),
+  so their results are now reproducible regardless of the reader's own RNG
+  configuration -- but `ss_time_dependent_roc()` also draws from the
+  *normal* generator (`stats::rnorm()`, for the simulated biomarker), which
+  `normal.kind` controls independently of `kind`, and 0.6.1 left that
+  unfixed; see 0.6.2 for the correction. `ss_unified()` itself remains
+  unaffected here, as it already fixed its generator (L'Ecuyer-CMRG,
+  needed for its independent per-N streams) explicitly.
+
+* **`ss_unified()` could report a vacuous `assurance_lower = 1.000` (and
+  `joint_assurance = 1.000`) at a very small `B`.** All three decision
+  rules computed the lower confidence bound on the Monte Carlo assurance
+  with the ordinary normal approximation (Wald), whose standard error is
+  *exactly* 0 whenever the estimated proportion is 0 or 1, regardless of
+  `B`: at `B = 1`, a single replicate that happened to pass every active
+  target gave `joint_assurance = 1` with a Wald standard error of
+  `sqrt(1 * 0 / 1) = 0`, so `assurance_lower` came out as `1.000` --
+  manufactured certainty from one replicate -- and every decision rule
+  (`"point"`, `"lower_bound"`, `"isotonic"`) accepted the first N tried on
+  that basis. `assurance_lower` (and, under `decision = "isotonic"`, the
+  margin subtracted from the fitted curve before inversion) is now a
+  one-sided Wilson score bound instead, which stays strictly inside
+  `(0, 1)` for any finite `B` -- at `B = 1` and `joint_assurance = 1` it
+  gives approximately 0.27, not 1.000. The Wilson and Wald bounds agree to
+  `O(z^2 / B)`, on the order of `1e-4` or smaller already at the `B =
+  20000` used for the manuscript's own results, so **no result computed
+  at a realistic `B` is affected**; only the small-`B` behaviour is.
+  `assurance_mcse` is unchanged (still the descriptive Wald standard
+  error, documented as such).
+
+* **`nb_ceiling`'s six published values (Table 5) were systematically low
+  by about 0.001, and their errors were perfectly correlated with each
+  other.** `nb_assurance_ceiling()` used a single shared sample of 200,000
+  prior draws, generated once from `seed` alone; a caller evaluating
+  several `pt_range` values under the same `seed` (as the manuscript's
+  Table 5 does, one row per range) therefore drew the *exact same*
+  `(prev, Se, Sp)` triplet for every row, since `pt_range` only entered
+  the calculation after the draws. Whichever direction that one sample's
+  noise happened to point, every row inherited it in the same direction
+  and to a similar relative size -- a table of nominally independent
+  estimates whose Monte Carlo errors did not average out across rows. Two
+  changes address this: (1) `seed` is now combined with a deterministic,
+  order-independent fingerprint of `pt_range` before seeding, so that
+  different `pt_range` values draw statistically independent samples
+  under the same nominal `seed`, while a given `(seed, pt_range)` pair
+  stays exactly reproducible; and (2) the default number of prior draws
+  rises from 200,000 to 30,000,000, which keeps the Monte Carlo standard
+  error under about `1e-4` for ceilings in the typical 0.7-0.95 range
+  (verified against an independently derived reference computed by
+  tensor-product Gauss-Legendre quadrature: the largest observed absolute
+  error across six `pt_range` scenarios was `6.1e-5`). The manuscript's
+  Table 5 values move accordingly, e.g. `pt_range = c(0.15, 0.40)` from
+  0.87864 to approximately 0.8796 (independently verified value:
+  0.879606); `validation/make_manuscript_assets.R`'s anchor check for
+  this table now compares against that independently derived value
+  instead of a number read off the package's own prior output, which was
+  circular (it confirmed only that the code reproduces itself, not that
+  it is correct).
+
+# dtasamplesize 0.6.0
+
+**Validity release, breaking.** Five further defects were found, three of
+which change published numbers. This release does not touch the numbers
+`bam_sample_size()` and `joint_sample_size()` returned in the manuscript
+(678, 672, 580), but it does change what `ss_adaptive_prevalence()`,
+`ss_imperfect_ref()`, and `ss_unified()` return, and it changes them in
+different directions -- some numbers go up, `ss_unified()`'s search also
+gets tighter around the target it claims to reach. We state this plainly
+because users may have planned studies with the old numbers: if you used
+`ss_adaptive_prevalence()`, `ss_imperfect_ref()`, or `ss_unified()` under
+0.5.0 or earlier, recompute your sample size.
+
+## Validity fixes (results change)
+
+* **`ss_adaptive_prevalence()` discarded the stage-1 pilot and re-sampled
+  the full stage-2 sample from scratch.** Stage 1 was simulated only to
+  produce the interim prevalence estimate and then thrown away; stage 2
+  then drew the *entire* re-estimated `N_final` again, so the stage-1
+  subjects were recruited but never analysed and never counted. This is
+  not what an internal-pilot design does (Stark & Zapf 2020): the whole
+  point is that the pilot's subjects are folded into the final analysed
+  sample, and stage 2 tops up rather than starting over. Stage 1 is now a
+  genuine internal pilot -- its subjects, and the diseased/non-diseased
+  counts observed in them, are retained and analysed alongside stage 2.
+  The recruitment the old code reported **understated the true N needed
+  between 21% and 36%**; the reported N now matches actual recruitment.
+
+* **`ss_imperfect_ref()` multiplied the sample size for the index test's
+  sensitivity and specificity by the Rogan-Gladen variance-inflation
+  factor, `1 / (Se_ref + Sp_ref - 1)^2`.** That factor is a correct
+  identity for the variance of a *prevalence* estimated from an imperfect
+  screening test; it is not the right multiplier for the variance of an
+  index test's Se/Sp evaluated against an imperfect reference, which the
+  package now derives from the exact, identified 2x2-table model instead
+  of borrowing a formula from a different problem. A single inflation
+  factor also cannot represent this correctly, because an imperfect
+  reference forces a choice of *what* is being sized: the study can be
+  powered for the *apparent* Se/Sp (what a naive analysis against the
+  imperfect reference actually estimates, `P(T+|R+)`/`P(T-|R-)`) or for
+  the misclassification-*corrected* Se/Sp (the true index-test accuracy,
+  recovered from the full 2x2 table). New argument
+  `estimand = c("apparent", "corrected")`, defaulting to `"apparent"`;
+  **both sample sizes are always computed and returned**
+  (`N_apparent`/`N_apparent_loss` and `N_corrected`/`N_corrected_loss`), so
+  a caller who reads only the generic `N_adjusted`/`n_total` cannot
+  silently under-power a corrected-estimand analysis by relying on the
+  default. In the manuscript's configuration, `N_adjusted` moves from 695
+  to **732** (apparent estimand, the new default) or to **1235**
+  (corrected estimand); with 10% expected loss to follow-up, to **814**
+  and **1373** respectively. The old `VIF` field is kept, unchanged, as an
+  informative diagnostic of the reference standard's information about
+  *prevalence* -- it no longer multiplies any sample size.
+
+* **`ss_unified()` accepted the first N in the search grid whose lower
+  Monte Carlo confidence bound reached the target.** Because the grid is
+  evaluated at successive N with the generator re-seeded from the same
+  `seed` at every N, the per-N replications were not independent draws --
+  they agreed on the first replication and diverged unpredictably from
+  the second, worse than either genuine common random numbers or genuine
+  independence. Repeating the search across seeds, the selected N had
+  standard deviation **96.8**, and only **84%** of the selected N's
+  actually reached `target_assurance` when checked against an independent
+  high-precision reference -- an 18-point undershoot of the nominal 95%
+  guarantee the old `decision = "lower_bound"` rule was supposed to
+  provide.
+
+  `ss_unified()` now seeds an L'Ecuyer-CMRG generator once and advances to
+  a fresh, independent stream per candidate N (via
+  `parallel::nextRNGStream()`), and gains `decision = "isotonic"`
+  (**new default**): it evaluates the whole `N_range`, fits a monotone
+  non-decreasing curve to the assurance-by-N points with
+  `stats::isoreg()`, and inverts that fitted curve at `target_assurance`
+  after subtracting a conservative Monte Carlo margin, rather than reading
+  off the first noisy crossing. Measured the same way across 17 seeds,
+  the selected N now has standard deviation **33.5**, and **100%** of the
+  selected N's reach the target. `decision = "lower_bound"` (the previous
+  default) and `decision = "point"` (the 0.4.0 behaviour) remain available
+  unchanged.
+
+* **`ss_unified()`'s `check_nb = TRUE` search had no way to detect an
+  unreachable target and would simply exhaust `N_range`, suggesting the
+  caller expand the grid** -- advice that cannot help when the criterion
+  cannot be met at *any* N. The function now computes, before the grid
+  search, the criterion's achievable **ceiling** as N -> infinity (a fast
+  vectorized calculation over the priors, `Se_ref`, `Sp_ref` and
+  `pt_range` alone, independent of `B` and `N_range`) and returns it as
+  `nb_ceiling`. If `target_assurance` exceeds this ceiling, the grid
+  search is skipped and the function warns that the target is unreachable
+  under these priors, rather than recommending a wider grid. With
+  `ss_unified()`'s default priors and `pt_range = c(0.15, 0.40)` the
+  ceiling is **0.880**; narrowing the top of the range to
+  `pt_range = c(0.10, 0.40)` lowers it to **0.695**, and widening it to
+  `pt_range = c(0.05, 0.50)` lowers it to **0.000** -- no N reaches the
+  target under that range, because a wide `pt_range` squeezes the
+  criterion's two inequalities from both ends at once.
+
+## Bug fixes (published numbers unaffected)
+
+* **`bam_sample_size(method = "exact")` did not apply the
+  degenerate-replicate rule its own documentation declared.** A
+  replicate with no diseased or no non-diseased subjects is supposed to
+  count as a failure regardless of how narrow the prior-only credible
+  interval happens to be -- the same convention `method = "monte_carlo"`
+  already enforced. The exact calculation instead evaluated the
+  credible-interval width at the *prior alone* for a zero-size arm, which
+  is not 0 in general and, for a sufficiently informative prior, can be 1.
+  With an informative prior this let a degenerate N = 10 replicate count
+  as a success purely because the prior interval already met the target:
+  the exact joint guarantee at N = 10 came out as **1.000**, against a
+  true value of **0.344**. Degenerate replicates now always score as
+  failures, matching `method = "monte_carlo"` exactly. **The manuscript's
+  published numbers do not change** (678 and 672): in that scenario the
+  degenerate-replicate contribution was negligible.
+
+* **`ss_net_benefit()` returned `NA` with no explanation when the
+  criterion could not be met at any sample size.** The joint criterion
+  requires, at every threshold, that the test beat both the treat-none
+  and the treat-all strategy. Whether it can do so at all is a structural
+  property of `Se`, `Sp`, `prev` and the threshold, not of the sample
+  size: if the limiting net benefit is not positive, no `N` helps. The
+  function now computes those limiting values in closed form, names the
+  thresholds that cannot be reached and which of the two comparisons
+  fails at each, and says plainly that expanding `N_range` will not help.
+  The per-threshold verdicts are exposed in `N_by_pt` so they can be
+  inspected rather than only read from a message. A search that fails
+  because the grid was too small still gets the original advice to widen
+  it. Published numbers are unchanged (the conservative `N` = 240 and the
+  per-threshold sizes).
+
+* **`ss_unified()` now restores the random-number generator *kind*, not
+  only `.Random.seed`.** Drawing an independent stream per candidate `N`
+  requires the L'Ecuyer-CMRG generator. Restoring the seed vector alone
+  would leave that generator selected for the rest of the session, so any
+  function called afterwards would return different results even with an
+  explicit seed of its own. Both the kind and the seed are now restored
+  on exit, including when the function exits with an error.
+
+## Documentation
+
+* `ss_time_dependent_roc()`'s `censoring_rates` was documented as
+  "censoring proportions." It is not: each entry is the marginal
+  probability that the *censoring time* precedes `t_horizon`, calibrating
+  an exponential censoring model. Because censoring competes with the
+  event, the censoring actually observed in the simulated data is lower
+  than this nominal value -- roughly 80% of it, for the package's default
+  `lambda_event` and `t_horizon` (the ratio is not universal and shifts
+  with those parameters). The documentation now states this explicitly
+  and the function's warning message says "nominal censoring rate"
+  instead of "censoring rate." **Only the documentation changes; the
+  simulation and every numeric result are identical.**
+
+## Dependencies
+
+* `DESCRIPTION` now lists `parallel` (an R base package) under `Imports`,
+  used by `ss_unified()` to generate independent per-N random streams via
+  `parallel::nextRNGStream()`.
+
+# dtasamplesize 0.5.0
+
+**Validity release.** `bam_sample_size()` searched sensitivity and specificity
+requirements independently and never checked that both credible intervals
+reached their target in the same study; `ss_unified()` accepted the first N at
+which a Monte Carlo search happened to cross the target, without accounting
+for the sampling error of that crossing; and `joint_sample_size()` fixed the
+number of diseased subjects at its expected value instead of letting it vary
+as it does in a real cohort. These are not cosmetic: the sample sizes
+`bam_sample_size()` and `ss_unified()` returned in 0.4.0 do not reach the
+assurance they declared, and a study planned with those values is
+under-sized. We state this plainly because users may have planned studies
+with the old numbers: if you used `bam_sample_size()` or `ss_unified()` under
+0.4.0 or earlier, recompute your sample size.
+
+## Validity fixes (results change)
+
+* **`bam_sample_size()` reported a marginal per-arm guarantee, not a joint
+  one.** It searched `n_se` and `n_sp` independently, each against its own
+  marginal credible-interval target, and returned the median of
+  `max(n_se / prev, n_sp / (1 - prev))`. It never checked that both credible
+  intervals met their target in the *same* study. For the manuscript
+  scenario, the true joint assurance of the N it returned (591) was
+  **0.7245**, not 0.80; the first N whose joint assurance reaches 0.80 is
+  **678** -- an understatement of 87 participants (14.7%).
+
+  It now searches directly for the smallest total N whose **joint**
+  assurance reaches the target, under a cohort design (the number of
+  diseased subjects is random, `Binomial(N, prev)`), and degenerate
+  replications count as failures with denominator `B`. It also gains
+  `method = c("exact", "monte_carlo")`, **defaulting to `"exact"`**: the
+  joint assurance has closed form (a Beta-Binomial sum), so it is computed
+  deterministically, with no Monte Carlo error and no dependence on `B` or
+  the seed. The legacy fields (`n_diseased`, `n_non_diseased`,
+  `N_total_median`, ...) are kept and documented as per-arm diagnostics.
+
+* **`joint_sample_size()` fixed the number of diseased subjects at
+  `floor(N * prev)`.** Conditioning on that expected value overstates the
+  assurance in a prospective cohort, where the count is random -- the same
+  defect fixed in `ss_net_benefit()` in 0.3.0. For the manuscript scenario
+  (N = 580) the reported assurance was 0.856 and the true cohort assurance
+  is **0.808**: the N remains adequate, but the real margin is far smaller
+  than declared. In an adversarial case (Se = 0.70, Sp = 0.80, prev = 0.20)
+  the difference is 0.807 against 0.716, enough to overturn the conclusion.
+
+  New argument `design = c("cohort", "fixed")`, **defaulting to
+  `"cohort"`**. `"fixed"` reproduces the previous behaviour and is
+  documented as valid only when the two groups are recruited separately
+  with pre-specified sizes.
+
+* **`ss_unified()` accepted the first crossing of a noisy grid.** The
+  algorithm and the success criterion were correct, but at `B = 1200` the
+  Monte Carlo standard error of the assurance near 0.80 is **≈0.0115**.
+  Repeating the same search with ten seeds, the selected N ranged from
+  **900** to **940**. Evaluated at `B = 300000`, the N that had been
+  published reached **0.793**, not 0.80.
+
+  An N is now accepted only when the **lower bound** of the one-sided 95%
+  interval of the assurance reaches the target (`decision = "lower_bound"`,
+  the default; `"point"` recovers the previous behaviour). The result now
+  also carries `assurance_mcse` and `assurance_lower`, and the function
+  warns when the Monte Carlo error is large relative to the distance to the
+  target.
+
+## Reproducibility
+
+* New `validation/make_manuscript_assets.R`, the public generator of every
+  figure and of the manuscript's derived tables. This script was not
+  previously part of the repository.
+* Table 1 is now derived from the `NAMESPACE` instead of being maintained by
+  hand.
+* The capability matrix comparing this package against alternatives now
+  lives in a version-controlled CSV, accompanied by a provenance log
+  recording the exact versions of `presize`, `pROC`, `MKpower`, `epiR`, and
+  `MKmisc` examined, and the date they were examined.
+* `validation/reproduce_manuscript.R` now covers 20 checks, including the
+  five steps of the nested comparison.
+
 # dtasamplesize 0.4.0
 
 **Usability release.** No published number changes: every quantity reported

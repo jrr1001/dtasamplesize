@@ -9,19 +9,43 @@
 #'   \strong{half-widths} of the confidence interval. The full CI width
 #'   target is \code{2 * d}.
 #'
-#'   \strong{Losses to follow-up.} Each replicate recruits
-#'   \code{N_final_adj = ceiling(N_final / (1 - loss_rate))} subjects and
-#'   then \strong{loses} a random \eqn{Bin(N\_final\_adj, loss\_rate)} of
-#'   them; the accuracy estimates and their confidence intervals are
-#'   computed on the surviving (analysed) sample only. The reported
-#'   \code{N_final_*} columns are the \strong{recruited} sample sizes (what
-#'   an investigator must enrol) and \code{N_analysed_median} is the median
-#'   analysed sample size. Consequently \code{precision_achieved} is
-#'   approximately \strong{invariant} to \code{loss_rate}: inflating for
-#'   losses restores the precision that the losses destroy, it does not
-#'   improve on it. In versions <= 0.2.0 the inflated sample was analysed in
-#'   full (the loss never happened), so the reported precision \emph{rose}
-#'   with the loss rate -- an artefact.
+#'   \strong{Internal pilot design.} Following Stark and Zapf (2020), stage 1
+#'   is a genuine \emph{internal} pilot, not a throw-away sample used only to
+#'   estimate the prevalence and then discarded: the \code{n_stage1}
+#'   subjects recruited in stage 1 are retained and folded into the final
+#'   analysed sample. Concretely, stage 2 recruits only the
+#'   \strong{additional} subjects needed to reach the re-estimated total,
+#'   \code{N_final - n_stage1} (never \code{N_final} again from scratch),
+#'   and the final diseased count is \code{D_stage1} (already observed in
+#'   stage 1) \strong{plus} the diseased subjects drawn in stage 2. This
+#'   preserves the correlation between the interim prevalence estimate and
+#'   the analysed sample that a real internal pilot has by construction (the
+#'   same patients feed both). In versions <= 0.5.0 stage 1 was simulated
+#'   and then discarded entirely: the reported \code{N_final_*} undercounted
+#'   the true recruitment by \code{n_stage1} subjects (about 20-36% at the
+#'   package defaults), and \code{prev_hat} was statistically independent of
+#'   the analysed sample -- which is not what an internal-pilot design does.
+#'
+#'   \strong{Losses to follow-up.} Losses are modelled on the stage-2
+#'   increment only. Each replicate recruits
+#'   \code{n_stage2_adj = ceiling((N_final - n_stage1) / (1 - loss_rate))}
+#'   additional subjects and \strong{loses} a random
+#'   \eqn{Bin(n\_stage2\_adj, loss\_rate)} of them; the stage-1 subjects are
+#'   not re-subjected to loss because \code{D_stage1} is, by construction,
+#'   already fully observed (that is what makes it usable to re-estimate the
+#'   prevalence at the interim look) -- mirroring how stage 1 was already
+#'   exempt from the loss adjustment before this fix. The accuracy estimates
+#'   and their confidence intervals are computed on the surviving (analysed)
+#'   sample, \code{n_stage1 + (n_stage2_adj - n_lost)}, only. The reported
+#'   \code{N_final_*} columns are the \strong{recruited} sample sizes across
+#'   both stages (what an investigator must enrol in total) and
+#'   \code{N_analysed_median} is the median analysed sample size.
+#'   Consequently \code{precision_achieved} is approximately \strong{invariant}
+#'   to \code{loss_rate}: inflating the stage-2 recruitment for losses
+#'   restores the precision that the losses destroy, it does not improve on
+#'   it. In versions <= 0.2.0 the inflated sample was analysed in full (the
+#'   loss never happened), so the reported precision \emph{rose} with the
+#'   loss rate -- an artefact.
 #'
 #'   \strong{Interim prevalence truncation.} The stage-1 prevalence estimate
 #'   is truncated to \eqn{[0.05, 0.95]} before it is used to re-estimate the
@@ -35,6 +59,15 @@
 #'   small, prevalence estimates at the boundary are not credible, and the
 #'   cap bounds the re-estimated N at \code{max(n_se / 0.05, n_sp / 0.05)}.
 #'
+#'   \strong{Stage-1 fraction.} For the one-time re-estimation design, Stark
+#'   and Zapf (2020) recommend an internal pilot of \strong{50\%} of the
+#'   initially calculated sample size: \dQuote{The appropriate size of the
+#'   internal pilot study in the one-time re-estimation design is 50\% of
+#'   the initially calculated sample size.} The package default,
+#'   \code{fraction_stage1 = 0.40}, is smaller than that recommendation and
+#'   is left unchanged here; pass \code{fraction_stage1 = 0.5} to follow the
+#'   published recommendation.
+#'
 #' @param Se Expected sensitivity. Default 0.85.
 #' @param Sp Expected specificity. Default 0.90.
 #' @param d_se Precision for Se (half-width). Default 0.07.
@@ -42,7 +75,11 @@
 #' @param prev_initial Initially assumed prevalence. Default 0.30.
 #' @param prev_true_range Numeric vector of true prevalence scenarios.
 #'   Default \code{c(0.18, 0.25, 0.30, 0.35, 0.42)}.
-#' @param fraction_stage1 Fraction of initial N for stage 1. Default 0.40.
+#' @param fraction_stage1 Fraction of initial N recruited as the stage-1
+#'   internal pilot (see \code{Details}). Default 0.40. Stark and Zapf
+#'   (2020) recommend 0.50 for the one-time re-estimation design; the
+#'   default here is left at 0.40 for backward compatibility -- pass
+#'   \code{fraction_stage1 = 0.5} to follow the published recommendation.
 #' @param loss_rate Expected loss-to-follow-up rate. Default 0.10. Losses
 #'   are simulated: the analysed sample is the recruited sample minus a
 #'   random binomial number of losses. See \code{Details}.
@@ -69,9 +106,9 @@
 #'   variation across loss rates is Monte Carlo noise plus the effect of
 #'   rounding the inflated sample size up to an integer.
 #' @references
-#' Stark M, Zapf A (2020). Sample size calculation and re-estimation for
-#' diagnostic accuracy studies based on sensitivity and specificity.
-#' \emph{Stat Methods Med Res} 29:2958-2971.
+#' Stark M, Zapf A (2020). Sample size calculation and re-estimation based
+#' on the prevalence in a single-arm confirmatory diagnostic accuracy
+#' study. \emph{Stat Methods Med Res} 29:2958-2971.
 #' \doi{10.1177/0962280220913588}
 #' @examples
 #' # B kept small here for a fast example; see @param B.
@@ -90,16 +127,16 @@ ss_adaptive_prevalence <- function(Se = 0.85,
                                    loss_rate = 0.10,
                                    B = 5000,
                                    seed = 2026) {
-  # --- preserve the caller's RNG state -------------------------------
-  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-    on.exit(assign(".Random.seed", old_seed, envir = .GlobalEnv), add = TRUE)
-  } else {
-    on.exit(
-      suppressWarnings(rm(".Random.seed", envir = .GlobalEnv)),
-      add = TRUE
-    )
-  }
+  # --- preserve the caller's RNG state (kind AND seed) ------------------
+  # See save_rng_state()/restore_rng_state(): restoring only .Random.seed's
+  # VALUE is not enough, because set.seed() called later by unrelated code
+  # with no explicit `kind` argument reuses whichever kind is CURRENTLY
+  # ACTIVE. The set.seed() call below names its kind explicitly
+  # (Mersenne-Twister, R's own default), so the adaptive-design simulation
+  # reproduces the same numbers regardless of the caller's own RNG
+  # configuration.
+  old_rng_state <- save_rng_state()
+  on.exit(restore_rng_state(old_rng_state), add = TRUE)
 
   # Validate inputs
   stopifnot(Se > 0, Se < 1, Sp > 0, Sp < 1)
@@ -134,7 +171,7 @@ ss_adaptive_prevalence <- function(Se = 0.85,
 
   for (i in seq_along(prev_true_range)) {
     prev_true <- prev_true_range[i]
-    set.seed(seed)
+    set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rejection")
 
     N_finals <- numeric(B)
     N_analysed <- numeric(B)
@@ -154,22 +191,37 @@ ss_adaptive_prevalence <- function(Se = 0.85,
         n_truncated <- n_truncated + 1L
       }
 
-      # --- Re-estimate N and inflate for the expected losses ---
+      # --- Re-estimate N ---
       N_final <- max(buderer_total_N(Se, Sp, d_se, d_sp, prev_hat), N_initial)
-      N_final_adj <- ceiling(N_final / (1 - loss_rate))
 
-      # Recruited sample size (what the investigator must enrol)
-      N_finals[b] <- N_final_adj
-
-      # --- the losses actually HAPPEN ---
-      # Recruit N_final_adj, lose a random Bin(N_final_adj, loss_rate),
-      # and analyse only the survivors.
-      n_lost <- if (loss_rate > 0) {
-        stats::rbinom(1, N_final_adj, loss_rate)
+      # --- Stage 2: recruit only the ADDITIONAL subjects needed ---------
+      # n_stage1 is an internal pilot (see @details "Internal pilot
+      # design"): its subjects are already part of the analysed sample, so
+      # stage 2 tops up to N_final rather than recruiting N_final again.
+      # n_stage2_needed is >= 0 by construction (N_final >= N_initial >
+      # n_stage1 whenever 0 < fraction_stage1 < 1), but max(..., 0) guards
+      # the edge case fraction_stage1 -> 1 where N_final == n_stage1.
+      n_stage2_needed <- max(N_final - n_stage1, 0)
+      n_stage2_adj <- if (n_stage2_needed > 0) {
+        ceiling(n_stage2_needed / (1 - loss_rate))
       } else {
         0L
       }
-      N_analysis <- N_final_adj - n_lost
+
+      # Recruited sample size (what the investigator must enrol, in total,
+      # across both stages)
+      N_final_adj <- n_stage1 + n_stage2_adj
+      N_finals[b] <- N_final_adj
+
+      # --- the losses actually HAPPEN, on the stage-2 increment only ----
+      # (see @details "Losses to follow-up" for why stage 1 is exempt)
+      n_lost <- if (loss_rate > 0 && n_stage2_adj > 0) {
+        stats::rbinom(1, n_stage2_adj, loss_rate)
+      } else {
+        0L
+      }
+      n_stage2_analysis <- n_stage2_adj - n_lost
+      N_analysis <- n_stage1 + n_stage2_analysis
       N_analysed[b] <- N_analysis
 
       if (N_analysis < 2) {
@@ -177,8 +229,15 @@ ss_adaptive_prevalence <- function(Se = 0.85,
         next
       }
 
-      # --- Analyse the POST-LOSS sample ---
-      n_d <- stats::rbinom(1, N_analysis, prev_true)
+      # --- Analyse the POST-LOSS sample: the D_stage1 diseased subjects
+      # already observed in stage 1, PLUS a fresh draw among the surviving
+      # stage-2 subjects ---------------------------------------------------
+      n_d_stage2 <- if (n_stage2_analysis > 0) {
+        stats::rbinom(1, n_stage2_analysis, prev_true)
+      } else {
+        0L
+      }
+      n_d <- D_stage1 + n_d_stage2
       n_nd <- N_analysis - n_d
 
       # A degenerate arm cannot meet the precision target: count as failure

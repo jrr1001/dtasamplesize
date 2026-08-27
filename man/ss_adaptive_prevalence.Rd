@@ -31,7 +31,11 @@ ss_adaptive_prevalence(
 \item{prev_true_range}{Numeric vector of true prevalence scenarios.
 Default \code{c(0.18, 0.25, 0.30, 0.35, 0.42)}.}
 
-\item{fraction_stage1}{Fraction of initial N for stage 1. Default 0.40.}
+\item{fraction_stage1}{Fraction of initial N recruited as the stage-1
+internal pilot (see \code{Details}). Default 0.40. Stark and Zapf
+(2020) recommend 0.50 for the one-time re-estimation design; the
+default here is left at 0.40 for backward compatibility -- pass
+\code{fraction_stage1 = 0.5} to follow the published recommendation.}
 
 \item{loss_rate}{Expected loss-to-follow-up rate. Default 0.10. Losses
 are simulated: the analysed sample is the recruited sample minus a
@@ -69,19 +73,43 @@ The parameters \code{d_se} and \code{d_sp} are
   \strong{half-widths} of the confidence interval. The full CI width
   target is \code{2 * d}.
 
-  \strong{Losses to follow-up.} Each replicate recruits
-  \code{N_final_adj = ceiling(N_final / (1 - loss_rate))} subjects and
-  then \strong{loses} a random \eqn{Bin(N\_final\_adj, loss\_rate)} of
-  them; the accuracy estimates and their confidence intervals are
-  computed on the surviving (analysed) sample only. The reported
-  \code{N_final_*} columns are the \strong{recruited} sample sizes (what
-  an investigator must enrol) and \code{N_analysed_median} is the median
-  analysed sample size. Consequently \code{precision_achieved} is
-  approximately \strong{invariant} to \code{loss_rate}: inflating for
-  losses restores the precision that the losses destroy, it does not
-  improve on it. In versions <= 0.2.0 the inflated sample was analysed in
-  full (the loss never happened), so the reported precision \emph{rose}
-  with the loss rate -- an artefact.
+  \strong{Internal pilot design.} Following Stark and Zapf (2020), stage 1
+  is a genuine \emph{internal} pilot, not a throw-away sample used only to
+  estimate the prevalence and then discarded: the \code{n_stage1}
+  subjects recruited in stage 1 are retained and folded into the final
+  analysed sample. Concretely, stage 2 recruits only the
+  \strong{additional} subjects needed to reach the re-estimated total,
+  \code{N_final - n_stage1} (never \code{N_final} again from scratch),
+  and the final diseased count is \code{D_stage1} (already observed in
+  stage 1) \strong{plus} the diseased subjects drawn in stage 2. This
+  preserves the correlation between the interim prevalence estimate and
+  the analysed sample that a real internal pilot has by construction (the
+  same patients feed both). In versions <= 0.5.0 stage 1 was simulated
+  and then discarded entirely: the reported \code{N_final_*} undercounted
+  the true recruitment by \code{n_stage1} subjects (about 20-36% at the
+  package defaults), and \code{prev_hat} was statistically independent of
+  the analysed sample -- which is not what an internal-pilot design does.
+
+  \strong{Losses to follow-up.} Losses are modelled on the stage-2
+  increment only. Each replicate recruits
+  \code{n_stage2_adj = ceiling((N_final - n_stage1) / (1 - loss_rate))}
+  additional subjects and \strong{loses} a random
+  \eqn{Bin(n\_stage2\_adj, loss\_rate)} of them; the stage-1 subjects are
+  not re-subjected to loss because \code{D_stage1} is, by construction,
+  already fully observed (that is what makes it usable to re-estimate the
+  prevalence at the interim look) -- mirroring how stage 1 was already
+  exempt from the loss adjustment before this fix. The accuracy estimates
+  and their confidence intervals are computed on the surviving (analysed)
+  sample, \code{n_stage1 + (n_stage2_adj - n_lost)}, only. The reported
+  \code{N_final_*} columns are the \strong{recruited} sample sizes across
+  both stages (what an investigator must enrol in total) and
+  \code{N_analysed_median} is the median analysed sample size.
+  Consequently \code{precision_achieved} is approximately \strong{invariant}
+  to \code{loss_rate}: inflating the stage-2 recruitment for losses
+  restores the precision that the losses destroy, it does not improve on
+  it. In versions <= 0.2.0 the inflated sample was analysed in full (the
+  loss never happened), so the reported precision \emph{rose} with the
+  loss rate -- an artefact.
 
   \strong{Interim prevalence truncation.} The stage-1 prevalence estimate
   is truncated to \eqn{[0.05, 0.95]} before it is used to re-estimate the
@@ -94,6 +122,15 @@ The parameters \code{d_se} and \code{d_sp} are
   adaptive rule, not a statistical estimate: with a stage-1 sample this
   small, prevalence estimates at the boundary are not credible, and the
   cap bounds the re-estimated N at \code{max(n_se / 0.05, n_sp / 0.05)}.
+
+  \strong{Stage-1 fraction.} For the one-time re-estimation design, Stark
+  and Zapf (2020) recommend an internal pilot of \strong{50\%} of the
+  initially calculated sample size: \dQuote{The appropriate size of the
+  internal pilot study in the one-time re-estimation design is 50\% of
+  the initially calculated sample size.} The package default,
+  \code{fraction_stage1 = 0.40}, is smaller than that recommendation and
+  is left unchanged here; pass \code{fraction_stage1 = 0.5} to follow the
+  published recommendation.
 }
 \note{
 \code{precision_achieved} is computed on the post-loss (analysed)
@@ -109,8 +146,8 @@ result <- suppressWarnings(
 print(result)
 }
 \references{
-Stark M, Zapf A (2020). Sample size calculation and re-estimation for
-diagnostic accuracy studies based on sensitivity and specificity.
-\emph{Stat Methods Med Res} 29:2958-2971.
+Stark M, Zapf A (2020). Sample size calculation and re-estimation based
+on the prevalence in a single-arm confirmatory diagnostic accuracy
+study. \emph{Stat Methods Med Res} 29:2958-2971.
 \doi{10.1177/0962280220913588}
 }

@@ -67,8 +67,15 @@ Object of class \code{"dtasamplesize"} with additional elements:
   \describe{
     \item{design}{The sampling design used.}
     \item{N_by_pt}{Data frame with columns \code{pt}, \code{feasible},
-      \code{N_required}, \code{prob_achieved}, \code{NB_true},
-      \code{NB_treat_all}.}
+      \code{feasible_vs_none} (is \eqn{NB > 0} achievable as
+      \eqn{N \to \infty}?), \code{feasible_vs_all} (is
+      \eqn{NB > NB_{all}} achievable as \eqn{N \to \infty}?),
+      \code{N_required}, \code{prob_achieved}, \code{NB_true} (the
+      \eqn{N \to \infty} limit of \eqn{NB}), \code{NB_treat_all}, and
+      \code{D_true} (the \eqn{N \to \infty} limit of
+      \eqn{D = NB - NB_{all}}; \code{feasible_vs_all} is
+      \code{D_true > 0}). \code{feasible} is
+      \code{feasible_vs_none \& feasible_vs_all}.}
     \item{N_conservative}{Maximum required N across feasible thresholds
       (\code{NA} if none feasible, or if a feasible threshold did not
       converge within \code{N_range}).}
@@ -87,11 +94,32 @@ For each threshold probability \code{pt} (write
   \deqn{NB = prev \cdot Se - (1 - prev)(1 - Sp)\,w,}
   \deqn{NB_{all} = prev - (1 - prev)\,w.}
   The treat-none strategy has \eqn{NB = 0} by definition. A test is
-  useful at \code{pt} only when \eqn{NB > 0} \strong{and}
-  \eqn{NB > NB_{all}}. When the test is \strong{not} useful at a
-  threshold under the assumed parameters, no sample size can demonstrate
-  superiority; the threshold is flagged \code{feasible = FALSE} and
-  \code{N_required = NA}.
+  useful at \code{pt} only when \eqn{NB > 0} (\code{feasible_vs_none})
+  \strong{and} \eqn{NB > NB_{all}}, equivalently
+  \eqn{D = NB - NB_{all} > 0} (\code{feasible_vs_all}). When the test is
+  \strong{not} useful at a threshold under the assumed parameters, no
+  sample size can demonstrate superiority; the threshold is flagged
+  \code{feasible = FALSE} and \code{N_required = NA}.
+
+  \strong{This is a deterministic ceiling, computed in closed form, not a
+  search-range problem.} \code{NB} and \code{D} are exactly the
+  population-level (\eqn{N \to \infty}) limits of the point estimates
+  the CI-based search below tests: as \code{N} grows the confidence
+  half-widths shrink to 0, so the lower confidence limit converges to
+  the point estimate, which converges to \code{NB_true} (resp.
+  \code{D_true}). When \code{NB_true <= 0} or \code{D_true <= 0} at a
+  threshold, \strong{no} \code{N}, however large, can ever push the
+  corresponding lower confidence limit above 0, and expanding
+  \code{N_range} cannot help. This is different from, and takes
+  precedence over, the ordinary case where a threshold \emph{is}
+  feasible in the limit but the search did not reach \code{target_prob}
+  within \code{N_range} -- there, and only there, expanding
+  \code{N_range} is the right advice. The function warns in both cases,
+  but with different guidance: a structurally infeasible threshold names
+  the failing comparison(s) and the limiting value(s) they converge to
+  (see \code{feasible_vs_none}, \code{feasible_vs_all}, \code{NB_true},
+  \code{NB_treat_all} and \code{D_true} in \code{N_by_pt}), and states
+  plainly that expanding the search will not help.
 
   The sample-size criterion is \strong{inference-based}: a simulated
   study is a "success" when the lower confidence limit of the relevant

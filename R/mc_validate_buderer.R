@@ -52,15 +52,16 @@ mc_validate_buderer <- function(Se = 0.85,
                                 ci_method = "both",
                                 alpha = 0.05,
                                 seed = 2026) {
-  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-    on.exit(assign(".Random.seed", old_seed, envir = .GlobalEnv), add = TRUE)
-  } else {
-    on.exit(
-      suppressWarnings(rm(".Random.seed", envir = .GlobalEnv)),
-      add = TRUE
-    )
-  }
+  # --- preserve the caller's RNG state (kind AND seed) ------------------
+  # See save_rng_state()/restore_rng_state(): restoring only .Random.seed's
+  # VALUE is not enough, because set.seed() called later by unrelated code
+  # with no explicit `kind` argument reuses whichever kind is CURRENTLY
+  # ACTIVE. The set.seed() call below names its kind explicitly
+  # (Mersenne-Twister, R's own default), so the reported P_width_target /
+  # coverage figures reproduce the same numbers regardless of the caller's
+  # own RNG configuration.
+  old_rng_state <- save_rng_state()
+  on.exit(restore_rng_state(old_rng_state), add = TRUE)
 
   # Validate inputs
   stopifnot(Se > 0, Se < 1)
@@ -79,7 +80,7 @@ mc_validate_buderer <- function(Se = 0.85,
   z <- stats::qnorm(1 - alpha / 2)
 
   # Simulate all B binomial samples at once
-  set.seed(seed)
+  set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rejection")
   x <- stats::rbinom(B, n_diseased, Se)
   se_hat <- x / n_diseased
 

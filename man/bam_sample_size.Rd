@@ -14,7 +14,9 @@ bam_sample_size(
   n_range = 20:500,
   B = 5000,
   alpha_ci = 0.95,
-  seed = 2026
+  seed = 2026,
+  N_range = NULL,
+  method = c("exact", "monte_carlo")
 )
 }
 \arguments{
@@ -33,48 +35,249 @@ specificity. Default \code{c(2, 2)} (vague).}
 \item{prior_prev}{Numeric vector \code{c(alpha, beta)} for Beta prior on
 prevalence. Default \code{c(6, 14)} (E[prev]=0.30).}
 
-\item{n_range}{Integer vector of candidate n values to search.
-Default \code{20:500}.}
+\item{n_range}{Integer vector of candidate \strong{per-arm} n values
+searched independently for the legacy/diagnostic fields
+\code{n_diseased}, \code{n_non_diseased}, \code{assurance_se}, and
+\code{assurance_sp}. Default \code{20:500}. See \code{Details} for how
+this differs from \code{N_range}.}
 
-\item{B}{Number of MC replications. Default 5000. A warning is issued
-when \code{0 < B < 1000}, since the Monte Carlo error of the reported
-assurance may then be substantial; silence it with
-\code{options(dtasamplesize.warn_small_B = FALSE)}.}
+\item{B}{Number of MC replications. Default 5000. Used for the legacy
+per-arm searches and heuristics (\code{n_diseased}, \code{n_non_diseased},
+\code{assurance_se}, \code{assurance_sp}, \code{N_total_median},
+\code{N_total_P75}, \code{N_total_P90}) regardless of \code{method}. Also
+governs the headline joint search (\code{N_total}, \code{joint_assurance},
+\code{assurance_mcse}) when \code{method = "monte_carlo"}, but
+\strong{ignored by that headline joint search when \code{method =
+"exact"}} (the default), since that calculation has no Monte Carlo error
+to control -- see \code{Details}. A warning is issued when
+\code{0 < B < 1000}, since Monte Carlo error may then be substantial in
+whichever results \code{B} actually affects: under \code{method =
+"monte_carlo"} this is the package-wide small-\code{B} warning (it
+applies to the headline result too); under \code{method = "exact"} the
+warning is reworded to name only the legacy fields above, since the
+headline result has no Monte Carlo error to warn about there. Either
+version is silenced with \code{options(dtasamplesize.warn_small_B =
+FALSE)}.}
 
 \item{alpha_ci}{Credible interval level. Default 0.95.}
 
 \item{seed}{Random seed. Default 2026. The RNG state of the calling
-session is restored on exit.}
+session is restored on exit. Affects the legacy per-arm searches and
+heuristics regardless of \code{method}, but has \strong{no effect on
+\code{N_total} / \code{joint_assurance} when \code{method = "exact"}}
+(the default), since that calculation is deterministic.}
+
+\item{N_range}{Integer vector of candidate \strong{total} N values
+searched for the headline joint-assurance result \code{N_total}.
+Default \code{NULL}, which builds the grid automatically from
+\code{n_se}, \code{n_sp}, and \code{N_total_P90} -- see \code{Details}.}
+
+\item{method}{Either \code{"exact"} (the default) or \code{"monte_carlo"}.
+Selects how the headline joint search (\code{N_total},
+\code{joint_assurance}, \code{assurance_mcse}) is computed; see
+\code{Details}. \code{"exact"} evaluates the joint assurance in closed
+form via Beta-Binomial enumeration, with no simulation and no sampling
+error. \code{"monte_carlo"} reproduces the simulation-based search
+(including the anti-noise acceptance rule) unchanged.}
 }
 \value{
 Object of class \code{"dtasamplesize"} with additional elements:
   \describe{
-    \item{n_diseased}{Minimum diseased sample for Se assurance.}
-    \item{n_non_diseased}{Minimum non-diseased sample for Sp assurance.}
-    \item{assurance_se}{Achieved assurance for Se at \code{n_diseased}.}
-    \item{assurance_sp}{Achieved assurance for Sp at \code{n_non_diseased}.}
-    \item{N_total_median}{Median total N accounting for prevalence
-      uncertainty and for both the sensitivity (diseased) and
-      specificity (non-diseased) sample-size requirements.}
-    \item{N_total_P75}{75th percentile of total N.}
-    \item{N_total_P90}{90th percentile of total N.}
+    \item{n_diseased}{Minimum diseased sample for the \strong{marginal}
+      Se assurance (legacy diagnostic field; searched over \code{n_range}).}
+    \item{n_non_diseased}{Minimum non-diseased sample for the
+      \strong{marginal} Sp assurance (legacy diagnostic field; searched
+      over \code{n_range}).}
+    \item{n_total}{Alias of \code{N_total} (kept so that code written
+      against the printed/generic \code{n_total} field, used across this
+      package's \code{"dtasamplesize"} objects, keeps working). Note this
+      is a \strong{behavior change} from versions <= 0.4.0, where
+      \code{n_total} held \code{N_total_median}: see \code{Details}.}
+    \item{N_total}{The minimum total N whose \strong{joint} assurance
+      (Se and Sp both within target width, in the same replication, under
+      cohort design) reaches \code{target_assurance}. Under \code{method =
+      "exact"} this is the exact probability itself; under \code{method =
+      "monte_carlo"} it is accepted at the 95\% Monte Carlo confidence
+      lower bound (the anti-noise rule). This is the headline result of
+      this function; see \code{Details}.}
+    \item{joint_assurance}{The joint assurance achieved at \code{N_total}
+      (point estimate, not the lower confidence bound used to accept it
+      under \code{method = "monte_carlo"}; under \code{method = "exact"}
+      this already \emph{is} the exact probability, with no further bound
+      to distinguish it from).}
+    \item{assurance_mcse}{Monte Carlo standard error of
+      \code{joint_assurance}, i.e.
+      \code{sqrt(joint_assurance * (1 - joint_assurance) / B)}, under
+      \code{method = "monte_carlo"}. Always exactly \code{0} under
+      \code{method = "exact"}, chosen over \code{NA} because
+      \code{joint_assurance} under that method genuinely has zero sampling
+      error (it is not "unknown"), and because \code{0} keeps downstream
+      arithmetic such as the anti-noise formula well-defined without a
+      special case.}
+    \item{assurance_method}{The \code{method} argument actually used
+      (\code{"exact"} or \code{"monte_carlo"}). Not named \code{method}
+      because that field is already used, across every
+      \code{"dtasamplesize"} object in this package (see
+      \code{print.dtasamplesize}), to hold the human-readable method
+      \emph{name} printed as this object's header (here, always
+      \code{"Bayesian Assurance Method (BAM) for DTA Sample Size"},
+      regardless of \code{method}); reusing it for the exact/Monte Carlo
+      switch would silently break that shared convention.}
+    \item{assurance_se}{Achieved \strong{marginal} assurance for Se at
+      \code{n_diseased} (legacy diagnostic field).}
+    \item{assurance_sp}{Achieved \strong{marginal} assurance for Sp at
+      \code{n_non_diseased} (legacy diagnostic field).}
+    \item{N_total_median}{\strong{Deprecated heuristic}, kept for backward
+      compatibility with versions <= 0.4.0: the median of
+      \code{pmax(n_se / prev, n_sp / (1 - prev))} over draws of
+      \code{prev ~ Beta(prior_prev)}, where \code{n_se} and \code{n_sp}
+      are the independent marginal requirements above. This quantity
+      does \strong{not} guarantee a joint assurance of
+      \code{target_assurance}; use \code{N_total} instead. Retained
+      unchanged so that existing code and reports keep working.}
+    \item{N_total_P75}{75th percentile of the same legacy heuristic
+      distribution. Also used to size the default \code{N_range}.}
+    \item{N_total_P90}{90th percentile of the same legacy heuristic
+      distribution. Also used to size the default \code{N_range}.}
     \item{buderer_n_se}{Buderer sample size for comparison.}
   }
 }
 \description{
-Finds the minimum number of diseased (and non-diseased) individuals
-such that the probability of the posterior credible interval achieving
-the target width is at least \code{target_assurance}.
+Finds the minimum total sample size at which the posterior credible
+intervals for sensitivity AND specificity \strong{simultaneously} reach
+their target width, with probability at least \code{target_assurance},
+under a single cohort study of size \code{N}.
 }
 \details{
 The parameters \code{delta_se} and \code{delta_sp} are the
   \strong{full width} of the posterior credible interval (not half-width).
   For example, \code{delta_se = 0.14} corresponds to a half-width of 0.07.
   This differs from other functions in this package that use half-width.
+
+  \strong{The headline result (\code{N_total}) is a JOINT assurance under
+  cohort design.} At each candidate total \code{N}, every one of the
+  \code{B} Monte Carlo replications draws \code{prev ~ Beta(prior_prev)},
+  \code{Se_true ~ Beta(prior_se)} and \code{Sp_true ~ Beta(prior_sp)}, and
+  then, because the number of diseased subjects in a fixed-\code{N} cohort
+  study is itself random, draws \code{n_d ~ Binomial(N, prev)} and sets
+  \code{n_nd = N - n_d} (the same cohort convention used by
+  \code{\link{ss_net_benefit}} and \code{\link{ss_unified}}). Counts
+  \code{x_se ~ Binomial(n_d, Se_true)} and
+  \code{x_sp ~ Binomial(n_nd, Sp_true)} are then drawn, and the posterior
+  Beta credible interval width is computed for each arm using the same
+  \code{alpha_ci} and the same full-width convention described above. A
+  replication is a \strong{success} only if \strong{both} widths meet
+  their targets \strong{in that same replication}; \code{joint_assurance}
+  is the proportion of successes, with denominator always \code{B}. A
+  degenerate replication (\code{n_d = 0} or \code{n_nd = 0}, possible when
+  \code{N} is small or the prevalence draw is extreme) is always counted
+  as a \strong{failure}, never dropped from the denominator -- the same
+  convention already adopted by \code{\link{ss_unified}}.
+
+  This corrects a defect present through version 0.4.0, where \code{n_se}
+  and \code{n_sp} were found \strong{independently}, each against its own
+  \strong{marginal} assurance, and the previous \code{n_total} (now
+  \code{N_total_median}, see below) was only the median of
+  \code{pmax(n_se / prev, n_sp / (1 - prev))} over draws of \code{prev}.
+  That quantity never verified that both widths hold in the same study,
+  and its joint assurance is systematically lower than
+  \code{target_assurance} -- e.g., for the defaults with
+  \code{prior_prev = c(4, 16)}, the old \code{n_total} achieved a true
+  joint assurance of about 0.72 against a target of 0.80.
+
+  \strong{Two ways to evaluate the joint assurance: \code{method}.} The
+  generative model above -- draw \code{prev}, \code{Se_true}, \code{Sp_true};
+  split \code{N} into \code{n_d} and \code{n_nd}; draw the two arm counts;
+  check both widths -- has a closed form, because \code{n_d} is
+  Beta-Binomial given \code{prior_prev}, and, given an arm size, the arm's
+  own success count is Beta-Binomial given its own prior, with a
+  deterministic (hence exactly enumerable) credible-interval width for
+  every possible count. \code{method = "exact"} (the default) evaluates
+  this closed form directly, with no simulation and hence no sampling
+  noise: for a candidate \code{N},
+  \deqn{
+    \mathrm{assurance}(N) = \sum_{k=0}^{N} P(n_d = k) \, P_{se}(k) \, P_{sp}(N - k),
+  }
+  where \code{P(n_d = k)} is the Beta-Binomial(\code{N}, \code{prior_prev})
+  mass at \code{k}, and, for an arm of size \code{n},
+  \deqn{
+    P_{se}(n) = \sum_{x=0}^{n} \mathrm{BetaBinom}(x; n, a_{se}, b_{se}) \,
+      \mathbf{1}[w_{se}(x, n) \le \delta_{se}],
+  }
+  with \code{w_se(x, n)} the posterior credible interval width after
+  \code{x} successes in \code{n} trials (the same width formula and the
+  same \code{alpha_ci} used everywhere else in this function), and
+  \code{P_sp(n)} defined analogously from \code{prior_sp} and
+  \code{delta_sp}. By convention \code{P_se(0) = P_sp(0) = 0}: an arm of
+  size zero (\code{n_d = 0} or \code{n_nd = 0}) is the same degenerate
+  replication described above and is always a failure, regardless of how
+  narrow the prior-only credible interval happens to be, matching
+  \code{method = "monte_carlo"} exactly. The two arms are conditionally
+  independent given \code{(n_d, n_nd)}, which licenses the product
+  \code{P_se(k) * P_sp(N - k)} inside the sum. \code{N} is accepted as
+  soon as this exact
+  probability reaches \code{target_assurance}; there is no sampling error
+  to guard against, so \code{B} plays no role in this calculation (it is
+  still used for the legacy per-arm searches and heuristics described
+  below) and \code{seed} does not affect the result either. This is the
+  preferred mode: it is deterministic, reproducible bit-for-bit, and free
+  of the dependence on \code{B} that affects \code{method = "monte_carlo"}
+  (e.g., for the defaults with \code{prior_prev = c(4, 16)}, the exact
+  first \code{N} with joint assurance \eqn{\ge} 0.80 is 678, with assurance
+  0.800349, whereas \code{method = "monte_carlo"} with \code{B = 20000}
+  returns 683 because of Monte Carlo noise near the crossing point -- see
+  \strong{Anti-noise acceptance rule} below). \code{P_se} and \code{P_sp}
+  depend only on arm size, not on \code{N}, so they are cached once, up to
+  \code{max(N_range)}, and reused across every candidate \code{N}; the
+  cache itself costs \eqn{O(N_{\max}^2)} \code{qbeta} evaluations (about
+  500,000 for \code{N_max} around 700, a few seconds). If
+  \code{max(N_range)} is large enough that this becomes impractical, a
+  warning suggests \code{method = "monte_carlo"} instead.
+
+  \code{method = "monte_carlo"} instead estimates the same probability by
+  simulation, as described above, and is kept for continuity with
+  versions \verb{<= 0.4.x} of this joint search (introduced mid-cycle in
+  0.5.0) and as a fallback for \code{N} ranges too large for the exact
+  cache.
+
+  \strong{Anti-noise acceptance rule (\code{method = "monte_carlo"} only).}
+  Because \code{joint_assurance} at each \code{N} is itself a Monte Carlo
+  estimate with sampling error, an \code{N} is accepted only if the
+  \strong{lower bound of its one-sided 95\% confidence interval} also
+  reaches the target:
+  \code{joint_assurance - qnorm(0.95) * assurance_mcse >= target_assurance}
+  (where \code{assurance_mcse = sqrt(joint_assurance * (1 - joint_assurance) / B)}
+  is the Monte Carlo standard error of a proportion estimated from
+  \code{B} replications). Without this rule, the search could accept the
+  first \code{N} where the Monte Carlo estimate happens to cross
+  \code{target_assurance} by chance, on a noisy grid, rather than an
+  \code{N} where the target is genuinely reached. This rule makes the
+  search slightly conservative (it can select an \code{N} a few grid
+  steps above the raw crossing point), especially at small \code{B}. This
+  rule does not apply under \code{method = "exact"}, which has no sampling
+  error to guard against: the first \code{N} whose exact assurance reaches
+  \code{target_assurance} is accepted outright.
+
+  \strong{\code{n_range} vs. \code{N_range}.} \code{n_range} keeps its
+  original meaning: the grid of \strong{per-arm} sample sizes searched
+  independently for the diagnostic (legacy) fields \code{n_diseased},
+  \code{n_non_diseased}, \code{assurance_se}, and \code{assurance_sp}. It
+  no longer determines the headline result. \code{N_range} is a new
+  argument that controls the grid of \strong{total} sample sizes searched
+  for \code{N_total}, the joint-assurance result described above. When
+  \code{N_range = NULL} (the default), it is built automatically as
+  \code{max(20, n_se, n_sp):ceiling(N_total_P90)}, i.e. from the smallest
+  total that could possibly supply both per-arm requirements up to the
+  90th percentile of the legacy prevalence-uncertainty heuristic (see
+  \code{N_total_P90} below), which in practice comfortably brackets the
+  true joint requirement. No existing argument name was removed or had
+  its default behavior changed; \code{N_range} is purely additive.
 }
 \examples{
-# B kept small here for a fast example; see @param B.
-result <- suppressWarnings(bam_sample_size(B = 500, n_range = 20:500))
+# B and N_range kept small here for a fast example; see @param B.
+result <- suppressWarnings(bam_sample_size(
+  B = 500, n_range = 20:500, N_range = seq(100, 700, by = 20)
+))
 print(result)
 }
 \references{

@@ -12,6 +12,7 @@ joint_sample_size(
   delta_sp = 0.05,
   delta_auc = 0.05,
   prev = 0.2,
+  design = c("cohort", "fixed"),
   target_prob = 0.8,
   N_range = seq(100, 800, by = 10),
   B = 5000,
@@ -36,6 +37,16 @@ operating point may require \code{AUC} to be supplied explicitly.}
 
 \item{prev}{Disease prevalence. Default 0.20.}
 
+\item{design}{Sampling design for Se and Sp, \code{"cohort"} (default) or
+\code{"fixed"}. \code{"cohort"} treats the number of diseased subjects
+as random, as in a prospective cohort or consecutive series, and is the
+appropriate choice for almost all diagnostic accuracy studies.
+\code{"fixed"} conditions on \eqn{n_d = \lfloor N \cdot prev \rfloor}
+diseased subjects and reproduces the behaviour of versions <= 0.4.0; it
+applies only to a design that recruits the two disease groups
+separately with pre-specified sizes, and it is \strong{not} valid for a
+prospective cohort. See \code{Details}.}
+
 \item{target_prob}{Minimum joint probability \strong{for Se and Sp}.
 Default 0.80. See \code{Details}.}
 
@@ -53,8 +64,15 @@ session is restored on exit.}
 Object of class \code{"dtasamplesize"} with additional elements:
   \describe{
     \item{n_total}{Minimum total N achieving the joint target.}
-    \item{n_diseased}{Number of diseased at optimal N.}
-    \item{n_non_diseased}{Number of non-diseased at optimal N.}
+    \item{n_diseased}{Number of diseased at optimal N. Under
+      \code{design = "cohort"} this is \eqn{\lfloor N \cdot prev
+      \rfloor}, the \strong{expected} count, not a value fixed by
+      design: the number actually diseased varies from one replicate,
+      and one real study, to the next.}
+    \item{n_non_diseased}{Number of non-diseased at optimal N. Same
+      caveat as \code{n_diseased} under \code{design = "cohort"}.}
+    \item{design}{The sampling design used for the Se/Sp Monte Carlo
+      (\code{"cohort"} or \code{"fixed"}). Does not affect the AUC gate.}
     \item{joint_prob_se_sp}{Monte Carlo probability that the \strong{Se
       and Sp} intervals both meet their target width at the optimal N.
       This is \strong{not} a three-way joint probability: the AUC
@@ -121,6 +139,34 @@ The parameters \code{delta_se}, \code{delta_sp}, and
   The default \code{AUC = 0.90} sits between the two: it is geometrically
   attainable, and being smaller than the binormal value it yields a
   larger Hanley-McNeil variance and hence a conservative sample size.
+  The AUC gate is always evaluated at the \strong{expected} margins
+  \eqn{n_d = \lfloor N \cdot prev \rfloor} and \eqn{n_{nd} = N - n_d},
+  regardless of \code{design}: it is a deterministic criterion (see
+  above), so there is no sampling distribution of \eqn{n_d} to average
+  over in the first place.
+
+  \strong{The two sampling designs for Se and Sp differ in what is
+  random, and therefore in the variance of the joint probability.}
+
+  \code{design = "cohort"} (default) --- \emph{prospective cohort /
+  consecutive series}. Disease status is \strong{random}: each replicate
+  draws \eqn{n_d \sim Bin(N, prev)} diseased subjects and
+  \eqn{n_{nd} = N - n_d} non-diseased, then \eqn{X_{Se} \sim Bin(n_d, Se)}
+  and \eqn{X_{Sp} \sim Bin(n_{nd}, Sp)} conditional on that draw. A
+  replicate whose margins are degenerate (\eqn{n_d < 2} or
+  \eqn{n_{nd} < 2}) is counted as a \strong{failure}, not discarded, so
+  the reported joint probability is unconditional (denominator \code{B}).
+
+  \code{design = "fixed"} --- \emph{fixed disease-status margins} (the
+  behaviour of package versions <= 0.4.0). \eqn{n_d = \lfloor N \cdot
+  prev \rfloor} and \eqn{n_{nd} = N - n_d} are treated as fixed by
+  design, so \eqn{X_{Se} \sim Bin(n_d, Se)} and
+  \eqn{X_{Sp} \sim Bin(n_{nd}, Sp)} condition on the expected margins
+  rather than sampling them. This applies only to a design that recruits
+  the two disease groups separately with pre-specified sizes (e.g. a
+  case-control accuracy study), and it \strong{overstates the assurance}
+  for a prospective cohort, where the number of diseased subjects
+  actually enrolled is itself random. See \code{Note}.
 }
 \note{
 AUC CI width is computed using the Hanley-McNeil variance
@@ -128,6 +174,19 @@ AUC CI width is computed using the Hanley-McNeil variance
   Mann-Whitney statistics. This makes the AUC component deterministic per
   \code{N} and therefore a median-style, not an assurance-style,
   criterion. See \code{Details}.
+
+  \strong{Design matters, a lot, for the Se/Sp joint probability.} Under
+  the default \code{design = "cohort"}, the number of diseased subjects
+  is itself random, which adds a source of sampling variability that
+  \code{design = "fixed"} conditions away. At a realistic adverse
+  operating point (\code{Se = 0.70}, \code{Sp = 0.80}, \code{prev =
+  0.20}, \code{delta_se = 0.08}, \code{delta_sp = 0.06}, \code{N =
+  650}), the fixed-margin joint probability is \strong{0.807} while the
+  cohort joint probability is \strong{0.716}: the fixed design
+  overstates the assurance by roughly 9 percentage points. Sizing a
+  prospective cohort with \code{design = "fixed"} therefore yields a
+  sample size that is too small for the stated target. Versions <= 0.4.0
+  offered only the fixed-margin behaviour.
 }
 \examples{
 result <- joint_sample_size(B = 1000, N_range = seq(100, 700, by = 20))
@@ -135,6 +194,10 @@ print(result)
 
 # An AUC below the geometric minimum is refused:
 try(joint_sample_size(Se = 0.85, Sp = 0.90, AUC = 0.80))
+
+# Legacy fixed-margin design (not valid for a prospective cohort)
+old <- joint_sample_size(B = 1000, design = "fixed",
+                         N_range = seq(100, 700, by = 20))
 }
 \references{
 Hanley JA, McNeil BJ (1982). The meaning and use of the area under a

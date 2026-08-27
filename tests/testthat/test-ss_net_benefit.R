@@ -38,8 +38,11 @@ test_that("Useful thresholds are feasible and return a sample size", {
 
 test_that("Infeasible thresholds are flagged, not silently sized", {
   # Se = Sp = 0.55, prev = 0.10: at pt = 0.05 treat-all dominates the test
-  result <- ss_net_benefit(Se = 0.55, Sp = 0.55, prev = 0.10,
-                           pt_range = c(0.05), B = 1000, seed = 1)
+  # The infeasibility warnings are the behaviour under test; capture them so
+  # the suite stays warning-free.
+  result <- suppressWarnings(
+    ss_net_benefit(Se = 0.55, Sp = 0.55, prev = 0.10,
+                   pt_range = c(0.05), B = 1000, seed = 1))
   expect_false(result$N_by_pt$feasible[1])
   expect_true(is.na(result$N_by_pt$N_required[1]))
 })
@@ -124,6 +127,45 @@ test_that("the DECLARED cohort assurance matches an INDEPENDENT simulation", {
   # assurance must agree with the independently measured one.
   expect_gt(real, 0.78)
   expect_lt(abs(real - res$N_by_pt$prob_achieved[1]), 0.03)
+})
+
+test_that("a structurally infeasible threshold warns and names why, instead of a silent NA", {
+  # Se = 0.60, Sp = 0.55, prev = 0.10: at pt = 0.60 the population net
+  # benefit is negative even in the N -> Inf limit (never beats
+  # treat-none), and at pt = 0.05 the population net benefit, though
+  # positive, never exceeds the treat-all net benefit (never beats
+  # treat-all). Neither failure can be fixed by a wider N_range -- both
+  # are watched for explicitly here, with different failing comparisons,
+  # so the fix cannot be satisfied by warning generically at only one of
+  # the two thresholds.
+  expect_warning(
+    expect_warning(
+      expect_warning(
+        result <- ss_net_benefit(Se = 0.60, Sp = 0.55, prev = 0.10,
+                                 pt_range = c(0.05, 0.60), B = 2000, seed = 1),
+        "pt = 0.6 is not achievable at ANY N"
+      ),
+      "pt = 0.05 is not achievable at ANY N"
+    ),
+    "N_conservative is NA"
+  )
+
+  expect_true(is.na(result$n_total))
+  expect_true(is.na(result$N_conservative))
+  expect_false(any(result$N_by_pt$feasible))
+
+  by_pt <- result$N_by_pt
+  row_hi <- by_pt[by_pt$pt == 0.60, ]
+  row_lo <- by_pt[by_pt$pt == 0.05, ]
+
+  # pt = 0.60 fails the treat-none comparison (NB_true <= 0)...
+  expect_false(row_hi$feasible_vs_none)
+  expect_true(row_hi$NB_true <= 0)
+  # ...but pt = 0.05's NB_true is positive: the failure there is specific
+  # to the treat-all comparison, not a copy-paste of the pt = 0.60 reason.
+  expect_true(row_lo$feasible_vs_none)
+  expect_false(row_lo$feasible_vs_all)
+  expect_true(row_lo$D_true <= 0)
 })
 
 test_that("the fixed-margin design OVERSTATES the assurance of a cohort", {

@@ -29,8 +29,13 @@ ss_time_dependent_roc(
 
 \item{t_horizon}{Time point for AUC(t) evaluation in years. Default 2.}
 
-\item{censoring_rates}{Numeric vector of censoring proportions.
-Default \code{c(0.10, 0.20, 0.30)}.}
+\item{censoring_rates}{Numeric vector giving, for each scenario, the
+target marginal probability that the \emph{censoring time} precedes
+\code{t_horizon}, i.e. \eqn{P(C < t\_horizon)}. Each entry calibrates
+an exponential censoring-time model with rate
+\code{-log(1 - censoring_rates) / t_horizon}; it is \strong{not} the
+fraction of subjects who will actually be observed as censored. See
+Details. Default \code{c(0.10, 0.20, 0.30)}.}
 
 \item{delta_auc}{Target precision (half-width) for AUC(t). Default 0.06.}
 
@@ -49,7 +54,9 @@ session is restored on exit.}
 \value{
 Object of class \code{"dtasamplesize"} with additional elements:
   \describe{
-    \item{results}{Data frame with columns \code{censoring_rate},
+    \item{results}{Data frame with columns \code{censoring_rate} (the
+      nominal \eqn{P(C < t\_horizon)} value from \code{censoring_rates},
+      not the observed censoring proportion; see Details),
       \code{N_required}, \code{prob_achieved}.}
   }
 }
@@ -58,6 +65,37 @@ Monte Carlo-based sample size estimation for achieving a target
 precision of the area under the time-dependent ROC curve, AUC(t),
 at a given time horizon. Uses the \pkg{timeROC} package for
 AUC(t) estimation with inverse-probability-of-censoring weighting.
+}
+\details{
+\code{censoring_rates} parameterizes the exponential model for
+  the censoring time \eqn{C} alone: each entry \code{cens_rate} sets
+  \eqn{P(C < t\_horizon) = cens\_rate} exactly, via
+  \code{lambda_censor <- -log(1 - cens_rate) / t_horizon}. It does
+  \strong{not} equal the proportion of subjects observed as censored in
+  the simulated data, because censoring competes with the event: a
+  subject is recorded as censored only when \eqn{C} occurs before both
+  the event time \eqn{T} and \code{t_horizon}. Since some subjects who
+  would have been censored experience the event first, the observed
+  censoring proportion is systematically \strong{lower} than
+  \code{censoring_rates}.
+
+  For the package defaults (\code{lambda_event = 0.25},
+  \code{t_horizon = 2}, under which the event alone would be observed
+  before the horizon for 39.35\% of subjects), Monte Carlo simulation
+  (2,000,000 subjects per scenario) gives:
+  \tabular{lll}{
+    \code{censoring_rates} \tab \eqn{P(C < t\_horizon)} \tab observed censoring proportion \cr
+    0.10 \tab 0.0996 \tab 0.0787 \cr
+    0.20 \tab 0.2002 \tab 0.1591 \cr
+    0.30 \tab 0.3000 \tab 0.2396 \cr
+    0.50 \tab 0.5003 \tab 0.4054 \cr
+  }
+  The observed proportion runs at roughly 80\% of the nominal
+  \code{censoring_rates} value across this range; the ratio is not
+  universal and shifts with \code{lambda_event} and \code{t_horizon}
+  (a higher event rate leaves less "room" for censoring to be
+  observed, which lowers the ratio further). Treat 80\% as a rough
+  guide for the package defaults, not a general conversion factor.
 }
 \note{
 Parameters in the default example are HYPOTHETICAL. No published

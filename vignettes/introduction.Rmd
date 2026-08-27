@@ -75,13 +75,34 @@ cat("Joint N:", joint_result$n_total,
 
 ## Imperfect reference standard
 
-When the reference standard is imperfect, the Rogan-Gladen variance
-inflation factor (VIF) inflates the required sample size:
+When the reference standard is imperfect, there is no single "inflation
+factor" that turns the classical Buderer sample size into the right one.
+An imperfect reference forces a choice of what is actually being sized:
+the *apparent* sensitivity and specificity -- P(T+|R+) and P(T-|R-), what
+a standard 2x2-table analysis against the imperfect reference actually
+estimates -- have an exact closed form and need no inflation factor at
+all, while the misclassification-*corrected* sensitivity and specificity
+-- the index test's true accuracy, recovered from the full 2x2 table by a
+delta-method correction -- typically need substantially more subjects.
+Both are always computed:
 
 ```{r imperfect}
 imp_result <- ss_imperfect_ref(B = 0)
-imp_result$sensitivity_table[, c("Se_ref", "Sp_ref", "VIF", "N_adj")]
+imp_result$sensitivity_table[, c("Se_ref", "Sp_ref", "Se_apparent",
+                                  "Sp_apparent", "N_apparent", "N_corrected")]
 ```
+
+At the defaults shown above (`Se_ref = 0.90`, `Sp_ref = 0.95`), sizing for
+the apparent estimand needs N = `r imp_result$N_apparent_loss` (with the
+default 10% loss to follow-up); sizing for the corrected estimand needs
+N = `r imp_result$N_corrected_loss` instead -- about
+`r round(imp_result$N_corrected_loss / imp_result$N_apparent_loss, 1)`x as
+many, because its variance is driven by the whole 2x2 table rather than by
+a reference-positive/negative subsample. The classical Rogan-Gladen
+variance-inflation factor (`VIF`, also in `sensitivity_table`) is still
+reported, but only as an informative diagnostic of how much the reference
+standard's imperfection would inflate a *prevalence* estimate -- it does
+not multiply either sample size above.
 
 ## Comparison across methods
 
@@ -90,12 +111,15 @@ All four approaches below are evaluated at the **same disease prevalence of
 the Bayesian assurance method uses its default `Beta(6, 14)` prevalence prior,
 whose mean is 0.30. Comparing methods that were sized at *different*
 prevalences would confound the method with the prevalence, since the required
-total N scales roughly as `1 / prev` on the sensitivity arm.
+total N scales roughly as `1 / prev` on the sensitivity arm. The imperfect-
+reference row below reuses `imp_result` from above and reports its
+*apparent*-estimand N (the exact closed form, and `ss_imperfect_ref()`'s
+default); the larger corrected-estimand N is not repeated here.
 
 ```{r comparison}
 comparison <- data.frame(
   Method = c("Buderer (classical)", "BAM (Bayesian)",
-             "Joint (Se+Sp+AUC)", "Imperfect ref (Rogan-Gladen)"),
+             "Joint (Se+Sp+AUC)", "Imperfect ref (apparent, exact)"),
   N = c(
     ceiling(buderer_n(0.85, 0.07) / 0.30),
     bam_result$N_total_median,

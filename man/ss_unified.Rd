@@ -20,7 +20,9 @@ ss_unified(
   N_range = seq(200, 1000, by = 20),
   B = 5000,
   seed = 2026,
-  full_grid = FALSE
+  full_grid = FALSE,
+  decision = c("isotonic", "lower_bound", "point"),
+  nb_B_ceiling = 200000000L
 )
 }
 \arguments{
@@ -65,13 +67,55 @@ assurance may then be substantial; silence it with
 session is restored on exit.}
 
 \item{full_grid}{Logical. Default \code{FALSE}, which stops the search
-over \code{N_range} at the first N that reaches \code{target_assurance}
--- identical behaviour and cost to versions <= 0.3.0. If \code{TRUE},
-the search does not stop early: every N in \code{N_range} is evaluated
-so that \code{grid_results} holds the complete assurance curve.
-\code{optimal_N} and \code{joint_assurance} are unaffected by this
-switch -- they always refer to the \strong{first} N that reached
-\code{target_assurance}, never the last.}
+over \code{N_range} for \code{decision \%in\% c("lower_bound", "point")}
+as soon as the \strong{smallest} N in \code{N_range} that reaches
+\code{target_assurance} has been found (see below for why "smallest",
+not "first-in-traversal-order"). If \code{TRUE}, the search does not
+stop early: every N in \code{N_range} is evaluated so that
+\code{grid_results} holds the complete assurance curve. \code{optimal_N}
+and \code{joint_assurance} are unaffected by this switch for
+\code{decision \%in\% c("lower_bound", "point")} -- they always refer to
+the \strong{smallest} N that reached \code{target_assurance}, never a
+larger one, \strong{regardless of the order \code{N_range} was given
+in}. Versions <= 0.6.1 instead accepted whichever N reached
+\code{target_assurance} \emph{first in \code{N_range}'s own order},
+which is only the smallest N when \code{N_range} happens to already be
+sorted ascending: e.g. the identical set of candidate N reached
+\code{N_effective = 850} when \code{N_range} was given ascending but
+\code{1200} (the largest candidate, +41\%) when given descending, and
+yet another value when shuffled, with no warning of any kind, because
+descending/shuffled orders are evaluated largest-or-arbitrary-N-first
+and \code{decision \%in\% c("lower_bound", "point")} stopped at
+whichever N it reached first. \code{N_unique_sorted} (the distinct
+candidate N, ascending) is now always the traversal order for these two
+rules, independent of \code{N_range}'s own order, so the result -- and,
+under \code{full_grid = FALSE}, the search cost -- no longer depends on
+how \code{N_range} was arranged. \code{decision = "isotonic"} always
+evaluates the complete \code{N_range}, in the order given (one row of
+\code{grid_results} per element, including any repeats), regardless of
+\code{full_grid}, since the isotonic fit needs the whole curve; it
+already sorts internally before fitting and was already invariant to
+\code{N_range}'s order (see \code{Details}), so it is unaffected by
+this change and is more expensive than the default
+\code{full_grid = FALSE} cost of the other two rules.}
+
+\item{decision}{How to decide the required N from the assurance curve:
+\code{"isotonic"} (default), \code{"lower_bound"} or \code{"point"}.
+See \code{Details}.}
+
+\item{nb_B_ceiling}{Number of prior draws used by the internal
+\code{check_nb} ceiling calculation (\code{nb_assurance_ceiling()};
+see \code{Details}, "The CI-based net-benefit criterion has a hard
+ceiling"). Ignored when \code{check_nb = FALSE}. Default 200000000,
+which keeps the ceiling's Monte Carlo standard error below about
+\eqn{2.6 \times 10^{-5}} for ceilings in the typical 0.7-0.95 range (see
+\code{nb_assurance_ceiling}'s own documentation for how this was
+chosen and verified). Exposed mainly so that a caller who only needs an
+approximate ceiling -- e.g. while exploring \code{pt_range} choices,
+or in a test that checks the ceiling's presence rather than its exact
+value -- can pass a much smaller value for speed; the calculation is
+fully vectorized and independent of \code{B} and \code{N_range}, so
+its cost does not otherwise scale with the rest of the search.}
 }
 \value{
 Object of class \code{"dtasamplesize"} with additional elements:
@@ -82,21 +126,69 @@ Object of class \code{"dtasamplesize"} with additional elements:
       \code{check_nb = TRUE}) -- are reached \strong{simultaneously} in
       the same replication, not the probability that each is reached
       marginally. The denominator is \code{B}: degenerate replications
-      count as failures.}
-    \item{comparison}{Data frame comparing methods.}
+      count as failures. Under \code{decision = "isotonic"} this is the
+      fitted (smoothed), not raw, assurance at \code{N_effective} --
+      the actual point estimate, \strong{not} margin-adjusted downward
+      (see \code{assurance_lower} and \code{Details} for the margin that
+      \code{N_effective} was actually selected against).}
+    \item{assurance_mcse}{Monte Carlo standard error of
+      \code{joint_assurance} at \code{N_effective}, i.e.
+      \code{sqrt(joint_assurance * (1 - joint_assurance) / B)}.
+      \code{NA} under \code{decision = "isotonic"} (not defined for a
+      pooled, possibly off-grid estimate).}
+    \item{assurance_lower}{Lower limit of the one-sided 95\% Wilson score
+      confidence bound on \code{joint_assurance} (see \code{Details},
+      "The lower confidence bound is Wilson, not Wald"), for
+      \code{decision \%in\% c("point", "lower_bound")}; this is the
+      quantity compared against \code{target_assurance} when
+      \code{decision = "lower_bound"} (see \code{Details}). Under
+      \code{decision = "isotonic"} it is instead the same Wilson bound
+      applied to the fitted (smoothed) curve at its block-pooled
+      effective sample size, evaluated at \code{N_effective} (see
+      \code{Details}): the quantity \code{"isotonic"} actually inverts
+      to pick \code{N_effective}, and so is guaranteed \code{>=
+      target_assurance} whenever \code{N_effective} was found (never
+      \code{NA} in that case). Unlike the normal-approximation (Wald)
+      bound used in versions <= 0.6.0, this cannot report a vacuous
+      \code{1.000} when a tiny B happens to pass every replicate.}
+    \item{nb_ceiling}{The achievable ceiling of the \code{check_nb}
+      criterion as \eqn{N \to \infty} (see \code{Details}); \code{NA}
+      when \code{check_nb = FALSE}.}
+    \item{comparison}{Data frame comparing methods (columns \code{method}
+      and \code{N}). The imperfect-reference correction contributes two
+      rows, not one: \code{estimand = "apparent"} (the exact closed-form
+      Buderer-style calculation, no inflation factor needed) and
+      \code{estimand = "corrected"} (the delta-method misclassification
+      correction for the true Se/Sp), since a single row cannot
+      represent both target quantities at once. See
+      \code{\link{ss_imperfect_ref}}.}
     \item{N_buderer}{Total N from the classical Buderer formula, i.e.
       the "Buderer (classical)" row of \code{comparison}.}
-    \item{N_imperfect}{Total N from the Rogan-Gladen imperfect-reference
-      inflation, i.e. the "Imperfect ref" row of \code{comparison}.}
+    \item{N_imperfect}{Total N for the imperfect-reference correction's
+      \strong{apparent} estimand (\code{\link{ss_imperfect_ref}}'s
+      default), i.e. the "apparent estimand" row of \code{comparison}.
+      Kept under this name for backward compatibility; the (typically
+      much larger) misclassification-corrected N is the "corrected
+      estimand" row of \code{comparison}.}
     \item{seed}{The \code{seed} argument used for the search.}
     \item{target_assurance}{The \code{target_assurance} argument used for
       the search, echoed back for downstream use (e.g. by
       \code{\link{plot_assurance_curve}}).}
+    \item{decision}{The \code{decision} argument used for the search.}
     \item{grid_results}{Data frame with columns \code{N} and
       \code{assurance}, one row per N evaluated while searching
-      \code{N_range}. With the default \code{full_grid = FALSE} the
-      search stops at \code{N_effective}, so the grid is truncated there;
-      set \code{full_grid = TRUE} for the full curve over \code{N_range}.}
+      \code{N_range}. Under \code{decision = "isotonic"} this is one row
+      per \strong{element} of \code{N_range} (repeats included, in the
+      order given) whenever the search runs at all, since the isotonic
+      fit always evaluates the complete range. Under
+      \code{decision \%in\% c("lower_bound", "point")} it is one row per
+      \strong{distinct} N actually evaluated -- ascending, and with
+      \code{full_grid = TRUE} covering every unique value in
+      \code{N_range} -- since a repeated N is looked up rather than
+      re-evaluated (see \code{full_grid} above); with the default
+      \code{full_grid = FALSE} the search instead stops as soon as the
+      smallest N reaching \code{target_assurance} is found, so the grid
+      is truncated there.}
   }
 }
 \description{
@@ -145,6 +237,137 @@ The parameters \code{delta_se}, \code{delta_sp}, and
   treat-all NB -- a criterion satisfied with near-certainty whenever the
   test is useful at all, and one that \code{\link{ss_net_benefit}} itself
   documents as abandoned.
+
+  \strong{The CI-based net-benefit criterion has a hard ceiling that no
+  N can cross.} As \eqn{N \to \infty} the half-widths of both
+  inequalities above vanish, so the criterion collapses to a statement
+  about the drawn \eqn{(\mathrm{prev}, Se, Sp)} alone (see
+  \code{nb_assurance_ceiling}, internal). When \code{check_nb = TRUE},
+  this ceiling is computed \strong{before} the grid search (from the
+  priors, \code{Se_ref}, \code{Sp_ref} and \code{pt_range} only, by a
+  fast vectorized Monte Carlo independent of \code{B} and \code{N_range})
+  and returned as \code{nb_ceiling}. If \code{target_assurance} exceeds
+  this ceiling, the criterion is unreachable at \strong{any} N, the grid
+  search is skipped entirely (it cannot succeed, so nothing is gained by
+  running it), and the function warns accordingly -- a message that
+  \strong{replaces}, rather than joins, the generic "expand N_range"
+  warning below, since expanding \code{N_range} cannot help this failure
+  mode. A wide \code{pt_range} tends to push the ceiling down because
+  raising its top makes the "beats treat-none" side harder while
+  lowering its bottom makes the "beats treat-all" side harder, so both
+  ends of a wide range squeeze the (necessarily joint, over all
+  thresholds) criterion at once; see \code{nb_assurance_ceiling} for the
+  full derivation.
+
+  \strong{The N selected by the search is itself a Monte Carlo estimate,
+  and \code{decision} controls how that estimate is used.} At ordinary
+  \code{B} the per-N Monte Carlo error is not small: at \code{B = 1200}
+  the MCSE of an assurance near 0.80 is about 0.0115. Two distinct
+  sources of noise are at play: the \emph{per-N} sampling error just
+  described, and, across N, the \emph{level} of the whole assurance
+  curve, which drifts up or down as one block under a fresh seed because
+  the same priors and thresholds are shared by every N in the search.
+  Empirically (a nested Se/Sp/AUC/net-benefit scenario checked against a
+  B = 1e7 reference N* = 2216 across 20-25 seeds) the curve-level drift
+  dominates the per-N noise, and it is what makes taking the
+  \strong{first} N to cross a noisy curve a biased, high-variance
+  stopping rule: across seeds it landed with sd 96.8, bias +100.5, RMSE
+  138.1, and its nominal one-sided 95\% guarantee actually held in only
+  84\% of seeds (16\% selected an N whose true assurance fell short of
+  \code{target_assurance}).
+
+  \code{decision = "isotonic"} (default) instead evaluates the
+  \strong{entire} \code{N_range} (regardless of \code{full_grid}),
+  fits a monotone non-decreasing curve to \code{assurance} against
+  \code{N} via \code{\link[stats]{isoreg}} (pooling adjacent violators;
+  monotonicity itself is not in question -- assurance cannot decrease
+  in N -- only its noisy estimate can), and inverts that fitted curve at
+  \code{target_assurance} by linear interpolation between the two
+  bracketing grid points, rounding up to the next integer N. Pooling
+  the whole curve, rather than reading off a single noisy crossing,
+  is what removes most of the curve-level bias described above: in the
+  same benchmark this rule landed with sd 41.1, bias +10.4, RMSE 41.3.
+  \code{joint_assurance} for this rule is the fitted (not raw) assurance
+  at \code{N_effective}. \code{assurance_mcse} is not defined for a
+  pooled, possibly off-grid estimate and is reported as \code{NA};
+  \code{assurance_lower} is \strong{not} \code{NA} here -- it is the
+  margin-adjusted (block-pooled Wilson) curve actually inverted to pick
+  \code{N_effective}, described below and returned as a real number
+  whenever \code{N_effective} is found. See \code{Value}.
+
+  Achieving this requires that the \code{B} replications at different N
+  be genuinely independent draws, not the same draws replayed with a
+  shift. Versions <= 0.5.0 called \code{set.seed(seed)} once per N,
+  which is only \emph{partial} common random numbers: \code{rbinom(1,
+  N, prev_b)} consumes a number of uniforms that depends on N, so the
+  streams for different N agree for the first replication and diverge
+  unpredictably from the second onward -- worse than either genuine CRN
+  (which would help isolate a change between two specific N) or genuine
+  independence (which the isotonic smoother needs, since it relies on
+  neighbouring N's noise being uncorrelated). This version instead seeds
+  the L'Ecuyer-CMRG generator once from \code{seed} and advances to a
+  fresh stream for each N via \code{\link[parallel]{nextRNGStream}} --
+  each N's B replications are statistically independent of every other
+  N's, while the whole search remains exactly reproducible from the
+  single \code{seed} argument, and the caller's own RNG state and kind
+  are restored on exit exactly as before. This change alone moved the
+  stopping-rule benchmark above from sd 96.8 (matching the behaviour of
+  genuine common random numbers) toward the sd 53.9 expected of fully
+  independent streams; common random numbers were tried deliberately and
+  found to make the isotonic rule \emph{worse} (sd 91.7 vs 47.0), because
+  they make the dominant curve-level drift perfectly correlated across
+  N instead of averaging it out.
+
+  \code{decision = "lower_bound"} accepts the first N at which the lower
+  limit of a one-sided 95\% Monte Carlo confidence bound on the
+  assurance clears the target,
+  \deqn{\mathrm{WilsonLower}_{0.95}(\hat{a}, B) \geq \text{target\_assurance},}
+  where \eqn{\hat{a}} is \code{joint_assurance} at that N and
+  \eqn{\mathrm{WilsonLower}} is the one-sided Wilson score lower bound
+  (see below). This guards against per-N sampling error specifically --
+  it selects a larger (or equal) N than \code{"point"} for the same
+  draws -- but, being still a first-crossing rule, remains exposed to
+  the curve-level drift above; it is the benchmark against which
+  \code{"isotonic"}'s improvement was measured. Kept for a cheap,
+  single-N-at-a-time search (it can still stop early when
+  \code{full_grid = FALSE}) and for compatibility with versions
+  0.4.1-0.5.0.
+
+  \code{decision = "point"} reproduces the behaviour of versions <= 0.4.0:
+  an N is accepted as soon as \eqn{\hat{a} \geq} \code{target_assurance},
+  with no correction for the fact that \eqn{\hat{a}} is itself noisy.
+
+  \strong{The lower confidence bound is Wilson, not Wald, so it cannot
+  report a vacuous \code{1.000} at small B.} The textbook normal-
+  approximation (Wald) bound, \eqn{\hat{a} - z_{0.95}\sqrt{\hat{a}(1 -
+  \hat{a})/B}}, has a standard error that is \strong{exactly} 0 whenever
+  \eqn{\hat{a} \in \{0, 1\}}, regardless of B: at \code{B = 1}, a single
+  replicate that happens to pass every active target gives \eqn{\hat{a}
+  = 1} with a Wald standard error of \eqn{\sqrt{1 \cdot 0 / 1} = 0}, so
+  the Wald bound itself is \code{1.000} -- both \code{joint_assurance}
+  and \code{assurance_lower} report total certainty from one replicate,
+  under \code{decision \%in\% c("point", "lower_bound")} \strong{and}
+  under \code{"isotonic"}'s block-pooled margin (see below), and every
+  decision rule accepts the first N tried. This is an artifact of
+  approximating the sampling distribution of \eqn{\hat{a}} by a normal
+  centred at \eqn{\hat{a}} itself, which collapses to a point mass right
+  where \eqn{\hat{a}} sits at a boundary; it says nothing about how
+  confident one should actually be. \code{assurance_lower} is instead
+  computed with the Wilson score bound (\code{wilson_lower()}, internal;
+  see its documentation for the formula and references), which inverts
+  the normal approximation to the \emph{score} rather than to
+  \eqn{\hat{a}} and therefore stays strictly inside \eqn{(0, 1)} for any
+  finite B -- e.g. at \code{B = 1} and \eqn{\hat{a} = 1} it gives
+  approximately \code{0.27}, not \code{1.000}. It agrees with the Wald
+  bound to \eqn{O(z^2/B)}, which is already on the order of
+  \eqn{10^{-4}} or smaller at the \code{B = 20000} used for this
+  package's own published results, so \strong{no result computed at a
+  realistic B is affected by this change}; only the small-B behaviour
+  is. \code{assurance_mcse} itself is left as the ordinary Wald standard
+  error, \eqn{\sqrt{\hat{a}(1 - \hat{a})/B}} -- a purely descriptive
+  quantity, documented as such in \code{Return} -- so it is still
+  exactly 0 at \eqn{\hat{a} \in \{0, 1\}}; it is \code{assurance_lower}
+  that no longer collapses.
 }
 \note{
 \strong{The sensitivity being sized is the \emph{apparent}

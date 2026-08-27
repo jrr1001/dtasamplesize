@@ -48,6 +48,34 @@
 #'   The default \code{AUC = 0.90} sits between the two: it is geometrically
 #'   attainable, and being smaller than the binormal value it yields a
 #'   larger Hanley-McNeil variance and hence a conservative sample size.
+#'   The AUC gate is always evaluated at the \strong{expected} margins
+#'   \eqn{n_d = \lfloor N \cdot prev \rfloor} and \eqn{n_{nd} = N - n_d},
+#'   regardless of \code{design}: it is a deterministic criterion (see
+#'   above), so there is no sampling distribution of \eqn{n_d} to average
+#'   over in the first place.
+#'
+#'   \strong{The two sampling designs for Se and Sp differ in what is
+#'   random, and therefore in the variance of the joint probability.}
+#'
+#'   \code{design = "cohort"} (default) --- \emph{prospective cohort /
+#'   consecutive series}. Disease status is \strong{random}: each replicate
+#'   draws \eqn{n_d \sim Bin(N, prev)} diseased subjects and
+#'   \eqn{n_{nd} = N - n_d} non-diseased, then \eqn{X_{Se} \sim Bin(n_d, Se)}
+#'   and \eqn{X_{Sp} \sim Bin(n_{nd}, Sp)} conditional on that draw. A
+#'   replicate whose margins are degenerate (\eqn{n_d < 2} or
+#'   \eqn{n_{nd} < 2}) is counted as a \strong{failure}, not discarded, so
+#'   the reported joint probability is unconditional (denominator \code{B}).
+#'
+#'   \code{design = "fixed"} --- \emph{fixed disease-status margins} (the
+#'   behaviour of package versions <= 0.4.0). \eqn{n_d = \lfloor N \cdot
+#'   prev \rfloor} and \eqn{n_{nd} = N - n_d} are treated as fixed by
+#'   design, so \eqn{X_{Se} \sim Bin(n_d, Se)} and
+#'   \eqn{X_{Sp} \sim Bin(n_{nd}, Sp)} condition on the expected margins
+#'   rather than sampling them. This applies only to a design that recruits
+#'   the two disease groups separately with pre-specified sizes (e.g. a
+#'   case-control accuracy study), and it \strong{overstates the assurance}
+#'   for a prospective cohort, where the number of diseased subjects
+#'   actually enrolled is itself random. See \code{Note}.
 #'
 #' @param Se Expected sensitivity. Default 0.85.
 #' @param Sp Expected specificity. Default 0.90.
@@ -59,6 +87,15 @@
 #' @param delta_sp Half-width target for Sp. Default 0.05.
 #' @param delta_auc Half-width target for AUC. Default 0.05.
 #' @param prev Disease prevalence. Default 0.20.
+#' @param design Sampling design for Se and Sp, \code{"cohort"} (default) or
+#'   \code{"fixed"}. \code{"cohort"} treats the number of diseased subjects
+#'   as random, as in a prospective cohort or consecutive series, and is the
+#'   appropriate choice for almost all diagnostic accuracy studies.
+#'   \code{"fixed"} conditions on \eqn{n_d = \lfloor N \cdot prev \rfloor}
+#'   diseased subjects and reproduces the behaviour of versions <= 0.4.0; it
+#'   applies only to a design that recruits the two disease groups
+#'   separately with pre-specified sizes, and it is \strong{not} valid for a
+#'   prospective cohort. See \code{Details}.
 #' @param target_prob Minimum joint probability \strong{for Se and Sp}.
 #'   Default 0.80. See \code{Details}.
 #' @param N_range Range of total N to search. Default \code{seq(100, 800, by = 10)}.
@@ -71,8 +108,15 @@
 #' @return Object of class \code{"dtasamplesize"} with additional elements:
 #'   \describe{
 #'     \item{n_total}{Minimum total N achieving the joint target.}
-#'     \item{n_diseased}{Number of diseased at optimal N.}
-#'     \item{n_non_diseased}{Number of non-diseased at optimal N.}
+#'     \item{n_diseased}{Number of diseased at optimal N. Under
+#'       \code{design = "cohort"} this is \eqn{\lfloor N \cdot prev
+#'       \rfloor}, the \strong{expected} count, not a value fixed by
+#'       design: the number actually diseased varies from one replicate,
+#'       and one real study, to the next.}
+#'     \item{n_non_diseased}{Number of non-diseased at optimal N. Same
+#'       caveat as \code{n_diseased} under \code{design = "cohort"}.}
+#'     \item{design}{The sampling design used for the Se/Sp Monte Carlo
+#'       (\code{"cohort"} or \code{"fixed"}). Does not affect the AUC gate.}
 #'     \item{joint_prob_se_sp}{Monte Carlo probability that the \strong{Se
 #'       and Sp} intervals both meet their target width at the optimal N.
 #'       This is \strong{not} a three-way joint probability: the AUC
@@ -94,6 +138,19 @@
 #'   Mann-Whitney statistics. This makes the AUC component deterministic per
 #'   \code{N} and therefore a median-style, not an assurance-style,
 #'   criterion. See \code{Details}.
+#'
+#'   \strong{Design matters, a lot, for the Se/Sp joint probability.} Under
+#'   the default \code{design = "cohort"}, the number of diseased subjects
+#'   is itself random, which adds a source of sampling variability that
+#'   \code{design = "fixed"} conditions away. At a realistic adverse
+#'   operating point (\code{Se = 0.70}, \code{Sp = 0.80}, \code{prev =
+#'   0.20}, \code{delta_se = 0.08}, \code{delta_sp = 0.06}, \code{N =
+#'   650}), the fixed-margin joint probability is \strong{0.807} while the
+#'   cohort joint probability is \strong{0.716}: the fixed design
+#'   overstates the assurance by roughly 9 percentage points. Sizing a
+#'   prospective cohort with \code{design = "fixed"} therefore yields a
+#'   sample size that is too small for the stated target. Versions <= 0.4.0
+#'   offered only the fixed-margin behaviour.
 #' @references
 #' Hanley JA, McNeil BJ (1982). The meaning and use of the area under a
 #' receiver operating characteristic (ROC) curve. \emph{Radiology}
@@ -109,6 +166,10 @@
 #'
 #' # An AUC below the geometric minimum is refused:
 #' try(joint_sample_size(Se = 0.85, Sp = 0.90, AUC = 0.80))
+#'
+#' # Legacy fixed-margin design (not valid for a prospective cohort)
+#' old <- joint_sample_size(B = 1000, design = "fixed",
+#'                          N_range = seq(100, 700, by = 20))
 #' @export
 joint_sample_size <- function(Se = 0.85,
                               Sp = 0.90,
@@ -117,22 +178,24 @@ joint_sample_size <- function(Se = 0.85,
                               delta_sp = 0.05,
                               delta_auc = 0.05,
                               prev = 0.20,
+                              design = c("cohort", "fixed"),
                               target_prob = 0.80,
                               N_range = seq(100, 800, by = 10),
                               B = 5000,
                               seed = 2026) {
-  # --- preserve the caller's RNG state -------------------------------
-  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-    on.exit(assign(".Random.seed", old_seed, envir = .GlobalEnv), add = TRUE)
-  } else {
-    on.exit(
-      suppressWarnings(rm(".Random.seed", envir = .GlobalEnv)),
-      add = TRUE
-    )
-  }
+  # --- preserve the caller's RNG state (kind AND seed) ------------------
+  # See save_rng_state()/restore_rng_state(): restoring only .Random.seed's
+  # VALUE is not enough, because set.seed() called later by unrelated code
+  # with no explicit `kind` argument reuses whichever kind is CURRENTLY
+  # ACTIVE. The set.seed() call below names its kind explicitly
+  # (Mersenne-Twister, R's own default), so the Se/Sp Monte Carlo
+  # reproduces the same numbers regardless of the caller's own RNG
+  # configuration.
+  old_rng_state <- save_rng_state()
+  on.exit(restore_rng_state(old_rng_state), add = TRUE)
 
   # Validate inputs
+  design <- match.arg(design)
   stopifnot(Se > 0, Se < 1, Sp > 0, Sp < 1, AUC > 0.5, AUC <= 1)
   stopifnot(delta_se > 0, delta_sp > 0, delta_auc > 0)
   stopifnot(prev > 0, prev < 1)
@@ -176,12 +239,17 @@ joint_sample_size <- function(Se = 0.85,
   auc_gate_passed <- FALSE
 
   for (N in N_range) {
-    n_d <- floor(N * prev)
-    n_nd <- N - n_d
-    if (n_d < 2 || n_nd < 2) next
+    # Expected margins: used for the AUC gate always, and for the Se/Sp
+    # Monte Carlo under design = "fixed" (see below).
+    n_d_exp <- floor(N * prev)
+    n_nd_exp <- N - n_d_exp
+    if (n_d_exp < 2 || n_nd_exp < 2) next
 
     # --- AUC: DETERMINISTIC gate via Hanley-McNeil (median-style) ---
-    var_auc <- hanley_mcneil_var(AUC, n_d, n_nd)
+    # Evaluated at the expected margins regardless of design: this
+    # criterion has no sampling distribution to average over (see
+    # @details), so there is nothing for "cohort" to change here.
+    var_auc <- hanley_mcneil_var(AUC, n_d_exp, n_nd_exp)
     auc_width <- 2 * stats::qnorm(0.975) * sqrt(var_auc)
     auc_pass <- auc_width <= target_auc_width
 
@@ -190,16 +258,45 @@ joint_sample_size <- function(Se = 0.85,
     auc_gate_passed <- TRUE
 
     # --- Se and Sp: Monte Carlo with Wilson CI ---
-    set.seed(seed)
-    x_se <- stats::rbinom(B, n_d, Se)
-    x_sp <- stats::rbinom(B, n_nd, Sp)
+    set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rejection")
 
-    se_width <- wilson_width(x_se, n_d)
-    sp_width <- wilson_width(x_sp, n_nd)
+    if (design == "cohort") {
+      # Disease status is RANDOM in a prospective cohort: the number of
+      # diseased subjects actually enrolled varies from study to study.
+      # Conditioning on its expected value (design = "fixed") overstates
+      # the assurance; see @details and @note.
+      n_d_b <- stats::rbinom(B, N, prev)
+      n_nd_b <- N - n_d_b
+      degenerate <- (n_d_b < 2) | (n_nd_b < 2)
+
+      # Degenerate replicates count as FAILURES, not exclusions (the
+      # denominator stays B); clamp their margins to 1 only so that the
+      # vectorised draws below stay well-defined, since `pass` overrides
+      # them to FALSE regardless of the simulated width.
+      safe_n_d <- pmax(n_d_b, 1L)
+      safe_n_nd <- pmax(n_nd_b, 1L)
+      x_se <- stats::rbinom(B, safe_n_d, Se)
+      x_sp <- stats::rbinom(B, safe_n_nd, Sp)
+
+      se_width <- wilson_width(x_se, safe_n_d)
+      sp_width <- wilson_width(x_sp, safe_n_nd)
+
+      pass <- !degenerate &
+        (se_width <= target_se_width) & (sp_width <= target_sp_width)
+    } else {
+      # design == "fixed": disease-status margins fixed by design, valid
+      # only when the two groups are recruited separately with
+      # pre-specified sizes; NOT valid for a prospective cohort.
+      x_se <- stats::rbinom(B, n_d_exp, Se)
+      x_sp <- stats::rbinom(B, n_nd_exp, Sp)
+
+      se_width <- wilson_width(x_se, n_d_exp)
+      sp_width <- wilson_width(x_sp, n_nd_exp)
+
+      pass <- (se_width <= target_se_width) & (sp_width <= target_sp_width)
+    }
 
     # Joint over Se and Sp ONLY (the AUC gate is deterministic, see @details)
-    pass <- (se_width <= target_se_width) &
-      (sp_width <= target_sp_width)
     joint_prob <- mean(pass)
 
     if (joint_prob >= target_prob) {
@@ -228,6 +325,8 @@ joint_sample_size <- function(Se = 0.85,
     optimal_N <- max(N_range)
   }
 
+  # Expected margins at the final N. Under design = "cohort" these are
+  # EXPECTED counts, not values fixed by the study design; see @return.
   n_d_final <- floor(optimal_N * prev)
   n_nd_final <- optimal_N - n_d_final
 
@@ -237,6 +336,7 @@ joint_sample_size <- function(Se = 0.85,
   structure(
     list(
       method = "Joint Sample Size for Se + Sp + AUC",
+      design = design,
       n_total = optimal_N,
       n_diseased = n_d_final,
       n_non_diseased = n_nd_final,

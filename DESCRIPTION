@@ -1,7 +1,7 @@
 Package: dtasamplesize
 Type: Package
 Title: Simulation-Based Sample Size Estimation for Diagnostic Accuracy Studies
-Version: 0.4.0
+Version: 0.6.2
 Authors@R: c(
     person("Jes\u00fas D.", "Rojas", role = c("aut", "cre"),
            email = "jrojasrivero@gmail.com",
@@ -12,9 +12,12 @@ Description: Provides simulation-based (Monte Carlo) methods for sample size
     estimation in diagnostic test accuracy (DTA) studies. Implements Bayesian
     assurance (Wilson et al. 2022 <doi:10.1002/sim.9393>), joint optimization
     of sensitivity, specificity, and AUC, adjustment for imperfect reference
-    standards via the Rogan-Gladen variance inflation factor (Rogan &
-    Gladen 1978 <doi:10.1093/oxfordjournals.aje.a112510>; see also Staquet
-    et al. 1981 <doi:10.1016/0021-9681(81)90059-X>),
+    standards via an exactly-identified misclassification correction (with
+    a closed form for the apparent sensitivity/specificity and a delta-
+    method variance for the bias-corrected sensitivity/specificity; see also
+    Staquet et al. 1981 <doi:10.1016/0021-9681(81)90059-X> and, for the
+    retained prevalence variance-inflation diagnostic, Rogan & Gladen 1978
+    <doi:10.1093/oxfordjournals.aje.a112510>),
     adaptive prevalence re-estimation (Stark & Zapf 2020
     <doi:10.1177/0962280220913588>), sample size for time-dependent ROC
     curves, and sample size for net benefit (decision curve analysis).
@@ -25,7 +28,7 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 RoxygenNote: 7.3.3
 Depends: R (>= 4.1.0)
-Imports: stats
+Imports: stats, parallel
 Suggests:
     timeROC,
     survival,

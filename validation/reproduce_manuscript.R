@@ -6,6 +6,19 @@
 # study analyses no empirical data: all data are simulated inside the package's
 # functions from the stated parameters and are fully determined by the seed.
 #
+# WHAT THIS SCRIPT DOES NOT DO. Every check below is a REPRODUCIBILITY
+# check: it confirms that the installed package, run today, prints the same
+# numbers the article prints. It is NOT, and cannot be, a VALIDITY check.
+# A defect that biases a result reproduces just as cleanly as a result that
+# does not -- a PASS below only means the code and the article agree with
+# each other, not that either is statistically correct. This distinction is
+# not academic: the numbers this script currently checks against were
+# themselves revised twice (0.3.0, then 0.5.0 and 0.6.0) after earlier
+# releases passed their own reproducibility checks against defective
+# numbers. Validity is established separately, release by release, in
+# NEWS.md and by independent review of the methods -- never by this script
+# agreeing with itself.
+#
 # Run after installing the package:  R -f validation/reproduce_manuscript.R
 #
 # Optional: set DUMP_DATA <- TRUE below to also write the underlying simulated
@@ -16,14 +29,22 @@
 library(dtasamplesize)
 options(width = 110, digits = 6)
 
-# The article reports the numbers produced by version 0.4.0. Earlier releases
-# contain the validity errors that 0.3.0 corrects (see NEWS.md), so they return
-# different values -- notably a net-benefit sample size of 110 instead of 240,
-# and a joint sample size computed from a different AUC default. Stop early
-# rather than let a stale installation look like a discrepancy in the article.
-if (utils::packageVersion("dtasamplesize") < "0.3.0") {
+# The article reports the numbers produced by version 0.6.0. Earlier releases
+# contain the validity errors that 0.3.0, 0.5.0 and 0.6.0 correct in turn
+# (see NEWS.md) -- notably a net-benefit sample size of 110 instead of 240,
+# a BAM search that reported the marginal per-arm assurance instead of the
+# joint one, a Figure 4 comparison confounded with three different
+# prevalences across methods, an adaptive-prevalence design that discarded
+# its own stage-1 pilot and understated recruitment by 21-36%, an
+# imperfect-reference sample size inflated by a formula that belongs to a
+# different estimand (prevalence, not the index test's Se/Sp), and a
+# ss_unified() stopping rule whose selected N reached the declared
+# assurance only 84% of the time across seeds -- so earlier installations
+# return different values. Stop early rather than let a stale installation
+# look like a discrepancy in the article.
+if (utils::packageVersion("dtasamplesize") < "0.6.0") {
   stop("dtasamplesize ", utils::packageVersion("dtasamplesize"), " is installed, ",
-       "but this script reproduces the numbers of version 0.3.0 or later.\n",
+       "but this script reproduces the numbers of version 0.6.0 or later.\n",
        "  Install the current source first, e.g.\n",
        "    remotes::install_github('jrr1001/dtasamplesize')\n",
        "  or, from a local copy of the repository:\n",
@@ -93,25 +114,141 @@ app <- ir$mc_validation$se_apparent[ir$mc_validation$scenario == "adjusted"]
 cat(sprintf("apparent Se = %.3f   bias = %.3f   (article: 0.764, -0.086)   %s\n",
             app, app - 0.85, ok(near(app, 0.764, 0.01))))
 
-## ---- 6. Required N by planning approach (Figure 4) ----
-sep("6. Five planning approaches at a common prevalence of 0.20")
-PREV <- 0.20; PRIOR_PREV <- c(4, 16)          # Beta(4,16): mean 0.20
-N_bud <- ceiling(max(buderer_n(0.85, 0.07)/PREV, buderer_n(0.90, 0.05)/(1-PREV)))
-N_bam <- suppressWarnings(bam_sample_size(B = 2000, seed = SEED,
-             prior_prev = PRIOR_PREV, n_range = 20:800))$N_total_median
-N_joi <- suppressWarnings(joint_sample_size(B = 2000, seed = SEED,
-             prev = PREV, N_range = seq(100, 900, by = 20)))$n_total
-N_imp <- ss_imperfect_ref(B = 0, prev = PREV)$N_adjusted_loss
-N_uni <- suppressWarnings(ss_unified(B = 1200, seed = SEED,
-             prior_prev = PRIOR_PREV, N_range = seq(200, 1600, by = 20),
-             delta_auc = 0, check_nb = FALSE))$n_total
-got <- c(N_bud, N_bam, N_joi, N_imp, N_uni)
-exp <- c(500, 591, 580, 773, 1000)
-for (i in seq_along(got))
-  cat(sprintf("%-22s = %5d   (article: %4d)   %s\n",
-      c("Buderer (classical)","Bayesian assurance","Joint Se/Sp + AUC gate",
-        "Imperfect reference","Unified framework")[i],
-      got[i], exp[i], ok(got[i] == exp[i])))
+## ---- 6. Required N as a nested sequence of uncertainty sources (Figure 4) ----
+sep("6. Figure 4: five bars, each adding one source of uncertainty")
+# Shared design: Se ~ Beta(17,3), Sp ~ Beta(18,2), prevalence ~ Beta(4,16)
+# (mean 0.20), delta_se = 0.07, delta_sp = 0.05, target assurance 0.80,
+# loss_rate = 0, B = 20000. Step 1 is the deterministic Buderer formula;
+# steps 2-5 all go through ss_unified(), each turning on exactly one more
+# constraint than the step before it. See make_manuscript_assets.R for the
+# full derivation, including why each N_range below is wide enough that the
+# search converges well inside it rather than exhausting the range.
+PRIOR_SE <- c(17, 3); PRIOR_SP <- c(18, 2); PRIOR_PREV <- c(4, 16)
+DELTA_SE <- 0.07; DELTA_SP <- 0.05; B_MAIN <- 20000
+
+N_f4_1 <- ceiling(max(buderer_n(0.85, 0.07) / 0.20,
+                       buderer_n(0.90, 0.05) / 0.80))
+N_f4_2 <- suppressWarnings(ss_unified(
+  prior_se = PRIOR_SE, prior_sp = PRIOR_SP, prior_prev = PRIOR_PREV,
+  Se_ref = 1, Sp_ref = 1, loss_rate = 0, delta_se = DELTA_SE, delta_sp = DELTA_SP,
+  delta_auc = 0, check_nb = FALSE, N_range = seq(750, 1000, by = 10),
+  B = B_MAIN, seed = SEED))$n_total
+N_f4_3 <- suppressWarnings(ss_unified(
+  prior_se = PRIOR_SE, prior_sp = PRIOR_SP, prior_prev = PRIOR_PREV,
+  Se_ref = 1, Sp_ref = 1, loss_rate = 0, delta_se = DELTA_SE, delta_sp = DELTA_SP,
+  delta_auc = 0.06, check_nb = FALSE, N_range = seq(750, 1000, by = 10),
+  B = B_MAIN, seed = SEED))$n_total
+N_f4_4 <- suppressWarnings(ss_unified(
+  prior_se = PRIOR_SE, prior_sp = PRIOR_SP, prior_prev = PRIOR_PREV,
+  Se_ref = 0.90, Sp_ref = 0.95, loss_rate = 0, delta_se = DELTA_SE, delta_sp = DELTA_SP,
+  delta_auc = 0.06, check_nb = FALSE, N_range = seq(1050, 1400, by = 10),
+  B = B_MAIN, seed = SEED))$n_total
+N_f4_5_res <- suppressWarnings(ss_unified(
+  prior_se = PRIOR_SE, prior_sp = PRIOR_SP, prior_prev = PRIOR_PREV,
+  Se_ref = 0.90, Sp_ref = 0.95, loss_rate = 0, delta_se = DELTA_SE, delta_sp = DELTA_SP,
+  delta_auc = 0.06, check_nb = TRUE, N_range = seq(1950, 2600, by = 10),
+  B = B_MAIN, seed = SEED))
+N_f4_5 <- N_f4_5_res$n_total
+
+got_f4 <- c(N_f4_1, N_f4_2, N_f4_3, N_f4_4, N_f4_5)
+exp_f4 <- c(500, 844, 844, 1155, 2351)
+lab_f4 <- c("1. Buderer (deterministic)", "2. + joint Se/Sp precision",
+            "3. + AUC gate", "4. + imperfect reference", "5. + net benefit")
+for (i in seq_along(got_f4))
+  cat(sprintf("%-28s = %5d   (article: %4d)   %s\n",
+      lab_f4[i], got_f4[i], exp_f4[i], ok(got_f4[i] == exp_f4[i])))
+cat("Note: step 2 -> step 3 is expected to be FLAT (+0): the AUC gate does\n",
+    "not exclude any additional replicate at this operating point.\n", sep = "")
+
+# Step 5 also reports the achievable ceiling of the check_nb criterion: the
+# largest joint assurance the CI-based net-benefit criterion could ever
+# reach as N -> Inf under this step's priors, Se_ref, Sp_ref and pt_range
+# (default c(0.15, 0.40), not overridden above). This is a new diagnostic
+# in 0.6.0 (see NEWS.md), not a search result, so it does not move with N --
+# it depends only on the priors, Se_ref, Sp_ref, pt_range and the seed, not
+# on N_range or on the search's own B (see ?ss_unified). That is also why
+# the same ceiling can be read off the full Step-5 search above for the
+# article's own pt_range, and off the cheapest possible call -- a
+# single-value N_range and a small B -- for the other five threshold
+# ranges reported in Table 5, checked below.
+#
+# Tolerance: nb_assurance_ceiling()'s default B_ceiling = 30000000 draws
+# (raised from 200000 after the ceiling values were found to be
+# systematically off by ~0.001 and correlated across pt_range -- see
+# NEWS.md) is documented (?ss_unified, internal nb_assurance_ceiling) to
+# keep the Monte Carlo error of the ceiling below about 1e-4 for ceilings
+# in the typical 0.7-0.95 range; since both the seed and B_ceiling are
+# fixed, the value is in fact exactly reproducible run to run, but the
+# declared tolerance below (2e-3) also absorbs the +/-0.0005 from rounding
+# the article's published figures to three decimals.
+NB_CEILING_TOL <- 2e-3
+nb_ceiling_for <- function(pt_range) {
+  suppressWarnings(ss_unified(
+    prior_se = PRIOR_SE, prior_sp = PRIOR_SP, prior_prev = PRIOR_PREV,
+    Se_ref = 0.90, Sp_ref = 0.95, loss_rate = 0,
+    delta_se = DELTA_SE, delta_sp = DELTA_SP, delta_auc = 0.06,
+    check_nb = TRUE, pt_range = pt_range, target_assurance = 0.80,
+    N_range = 500, B = 100, seed = SEED
+  ))$nb_ceiling
+}
+
+table5_pt_ranges <- list(c(0.15, 0.40), c(0.20, 0.30), c(0.15, 0.25),
+                          c(0.10, 0.40), c(0.10, 0.30), c(0.05, 0.50))
+table5_labels <- c("0.15-0.40 (used in this article)", "0.20-0.30",
+                    "0.15-0.25", "0.10-0.40", "0.10-0.30", "0.05-0.50")
+table5_expected <- c(0.880, 0.969, 0.956, 0.695, 0.753, 0.000)
+# The first range reuses the ceiling already returned by the full Step-5
+# search above instead of recomputing it, since the two are identical by
+# construction (see note above).
+table5_got <- c(N_f4_5_res$nb_ceiling,
+                 vapply(table5_pt_ranges[-1], nb_ceiling_for, numeric(1)))
+for (i in seq_along(table5_got))
+  cat(sprintf("Table 5 ceiling, pt_range = %-33s = %.3f   (article: %.3f)   %s\n",
+      table5_labels[i], table5_got[i], table5_expected[i],
+      ok(near(table5_got[i], table5_expected[i], NB_CEILING_TOL))))
+
+## ---- 7. Harmonized comparison of five planning approaches (new table) ----
+sep("7. Harmonized comparison table: five methods, common assumptions")
+# Unlike Figure 4 (a nested sequence, all but one bar computed by
+# ss_unified()), this table calls each method's own native function once,
+# under the same five common parameters where each method has the
+# corresponding argument.
+E_SE <- PRIOR_SE[1] / sum(PRIOR_SE); E_SP <- PRIOR_SP[1] / sum(PRIOR_SP)
+E_PREV <- PRIOR_PREV[1] / sum(PRIOR_PREV)
+
+N_h_bud <- N_f4_1  # identical configuration to Figure 4 step 1
+N_h_bam <- suppressWarnings(bam_sample_size(
+  prior_se = PRIOR_SE, prior_sp = PRIOR_SP, prior_prev = PRIOR_PREV,
+  delta_se = 2 * DELTA_SE, delta_sp = 2 * DELTA_SP, target_assurance = 0.80,
+  method = "exact", B = B_MAIN, seed = SEED))$N_total
+N_h_joi <- suppressWarnings(joint_sample_size(
+  Se = E_SE, Sp = E_SP, delta_se = DELTA_SE, delta_sp = DELTA_SP, prev = E_PREV,
+  design = "cohort", target_prob = 0.80, B = B_MAIN, seed = SEED))$n_total
+N_h_imp_res <- ss_imperfect_ref(
+  Se = E_SE, Sp = E_SP, d_se = DELTA_SE, d_sp = DELTA_SP, prev = E_PREV,
+  Se_ref = 0.90, Sp_ref = 0.95, loss_rate = 0, B = 0, seed = SEED)
+N_h_imp <- N_h_imp_res$n_total  # estimand = "apparent" (default): the
+                                 # naive-analysis N, not the corrected one
+N_h_uni <- N_f4_5  # identical configuration to Figure 4 step 5
+
+got_h <- c(N_h_bud, N_h_bam, N_h_joi, N_h_imp, N_h_uni)
+exp_h <- c(500, 672, 580, 732, 2351)
+lab_h <- c("Buderer (classical)", "BAM (exact mode)", "Joint Se/Sp + AUC",
+           "Imperfect reference (apparent)", "Unified (all sources active)")
+for (i in seq_along(got_h))
+  cat(sprintf("%-28s = %5d   (article: %4d)   %s\n",
+      lab_h[i], got_h[i], exp_h[i], ok(got_h[i] == exp_h[i])))
+
+## ---- 8. Imperfect reference: the corrected estimand (new in 0.6.0) ----
+sep("8. Imperfect reference: apparent vs corrected estimand")
+# ss_imperfect_ref() always computes and returns BOTH estimands regardless
+# of which one `estimand` selects for the generic n_total slot checked in
+# section 7 above. This checks the OTHER one -- the misclassification-
+# corrected Se/Sp -- from the same call already made above (N_h_imp_res),
+# under the identical common configuration used throughout this script.
+cat(sprintf("N_corrected (imperfect ref) = %5d   (article: %4d)   %s\n",
+            N_h_imp_res$N_corrected, 1235,
+            ok(N_h_imp_res$N_corrected == 1235)))
 
 ## ---- Simulated data (optional export) ----
 # The article analyses no empirical data. Each quantity above is computed from
