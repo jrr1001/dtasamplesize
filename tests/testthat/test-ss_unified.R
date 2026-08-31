@@ -338,10 +338,13 @@ test_that("nb_ceiling reproduces the independently-verified value for the defaul
   # by tensor-product Gauss-Legendre quadrature over the (prev, Se, Sp)
   # priors (n = 300 and n = 600 nodes per dimension agree to six decimals),
   # cross-checked against a 5e6-draw Monte Carlo run. This uses the
-  # function's real default nb_B_ceiling (30000000), which is what the
-  # precision fix (defect 4) is actually about: versions <= 0.6.0 used
-  # B_ceiling = 200000 and got 0.87864 here, off by ~0.00097 -- more than
-  # the tolerance below allows.
+  # function's real default nb_B_ceiling (200000), which -- since 0.6.3 --
+  # is a deterministic quadrature evaluation budget, not a Monte Carlo
+  # sample size (see ?dtasamplesize:::nb_assurance_ceiling): versions
+  # <= 0.6.0 used a Monte Carlo B_ceiling = 200000 and got 0.87864 here,
+  # off by ~0.00097 (more than the tolerance below allows), and versions
+  # 0.6.1-0.6.2 fixed precision by raising Monte Carlo B_ceiling to 2e8,
+  # which reproduced this value but exhausted memory on ordinary hardware.
   result <- suppressWarnings(ss_unified(
     B = 100, seed = 2026, prior_se = c(17, 3), prior_sp = c(18, 2),
     prior_prev = c(4, 16), Se_ref = 0.90, Sp_ref = 0.95,
@@ -350,46 +353,45 @@ test_that("nb_ceiling reproduces the independently-verified value for the defaul
   expect_equal(result$nb_ceiling, 0.879606, tolerance = 2e-4)
 })
 
-test_that("nb_assurance_ceiling() no longer replays the plain, un-salted seed across pt_range (defect 4)", {
-  # Versions <= 0.6.0 called set.seed(seed) directly, with no pt_range-
-  # dependent salting, so nb_assurance_ceiling(seed = 2026, pt_range = X)
-  # started from the EXACT SAME (prev, Se, Sp) draws for any X -- meaning a
-  # table of ceilings at several pt_range values (all called with the same
-  # seed, as validation/make_manuscript_assets.R's Table 5 does) had
-  # perfectly correlated Monte Carlo error: every value was biased in the
-  # same direction by a similar relative amount. Reproduce that old,
-  # un-salted draw directly (same seed, same B_ceiling, same kind) and
-  # confirm the CURRENT function's value for the SAME pt_range differs from
-  # it -- i.e. seed = 2026 alone no longer determines the draw.
+test_that("nb_assurance_ceiling() is a deterministic quadrature: identical across seed and RNGkind", {
+  # Versions <= 0.6.2 estimated the ceiling by Monte Carlo, so its value
+  # depended on `seed` (and, before an earlier fix, even on the caller's
+  # ambient RNGkind -- see test-rng_state.R for that regression test).
+  # Since 0.6.3 the ceiling is computed by closed-form integration over
+  # prevalence and Gauss-Legendre quadrature over Se and Sp: it touches no
+  # random number generator at all, so `seed` -- kept only for backward
+  # compatibility -- can no longer move the result even a single bit.
   nb_assurance_ceiling <- get("nb_assurance_ceiling", envir = asNamespace("dtasamplesize"))
   prior_se <- c(17, 3); prior_sp <- c(18, 2); prior_prev <- c(4, 16)
   Se_ref <- 0.90; Sp_ref <- 0.95; pt_range <- c(0.15, 0.40)
-  B_ceiling <- 200000L
 
-  current_val <- nb_assurance_ceiling(prior_se, prior_sp, prior_prev, Se_ref, Sp_ref,
-                                       pt_range, seed = 2026, B_ceiling = B_ceiling)
+  val_seed_a <- nb_assurance_ceiling(prior_se, prior_sp, prior_prev, Se_ref, Sp_ref,
+                                      pt_range, seed = 1, B_ceiling = 200000L)
+  val_seed_b <- nb_assurance_ceiling(prior_se, prior_sp, prior_prev, Se_ref, Sp_ref,
+                                      pt_range, seed = 999999, B_ceiling = 200000L)
+  expect_identical(val_seed_a, val_seed_b)
+  expect_equal(val_seed_a, 0.879606, tolerance = 1e-5)
 
-  old_seed_present <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  if (old_seed_present) {
-    saved <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-    on.exit(assign(".Random.seed", saved, envir = .GlobalEnv), add = TRUE)
-  }
-  set.seed(2026)  # the pre-fix call, verbatim: no salting, no explicit kind
-  prev_b <- stats::rbeta(B_ceiling, prior_prev[1], prior_prev[2])
-  Se_b   <- stats::rbeta(B_ceiling, prior_se[1],   prior_se[2])
-  Sp_b   <- stats::rbeta(B_ceiling, prior_sp[1],   prior_sp[2])
-  p1 <- prev_b * Se_b * Se_ref + (1 - prev_b) * (1 - Sp_b) * (1 - Sp_ref)
-  p2 <- prev_b * Se_b * (1 - Se_ref) + (1 - prev_b) * (1 - Sp_b) * Sp_ref
-  q1 <- prev_b * (1 - Se_b) * Se_ref + (1 - prev_b) * Sp_b * (1 - Sp_ref)
-  q2 <- prev_b * (1 - Se_b) * (1 - Se_ref) + (1 - prev_b) * Sp_b * Sp_ref
-  ok <- rep(TRUE, B_ceiling)
-  for (pt in pt_range) {
-    w <- pt / (1 - pt)
-    ok <- ok & (p1 - w * p2 > 0) & (w * q2 - q1 > 0)
-  }
-  old_style_val <- mean(ok)
+  # A second pt_range, called immediately after the first with the SAME
+  # seed, must NOT reuse whatever the first call computed (the historical
+  # bug this test used to target, back when the underlying draws were
+  # random): it is a different, independently-checked ceiling.
+  val_other_range <- nb_assurance_ceiling(prior_se, prior_sp, prior_prev, Se_ref, Sp_ref,
+                                           c(0.20, 0.30), seed = 1, B_ceiling = 200000L)
+  expect_false(isTRUE(all.equal(val_seed_a, val_other_range)))
+  expect_equal(val_other_range, 0.968998, tolerance = 1e-5)
+})
 
-  expect_false(isTRUE(all.equal(current_val, old_style_val)))
+test_that("nb_B_ceiling above the maximum budget errors with a clear message instead of running", {
+  # See NB_B_CEILING_MAX (R/helpers.R) and A1 in the audit this guards
+  # against: earlier versions' Monte Carlo default (2e8 draws) allocated
+  # several ~4.8 GB double vectors and could exhaust memory outright. The
+  # cap below is checked before any computation is attempted.
+  expect_error(
+    ss_unified(B = 10, seed = 1, N_range = 300, delta_auc = 0,
+               check_nb = TRUE, nb_B_ceiling = 50000000),
+    "exceeds the maximum allowed budget"
+  )
 })
 
 test_that("an unreachable check_nb ceiling REPLACES, not joins, the generic 'expand N_range' warning", {
@@ -430,6 +432,12 @@ test_that("an unreachable check_nb ceiling REPLACES, not joins, the generic 'exp
   expect_false(is.null(result$nb_ceiling))
   expect_equal(result$nb_ceiling, 0)
   expect_true(is.na(result$joint_assurance))
+  # A2 fix: N_effective/n_total must be NA here too, not max(N_range) --
+  # otherwise a caller reading only n_total would adopt a "sample size"
+  # with a target that is structurally unreachable at any N.
+  expect_true(is.na(result$N_effective))
+  expect_true(is.na(result$n_total))
+  expect_identical(result$status, "unreachable")
 })
 
 # --- decision = "isotonic" -----------------------------------------------
@@ -481,7 +489,13 @@ test_that("decision = \"isotonic\" falls back to the generic warning when the fi
                N_range = c(100, 150), delta_auc = 0, check_nb = FALSE),
     "Consider expanding N_range"
   )
-  expect_equal(result$N_effective, 150)
+  # N_effective/n_total are NA when the search does not converge (A2 fix):
+  # a caller who reads only n_total must not see a number that looks like a
+  # validated design. status distinguishes this ("grid_exhausted") from the
+  # check_nb ceiling case ("unreachable").
+  expect_true(is.na(result$N_effective))
+  expect_true(is.na(result$n_total))
+  expect_identical(result$status, "grid_exhausted")
 })
 
 test_that("decision = \"isotonic\" is exactly reproducible for a fixed seed", {
@@ -540,8 +554,15 @@ test_that("decision = \"isotonic\" does not error on the reported single-N repro
       nb_B_ceiling = 50000
     ))
   )
-  expect_equal(result$N_effective, 2216L)
+  # The point estimate (0.800112) clears the target, but the conservative
+  # Monte Carlo margin puts the lower bound below it, so the rule declines
+  # this N rather than accepting a size whose true assurance sits on the
+  # boundary. An independent reference curve places the truth at N = 2216
+  # at 0.80000, so declining is the correct, conservative outcome.
   expect_equal(result$joint_assurance, 0.800112, tolerance = 1e-4)
+  expect_lt(result$assurance_lower, 0.80)
+  expect_true(is.na(result$N_effective))
+  expect_identical(result$status, "grid_exhausted")
 })
 
 # --- regression: decision = "isotonic" must keep a safety margin ----------
@@ -702,9 +723,14 @@ test_that("the \"did not converge\" fallback reports the assurance actually obse
   set.seed(7)
   r_shuf <- run(sample(low))
 
-  expect_identical(r_asc$N_effective, max(low))
-  expect_identical(r_desc$N_effective, max(low))
-  expect_identical(r_shuf$N_effective, max(low))
+  # N_effective is NA when the search does not converge (A2 fix), regardless
+  # of N_range's order; the assurance actually observed at max(N_range) --
+  # this test's own subject -- remains available via joint_assurance et al.
+  # (checked below), unaffected by that change.
+  expect_true(is.na(r_asc$N_effective))
+  expect_true(is.na(r_desc$N_effective))
+  expect_true(is.na(r_shuf$N_effective))
+  expect_identical(r_asc$status, "grid_exhausted")
 
   expect_equal(r_desc$joint_assurance, r_asc$joint_assurance)
   expect_equal(r_shuf$joint_assurance, r_asc$joint_assurance)

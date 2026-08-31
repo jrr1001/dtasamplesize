@@ -22,7 +22,7 @@ ss_unified(
   seed = 2026,
   full_grid = FALSE,
   decision = c("isotonic", "lower_bound", "point"),
-  nb_B_ceiling = 200000000L
+  nb_B_ceiling = 200000L
 )
 }
 \arguments{
@@ -103,23 +103,62 @@ this change and is more expensive than the default
 \code{"isotonic"} (default), \code{"lower_bound"} or \code{"point"}.
 See \code{Details}.}
 
-\item{nb_B_ceiling}{Number of prior draws used by the internal
+\item{nb_B_ceiling}{Approximate evaluation budget for the internal
 \code{check_nb} ceiling calculation (\code{nb_assurance_ceiling()};
 see \code{Details}, "The CI-based net-benefit criterion has a hard
-ceiling"). Ignored when \code{check_nb = FALSE}. Default 200000000,
-which keeps the ceiling's Monte Carlo standard error below about
-\eqn{2.6 \times 10^{-5}} for ceilings in the typical 0.7-0.95 range (see
-\code{nb_assurance_ceiling}'s own documentation for how this was
-chosen and verified). Exposed mainly so that a caller who only needs an
-approximate ceiling -- e.g. while exploring \code{pt_range} choices,
-or in a test that checks the ceiling's presence rather than its exact
-value -- can pass a much smaller value for speed; the calculation is
-fully vectorized and independent of \code{B} and \code{N_range}, so
-its cost does not otherwise scale with the rest of the search.}
+ceiling"). Ignored when \code{check_nb = FALSE}. Default 200000 (2e5).
+\strong{This is now a deterministic quadrature, not a Monte Carlo
+sample} -- versions <= 0.6.2 used \code{nb_B_ceiling} draws and a
+default of 200000000 (2e8), which could exhaust memory (several
+double vectors of that length, each about 4.8 GB) and still left the
+package's own published third-decimal ceiling only about four
+Monte Carlo standard errors from the rounding boundary. The current
+implementation integrates the sample-size-relevant prevalence
+dimension in closed form and evaluates the remaining two dimensions
+(Se, Sp) on a \code{ceiling(sqrt(nb_B_ceiling))}-node-per-dimension
+Gauss-Legendre grid, so \code{nb_B_ceiling} now controls quadrature
+resolution rather than sample size, is unaffected by \code{seed}, and
+its peak memory stays proportional to \code{sqrt(nb_B_ceiling)}, not
+to \code{nb_B_ceiling} itself. The default already reproduces this
+package's own published ceilings to six decimal places (see
+\code{nb_assurance_ceiling}'s own documentation); a caller who only
+needs an approximate ceiling -- e.g. while exploring \code{pt_range}
+choices, or in a test that checks the ceiling's presence rather than
+its exact value -- can pass a much smaller value for speed. Values
+above \code{2e7} are rejected with an informative error rather than
+attempted (see \code{nb_assurance_ceiling}); the calculation is
+independent of \code{B} and \code{N_range}, so its cost does not
+otherwise scale with the rest of the search.}
 }
 \value{
 Object of class \code{"dtasamplesize"} with additional elements:
   \describe{
+    \item{status}{One of \code{"converged"} (a design was found),
+      \code{"unreachable"} (\code{check_nb}'s ceiling is below
+      \code{target_assurance}, so no N could ever succeed; see
+      \code{Details}, "The CI-based net-benefit criterion has a hard
+      ceiling") or \code{"grid_exhausted"} (no N in \code{N_range} reached
+      \code{target_assurance}). \code{N_effective} and \code{n_total} are
+      \code{NA} whenever \code{status != "converged"} (see below); the
+      warning issued in either non-convergent case (kept, not replaced by
+      this field) still carries the diagnostic detail (e.g. the ceiling
+      value, or the assurance actually observed at \code{max(N_range)}).
+      Versions <= 0.6.2 signalled non-convergence only via that warning
+      while still returning \code{N_effective = n_total = max(N_range)}
+      -- a real, usable-looking integer -- so a caller who read \code{
+      n_total} without also checking for a warning (or for \code{
+      joint_assurance} being \code{NA}/below target) could silently adopt
+      a sample size with no assurance guarantee behind it at all.}
+    \item{N_effective}{The selected total sample size, before inflating
+      for \code{loss_rate} (see \code{n_total}/\code{N_enrolled} for the
+      inflated value). \code{NA} when \code{status != "converged"} (see
+      \code{status}).}
+    \item{n_total, N_enrolled}{The same quantity under two names, kept for
+      backward compatibility: \code{N_effective} inflated for
+      \code{loss_rate}, i.e. \code{ceiling(N_effective / (1 -
+      loss_rate))}. \code{NA} when \code{status != "converged"} (see
+      \code{status}); \code{n_diseased} is likewise \code{NA} in that
+      case, since it too is only meaningful for a converged design.}
     \item{joint_assurance}{Achieved joint assurance at \code{N_effective}:
       the probability that \strong{all} active targets -- Se, Sp, AUC
       (when \code{delta_auc > 0}) and net benefit (when
@@ -185,7 +224,7 @@ Object of class \code{"dtasamplesize"} with additional elements:
       \strong{distinct} N actually evaluated -- ascending, and with
       \code{full_grid = TRUE} covering every unique value in
       \code{N_range} -- since a repeated N is looked up rather than
-      re-evaluated (see \code{full_grid} above); with the default
+      re-evaluated (see \code{@param full_grid}); with the default
       \code{full_grid = FALSE} the search instead stops as soon as the
       smallest N reaching \code{target_assurance} is found, so the grid
       is truncated there.}
@@ -245,8 +284,10 @@ The parameters \code{delta_se}, \code{delta_sp}, and
   \code{nb_assurance_ceiling}, internal). When \code{check_nb = TRUE},
   this ceiling is computed \strong{before} the grid search (from the
   priors, \code{Se_ref}, \code{Sp_ref} and \code{pt_range} only, by a
-  fast vectorized Monte Carlo independent of \code{B} and \code{N_range})
-  and returned as \code{nb_ceiling}. If \code{target_assurance} exceeds
+  fast deterministic quadrature independent of \code{B} and
+  \code{N_range}; see \code{nb_assurance_ceiling}, internal, for why this
+  is quadrature rather than Monte Carlo) and returned as
+  \code{nb_ceiling}. If \code{target_assurance} exceeds
   this ceiling, the criterion is unreachable at \strong{any} N, the grid
   search is skipped entirely (it cannot succeed, so nothing is gained by
   running it), and the function warns accordingly -- a message that
@@ -293,7 +334,7 @@ The parameters \code{delta_se}, \code{delta_sp}, and
   \code{assurance_lower} is \strong{not} \code{NA} here -- it is the
   margin-adjusted (block-pooled Wilson) curve actually inverted to pick
   \code{N_effective}, described below and returned as a real number
-  whenever \code{N_effective} is found. See \code{Value}.
+  whenever \code{N_effective} is found. See \code{Return}.
 
   Achieving this requires that the \code{B} replications at different N
   be genuinely independent draws, not the same draws replayed with a

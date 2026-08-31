@@ -29,7 +29,7 @@
 library(dtasamplesize)
 options(width = 110, digits = 6)
 
-# The article reports the numbers produced by version 0.6.0. Earlier releases
+# The article reports the numbers produced by version 0.6.3. Earlier releases
 # contain the validity errors that 0.3.0, 0.5.0 and 0.6.0 correct in turn
 # (see NEWS.md) -- notably a net-benefit sample size of 110 instead of 240,
 # a BAM search that reported the marginal per-arm assurance instead of the
@@ -42,12 +42,13 @@ options(width = 110, digits = 6)
 # assurance only 84% of the time across seeds -- so earlier installations
 # return different values. Stop early rather than let a stale installation
 # look like a discrepancy in the article.
-if (utils::packageVersion("dtasamplesize") < "0.6.0") {
+if (utils::packageVersion("dtasamplesize") != "0.6.3") {
   stop("dtasamplesize ", utils::packageVersion("dtasamplesize"), " is installed, ",
-       "but this script reproduces the numbers of version 0.6.0 or later.\n",
-       "  Install the current source first, e.g.\n",
-       "    remotes::install_github('jrr1001/dtasamplesize')\n",
-       "  or, from a local copy of the repository:\n",
+       "but this script reproduces the numbers of version 0.6.3 ",
+       "exactly: the published figures were computed under that version, ",
+       "and neither an older nor a newer installation is guaranteed to ",
+       "reproduce them bit-for-bit.\n",
+       "  Install version 0.6.3 from a local copy of the repository:\n",
        "    install.packages('.', repos = NULL, type = 'source')",
        call. = FALSE)
 }

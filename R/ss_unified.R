@@ -20,10 +20,10 @@
 #'   (1-\mathrm{prev})\,Sp\,Sp_{ref}.}
 #' \code{prev}, \code{Se} and \code{Sp} are drawn from their priors, so
 #' this ceiling is a probability \strong{over the priors}, not over any
-#' finite study: it is the fraction of prior draws for which a perfectly
-#' precise (N = Inf) study would still conclude the test is useful at
-#' every threshold in \code{pt_range}. No finite N can ever clear a
-#' \code{target_assurance} above this ceiling.
+#' finite study: it is the fraction of the prior mass for which a
+#' perfectly precise (N = Inf) study would still conclude the test is
+#' useful at every threshold in \code{pt_range}. No finite N can ever
+#' clear a \code{target_assurance} above this ceiling.
 #'
 #' \strong{Why a wide \code{pt_range} tends to lower the ceiling.}
 #' \eqn{p_1 - w\,p_2 > 0} is equivalent to \eqn{w < p_1/p_2}: raising the
@@ -35,145 +35,170 @@
 #' criterion from both ends at once, since \strong{all} thresholds in
 #' \code{pt_range} must pass simultaneously.
 #'
-#' The Monte Carlo draws use their own generator call (see below) and do
-#' not touch the caller's or \code{\link{ss_unified}}'s RNG stream --
-#' both the RNG kind and \code{.Random.seed} are saved and restored on
-#' exit, including on error (\code{\link{save_rng_state}}). Fully
-#' vectorized -- no per-N or per-observation simulation is needed for an
-#' N -> Inf limit -- so \code{B_ceiling} can be large without materially
-#' adding to the cost of the \code{check_nb} search it guards.
+#' \strong{This is computed by deterministic quadrature, not Monte Carlo
+#' sampling (versions <= 0.6.2 used the latter; see below for why that
+#' changed).} For fixed \code{Se} and \code{Sp}, both inequalities above
+#' are \strong{affine in \code{prev}} (it enters only through
+#' \eqn{\mathrm{prev}\cdot(\cdot) + (1-\mathrm{prev})\cdot(\cdot)} terms),
+#' so for each \code{pt} in \code{pt_range} the two inequalities cut
+#' \eqn{[0, 1]} down to a half-line in \code{prev}, and their intersection
+#' over every \code{pt} (and over the two inequalities at each \code{pt})
+#' is a single interval \eqn{[lo, hi] \subseteq [0, 1]} (possibly empty).
+#' The probability that \code{prev} falls in that interval is available in
+#' closed form as \code{pbeta(hi, ...) - pbeta(lo, ...)} -- no sampling
+#' error at all for this dimension, for any \code{prior_prev}. What
+#' remains is a two-dimensional integral, over \code{Se} and \code{Sp}
+#' only, of that (continuous, though not everywhere differentiable)
+#' closed-form expression against the \code{Se} and \code{Sp} priors; this
+#' is evaluated by a tensor-product Gauss-Legendre quadrature
+#' (\code{\link{gauss_legendre_unit}}) with \code{n = ceiling(sqrt(
+#' B_ceiling))} nodes per dimension, deterministic and independent of
+#' \code{seed}.
 #'
-#' \strong{The generator kind is fixed, not inherited.} Versions <= 0.6.0
-#' saved and restored \code{.Random.seed} but called \code{set.seed(seed)}
-#' with no \code{kind}, so the draws above -- and hence the reported
-#' ceiling -- silently depended on whatever generator the \strong{caller}
-#' had active, exactly the defect 0.6.0 fixed in \code{\link{ss_unified}}
-#' itself but left uncorrected in this helper. Measured with identical
-#' arguments and seed, the reported ceiling ranged from 0.28253
-#' (Marsaglia-Multicarry) to 0.28539 (Knuth-TAOCP-2002); with a
-#' \code{pt_range} whose true ceiling sits just above 0.80, some
-#' generators had the ceiling check correctly skip the (unreachable)
-#' search while others let it run. \code{set.seed()} below now fixes the
-#' kind explicitly to \code{"Mersenne-Twister"} (R's own default), so the
-#' ceiling no longer depends on the caller's RNG configuration.
+#' Reproducing the true ceiling to enough precision matters concretely:
+#' for the package's own default \code{pt_range = c(0.15, 0.40)} (with the
+#' priors used throughout the accompanying article), the true ceiling is
+#' approximately 0.879606, only \eqn{1.06 \times 10^{-4}} above 0.8795 --
+#' the boundary at which the value published to three decimals
+#' (\code{round(x, 3)}) flips from 0.879 to 0.880. A Monte Carlo estimate
+#' needs roughly \eqn{2\times10^8} independent draws to push its standard
+#' error far enough below that gap for the rounded value to stay robust to
+#' the seed (four standard errors, at \eqn{p \approx 0.88}); allocating
+#' that many double-precision draws (several such vectors, each about
+#' 4.8 GB) is what exhausted memory under versions <= 0.6.2's default
+#' \code{B_ceiling = 200000000}, terminating the process outright rather
+#' than merely running slowly. Chunking the same Monte Carlo computation
+#' into batches would fix the crash but not the underlying trade-off:
+#' getting the third decimal right by sampling alone still requires that
+#' many total draws, however they are chunked. The quadrature approach
+#' above sidesteps the trade-off instead of managing it -- it removes
+#' sampling error from the \code{prev} dimension entirely (closed form)
+#' and needs only a modest node count in the remaining two dimensions,
+#' because the integrand there is continuous rather than an indicator
+#' function with a sampling-noise floor. At \code{B_ceiling = 200000} (the
+#' new default, \eqn{n = 448} nodes per dimension, about 4 orders of
+#' magnitude less computation than the old default), this reproduces
+#' 0.879606 to all six published decimals for \code{pt_range = c(0.15,
+#' 0.40)}, and reproduces five further independently-verified ceilings
+#' (0.969, 0.956, 0.695, 0.753 and a structural 0 for \code{pt_range}
+#' \code{c(0.20, 0.30)}, \code{c(0.15, 0.25)}, \code{c(0.10, 0.40)},
+#' \code{c(0.10, 0.30)} and \code{c(0.05, 0.50)} respectively) to three
+#' decimals -- checked directly, not asserted; see
+#' \code{test-ss_unified.R}. Even \code{n = 100} (\code{B_ceiling =
+#' 10000}) already reproduces all six to six decimals in that check, so
+#' the default carries substantial headroom, not a bare pass.
 #'
-#' \strong{Independent streams per \code{pt_range}, not a shared sample.}
-#' A caller that evaluates this ceiling at several different
-#' \code{pt_range} values under the same \code{seed} -- e.g. one row per
-#' threshold range in a table -- would, under versions <= 0.6.0, draw the
-#' \strong{exact same} \code{(prev, Se, Sp)} triplet for every one of
-#' them: \code{pt_range} only entered the calculation \emph{after} the
-#' draws, in the loop over thresholds below, so nothing about it affected
-#' \code{set.seed()}. Whichever direction that one shared sample's noise
-#' happened to point, every reported ceiling inherited it, in the same
-#' direction and to a similar relative magnitude, since they were all
-#' evaluated on literally the same draws -- a table of "independent"
-#' ceiling estimates whose errors were, in fact, perfectly correlated
-#' with each other and did not average out across rows. \code{seed} is
-#' therefore now combined with a deterministic fingerprint of
-#' \code{pt_range} (order-independent, since the joint criterion below is
-#' itself symmetric in \code{pt_range}'s order) before seeding, so that
-#' two calls sharing a \code{seed} but differing in \code{pt_range} draw
-#' statistically independent samples, while a given \code{(seed,
-#' pt_range)} pair remains exactly reproducible.
+#' \code{seed} is kept in the signature only for backward compatibility
+#' with callers (including \code{\link{ss_unified}}) written against the
+#' Monte Carlo implementation; it is unused, and the result is identical
+#' for every value of \code{seed}, including across the caller's active
+#' \code{RNGkind()} (the function no longer touches the random number
+#' generator at all).
 #'
 #' @param prior_se,prior_sp,prior_prev Beta priors, as in
 #'   \code{\link{ss_unified}}.
 #' @param Se_ref,Sp_ref Reference standard accuracy, as in
 #'   \code{\link{ss_unified}}.
 #' @param pt_range Net-benefit thresholds, as in \code{\link{ss_unified}}.
-#' @param seed Seed for the internal Monte Carlo draws. Combined with a
-#'   fingerprint of \code{pt_range} before seeding; see \code{Details}.
-#' @param B_ceiling Number of prior draws. Default 200000000 (2e8). The
-#'   ceiling is a sample proportion, so its Monte Carlo standard error is
-#'   \eqn{\sqrt{p(1-p)/B_{ceiling}}} -- a real bound on the estimator's
-#'   sampling variability, not an after-the-fact observation -- which is
-#'   below \eqn{2.6 \times 10^{-5}} at this default for any \eqn{p} in the
-#'   0.7-0.95 range this function typically returns (worst case at the
-#'   low end, \eqn{p = 0.7}: \eqn{\sqrt{0.7 \times 0.3 / 2\times 10^8}
-#'   \approx 2.6\times10^{-5}}). What that bound has to overcome, for the
-#'   package's own default \code{pt_range = c(0.15, 0.40)}, is a
-#'   genuinely close call: the true ceiling there (independently derived
-#'   by tensor-product Gauss-Legendre quadrature, not by this function)
-#'   is approximately 0.879606, only \eqn{1.06 \times 10^{-4}} above
-#'   0.8795 -- the boundary at which the value published to three
-#'   decimals (\code{round(x, 3)}) flips from 0.879 to 0.880. At the
-#'   previous default (\code{B_ceiling = 30000000}, whose standard error
-#'   is close to \eqn{6\times10^{-5}} there), that boundary sat under two
-#'   standard errors away, putting a non-trivial fraction of seeds
-#'   (empirically, close to 3\%) on the wrong side of the rounded value.
-#'   \code{B_ceiling = 200000000} pushes the standard error down far
-#'   enough that the boundary sits more than four standard errors from
-#'   the true value, making the published third decimal robust to the
-#'   seed. \code{B_ceiling = 200000} (the default in versions <= 0.6.0)
-#'   additionally reused one shared sample across every \code{pt_range} a
-#'   caller evaluated (see \code{Details}), so its errors did not average
-#'   out across a table of ceilings the way independent-sample Monte
-#'   Carlo error normally does. An independent cross-check against the
-#'   Gauss-Legendre reference across six \code{pt_range} scenarios
-#'   (ceilings from 0.695 to 0.969) found the largest observed absolute
-#'   error at the current default to be well inside this bound -- an
-#'   empirical confirmation, not itself the guarantee; the guarantee is
-#'   the standard-error bound above. Fully vectorized draws keep the
-#'   runtime of this default at roughly two minutes per call on ordinary
-#'   hardware (a few seconds at the more modest \code{B_ceiling} values
-#'   sufficient for exploratory use), well under the cost of the
-#'   \code{check_nb} grid search it guards at realistic \code{B} and
-#'   \code{N_range}.
+#' @param seed Unused; kept for backward compatibility. See \code{Details}.
+#' @param B_ceiling Approximate quadrature evaluation budget: the number of
+#'   Gauss-Legendre nodes per dimension is \code{ceiling(sqrt(B_ceiling))},
+#'   so the total number of (Se, Sp) evaluations is close to
+#'   \code{B_ceiling} itself. Default 200000 (2e5); see \code{Details} for
+#'   why this default is both far below the memory-exhausting Monte Carlo
+#'   default of earlier versions and, being deterministic quadrature
+#'   rather than sampling, more precise than that default ever was. Values
+#'   above \code{\link{NB_B_CEILING_MAX}} (2e7) are rejected with an
+#'   informative error rather than attempted, since the cost of this
+#'   function scales with \code{B_ceiling} and a request that large is
+#'   never needed for the precision this function delivers (see
+#'   \code{Details}) -- almost always a typo or a value copied from an
+#'   unrelated context.
 #' @return Numeric scalar in \eqn{[0, 1]}: the achievable ceiling.
 #' @keywords internal
 #' @noRd
 nb_assurance_ceiling <- function(prior_se, prior_sp, prior_prev,
                                   Se_ref, Sp_ref, pt_range,
-                                  seed, B_ceiling = 200000000L) {
-  old_rng_state <- save_rng_state()
-  on.exit(restore_rng_state(old_rng_state), add = TRUE)
-
-  # --- seed salted by pt_range: see @details ------------------------------
-  # A simple polynomial (Horner) hash of pt_range's sorted, microsecond-
-  # rounded values, folded into `seed` by addition. Sorting first makes the
-  # fingerprint -- and hence the stream -- depend only on the SET of
-  # thresholds, not their order, matching the order-independence of the
-  # joint criterion itself (see the loop below). The modulus 2147483647
-  # (2^31 - 1, itself prime) keeps every intermediate value within double
-  # precision's exact-integer range for the B_ceiling and pt_range sizes
-  # this function is ever called with, and keeps the final seed a valid
-  # (positive) argument to set.seed().
-  pt_int <- sort(round(pt_range * 1e6))
-  fp <- 0
-  for (v in pt_int) fp <- (fp * 1000003 + v) %% 2147483647
-  seed_eff <- as.integer((as.numeric(seed) + fp) %% 2147483647)
-  # All three RNG kinds are named explicitly, not just the uniform
-  # generator: see @details, "The generator kind is fixed, not
-  # inherited," and the package-wide defect 0.6.2 fixes (NEWS.md) --
-  # naming `kind` alone leaves `normal.kind`/`sample.kind` inherited from
-  # the caller. This function only ever draws via stats::rbeta(), which
-  # does not consume the normal or discrete-sampling streams, so the
-  # ceiling itself does not depend on those two; both are still named
-  # here, for the same completeness reason the guarantee is made general
-  # elsewhere rather than function-specific.
-  set.seed(seed_eff, kind = "Mersenne-Twister",
-           normal.kind = "Inversion", sample.kind = "Rejection")
-
-  prev_b <- stats::rbeta(B_ceiling, prior_prev[1], prior_prev[2])
-  Se_b   <- stats::rbeta(B_ceiling, prior_se[1],   prior_se[2])
-  Sp_b   <- stats::rbeta(B_ceiling, prior_sp[1],   prior_sp[2])
-
-  p1 <- prev_b * Se_b * Se_ref +
-    (1 - prev_b) * (1 - Sp_b) * (1 - Sp_ref)
-  p2 <- prev_b * Se_b * (1 - Se_ref) +
-    (1 - prev_b) * (1 - Sp_b) * Sp_ref
-  q1 <- prev_b * (1 - Se_b) * Se_ref +
-    (1 - prev_b) * Sp_b * (1 - Sp_ref)
-  q2 <- prev_b * (1 - Se_b) * (1 - Se_ref) +
-    (1 - prev_b) * Sp_b * Sp_ref
-
-  ok <- rep(TRUE, B_ceiling)
-  for (pt in pt_range) {
-    w <- pt / (1 - pt)
-    ok <- ok & (p1 - w * p2 > 0) & (w * q2 - q1 > 0)
+                                  seed, B_ceiling = 200000L) {
+  if (B_ceiling > NB_B_CEILING_MAX) {
+    stop(
+      "B_ceiling = ", B_ceiling, " exceeds the maximum allowed budget (",
+      NB_B_CEILING_MAX, "). The default (200000, about 448 quadrature ",
+      "nodes per dimension) already reproduces this package's own ",
+      "published ceilings to six decimal places (see ",
+      "?dtasamplesize:::nb_assurance_ceiling); a budget this large is ",
+      "never needed and would take excessive time to compute for no ",
+      "gain in precision. Lower B_ceiling.",
+      call. = FALSE
+    )
   }
-  mean(ok)
+  n_nodes <- max(1L, ceiling(sqrt(B_ceiling)))
+  gl <- gauss_legendre_unit(n_nodes)
+  Se_nodes <- gl$x; Se_w <- gl$w
+  Sp_nodes <- gl$x; Sp_w <- gl$w
+  Se_dens <- stats::dbeta(Se_nodes, prior_se[1], prior_se[2])
+  Sp_dens <- stats::dbeta(Sp_nodes, prior_sp[1], prior_sp[2])
+
+  # Outer loop over Se nodes, vectorized over Sp nodes: peak memory is
+  # O(n_nodes), not O(n_nodes^2) -- the memory-exhaustion failure mode
+  # this function replaces cannot recur here regardless of how large
+  # B_ceiling (and hence n_nodes) is asked to be.
+  total <- 0
+  for (i in seq_len(n_nodes)) {
+    Se <- Se_nodes[i]
+    wt_se <- Se_w[i] * Se_dens[i]
+    if (wt_se == 0) next
+    Sp <- Sp_nodes
+
+    # Feasible prev-interval [lo, hi] for this (Se, Sp): the intersection,
+    # over every pt in pt_range and both inequalities at each pt, of the
+    # half-line each affine-in-prev inequality cuts out of [0, 1]. Started
+    # at the full interval and narrowed by each constraint in turn.
+    lo <- rep(0, n_nodes)
+    hi <- rep(1, n_nodes)
+    infeasible <- rep(FALSE, n_nodes)
+
+    for (pt in pt_range) {
+      w <- pt / (1 - pt)
+
+      # p1 - w*p2 > 0, written as A0 + prev*(A1 - A0) > 0 (A1 = coefficient
+      # at prev = 1, A0 = coefficient at prev = 0; see the p1/p2 formulas
+      # in @details above).
+      A1 <- Se * (Se_ref - w * (1 - Se_ref))
+      A0 <- (1 - Sp) * ((1 - Sp_ref) - w * Sp_ref)
+      slope1 <- A1 - A0
+      pos1 <- slope1 > 1e-12
+      neg1 <- slope1 < -1e-12
+      lo <- pmax(lo, ifelse(pos1, -A0 / slope1, -Inf), na.rm = TRUE)
+      hi <- pmin(hi, ifelse(neg1, -A0 / slope1, Inf), na.rm = TRUE)
+      # slope == 0: the inequality does not depend on prev at all here;
+      # it is either always satisfied (no constraint) or never (the whole
+      # (Se, Sp) column is infeasible regardless of prev).
+      infeasible <- infeasible | (!pos1 & !neg1 & A0 <= 0)
+
+      # w*q2 - q1 > 0, same construction (q1/q2 formulas in @details).
+      B1 <- (1 - Se) * (w * (1 - Se_ref) - Se_ref)
+      B0 <- Sp * (w * Sp_ref - (1 - Sp_ref))
+      slope2 <- B1 - B0
+      pos2 <- slope2 > 1e-12
+      neg2 <- slope2 < -1e-12
+      lo <- pmax(lo, ifelse(pos2, -B0 / slope2, -Inf), na.rm = TRUE)
+      hi <- pmin(hi, ifelse(neg2, -B0 / slope2, Inf), na.rm = TRUE)
+      infeasible <- infeasible | (!pos2 & !neg2 & B0 <= 0)
+    }
+    lo <- pmax(lo, 0)
+    hi <- pmin(hi, 1)
+
+    # Closed-form probability that prev falls in [lo, hi]; 0 wherever the
+    # interval is empty or the column was flagged infeasible above.
+    contrib <- ifelse(
+      infeasible | lo >= hi, 0,
+      stats::pbeta(hi, prior_prev[1], prior_prev[2]) -
+        stats::pbeta(lo, prior_prev[1], prior_prev[2])
+    )
+    total <- total + wt_se * sum(Sp_w * Sp_dens * contrib)
+  }
+  total
 }
 
 #' Unified Monte Carlo Framework for DTA Sample Size
@@ -230,8 +255,10 @@ nb_assurance_ceiling <- function(prior_se, prior_sp, prior_prev,
 #'   \code{nb_assurance_ceiling}, internal). When \code{check_nb = TRUE},
 #'   this ceiling is computed \strong{before} the grid search (from the
 #'   priors, \code{Se_ref}, \code{Sp_ref} and \code{pt_range} only, by a
-#'   fast vectorized Monte Carlo independent of \code{B} and \code{N_range})
-#'   and returned as \code{nb_ceiling}. If \code{target_assurance} exceeds
+#'   fast deterministic quadrature independent of \code{B} and
+#'   \code{N_range}; see \code{nb_assurance_ceiling}, internal, for why this
+#'   is quadrature rather than Monte Carlo) and returned as
+#'   \code{nb_ceiling}. If \code{target_assurance} exceeds
 #'   this ceiling, the criterion is unreachable at \strong{any} N, the grid
 #'   search is skipped entirely (it cannot succeed, so nothing is gained by
 #'   running it), and the function warns accordingly -- a message that
@@ -414,21 +441,60 @@ nb_assurance_ceiling <- function(prior_se, prior_sp, prior_prev,
 #' @param decision How to decide the required N from the assurance curve:
 #'   \code{"isotonic"} (default), \code{"lower_bound"} or \code{"point"}.
 #'   See \code{Details}.
-#' @param nb_B_ceiling Number of prior draws used by the internal
+#' @param nb_B_ceiling Approximate evaluation budget for the internal
 #'   \code{check_nb} ceiling calculation (\code{nb_assurance_ceiling()};
 #'   see \code{Details}, "The CI-based net-benefit criterion has a hard
-#'   ceiling"). Ignored when \code{check_nb = FALSE}. Default 200000000,
-#'   which keeps the ceiling's Monte Carlo standard error below about
-#'   \eqn{2.6 \times 10^{-5}} for ceilings in the typical 0.7-0.95 range (see
-#'   \code{nb_assurance_ceiling}'s own documentation for how this was
-#'   chosen and verified). Exposed mainly so that a caller who only needs an
-#'   approximate ceiling -- e.g. while exploring \code{pt_range} choices,
-#'   or in a test that checks the ceiling's presence rather than its exact
-#'   value -- can pass a much smaller value for speed; the calculation is
-#'   fully vectorized and independent of \code{B} and \code{N_range}, so
-#'   its cost does not otherwise scale with the rest of the search.
+#'   ceiling"). Ignored when \code{check_nb = FALSE}. Default 200000 (2e5).
+#'   \strong{This is now a deterministic quadrature, not a Monte Carlo
+#'   sample} -- versions <= 0.6.2 used \code{nb_B_ceiling} draws and a
+#'   default of 200000000 (2e8), which could exhaust memory (several
+#'   double vectors of that length, each about 4.8 GB) and still left the
+#'   package's own published third-decimal ceiling only about four
+#'   Monte Carlo standard errors from the rounding boundary. The current
+#'   implementation integrates the sample-size-relevant prevalence
+#'   dimension in closed form and evaluates the remaining two dimensions
+#'   (Se, Sp) on a \code{ceiling(sqrt(nb_B_ceiling))}-node-per-dimension
+#'   Gauss-Legendre grid, so \code{nb_B_ceiling} now controls quadrature
+#'   resolution rather than sample size, is unaffected by \code{seed}, and
+#'   its peak memory stays proportional to \code{sqrt(nb_B_ceiling)}, not
+#'   to \code{nb_B_ceiling} itself. The default already reproduces this
+#'   package's own published ceilings to six decimal places (see
+#'   \code{nb_assurance_ceiling}'s own documentation); a caller who only
+#'   needs an approximate ceiling -- e.g. while exploring \code{pt_range}
+#'   choices, or in a test that checks the ceiling's presence rather than
+#'   its exact value -- can pass a much smaller value for speed. Values
+#'   above \code{2e7} are rejected with an informative error rather than
+#'   attempted (see \code{nb_assurance_ceiling}); the calculation is
+#'   independent of \code{B} and \code{N_range}, so its cost does not
+#'   otherwise scale with the rest of the search.
 #' @return Object of class \code{"dtasamplesize"} with additional elements:
 #'   \describe{
+#'     \item{status}{One of \code{"converged"} (a design was found),
+#'       \code{"unreachable"} (\code{check_nb}'s ceiling is below
+#'       \code{target_assurance}, so no N could ever succeed; see
+#'       \code{Details}, "The CI-based net-benefit criterion has a hard
+#'       ceiling") or \code{"grid_exhausted"} (no N in \code{N_range} reached
+#'       \code{target_assurance}). \code{N_effective} and \code{n_total} are
+#'       \code{NA} whenever \code{status != "converged"} (see below); the
+#'       warning issued in either non-convergent case (kept, not replaced by
+#'       this field) still carries the diagnostic detail (e.g. the ceiling
+#'       value, or the assurance actually observed at \code{max(N_range)}).
+#'       Versions <= 0.6.2 signalled non-convergence only via that warning
+#'       while still returning \code{N_effective = n_total = max(N_range)}
+#'       -- a real, usable-looking integer -- so a caller who read \code{
+#'       n_total} without also checking for a warning (or for \code{
+#'       joint_assurance} being \code{NA}/below target) could silently adopt
+#'       a sample size with no assurance guarantee behind it at all.}
+#'     \item{N_effective}{The selected total sample size, before inflating
+#'       for \code{loss_rate} (see \code{n_total}/\code{N_enrolled} for the
+#'       inflated value). \code{NA} when \code{status != "converged"} (see
+#'       \code{status}).}
+#'     \item{n_total, N_enrolled}{The same quantity under two names, kept for
+#'       backward compatibility: \code{N_effective} inflated for
+#'       \code{loss_rate}, i.e. \code{ceiling(N_effective / (1 -
+#'       loss_rate))}. \code{NA} when \code{status != "converged"} (see
+#'       \code{status}); \code{n_diseased} is likewise \code{NA} in that
+#'       case, since it too is only meaningful for a converged design.}
 #'     \item{joint_assurance}{Achieved joint assurance at \code{N_effective}:
 #'       the probability that \strong{all} active targets -- Se, Sp, AUC
 #'       (when \code{delta_auc > 0}) and net benefit (when
@@ -559,7 +625,7 @@ ss_unified <- function(prior_se = c(17, 3),
                        seed = 2026,
                        full_grid = FALSE,
                        decision = c("isotonic", "lower_bound", "point"),
-                       nb_B_ceiling = 200000000L) {
+                       nb_B_ceiling = 200000L) {
   # --- preserve the caller's RNG state -------------------------------
   # This function switches the generator to L'Ecuyer-CMRG (see below) to
   # draw an independent stream per N via parallel::nextRNGStream(), so
@@ -606,6 +672,21 @@ ss_unified <- function(prior_se = c(17, 3),
   stopifnot(target_assurance > 0, target_assurance < 1)
   stopifnot(B >= 1)
   stopifnot(nb_B_ceiling >= 1)
+  # nb_assurance_ceiling() itself also enforces this cap (it may be called
+  # directly, bypassing this validation), but checking it here as well
+  # lets an oversized request fail immediately, before any other work in
+  # this function, with the same message either way.
+  if (nb_B_ceiling > NB_B_CEILING_MAX) {
+    stop(
+      "nb_B_ceiling = ", nb_B_ceiling, " exceeds the maximum allowed ",
+      "budget (", NB_B_CEILING_MAX, "). The default (200000, about 448 ",
+      "quadrature nodes per dimension) already reproduces this package's ",
+      "own published ceilings to six decimal places; a budget this large ",
+      "is never needed and would take excessive time to compute for no ",
+      "gain in precision. Lower nb_B_ceiling.",
+      call. = FALSE
+    )
+  }
 
   # --- validate N_range explicitly, with a diagnostic message -----------
   # Versions <= 0.6.1 did not validate N_range at all: a negative, NA,
@@ -725,8 +806,9 @@ ss_unified <- function(prior_se = c(17, 3),
     # normal.kind/sample.kind are named explicitly too, even though this
     # search only ever draws via stats::rbeta()/rbinom()/rmultinom() and so
     # does not itself consume the normal or discrete-sampling streams --
-    # see the same completeness note in nb_assurance_ceiling() above and
-    # NEWS.md's 0.6.2 entry.
+    # see NEWS.md's 0.6.2 entry (this completeness rationale used to also
+    # apply to nb_assurance_ceiling()'s own set.seed() call; that function
+    # no longer touches the RNG at all as of 0.6.3, see its documentation).
     set.seed(seed, kind = "L'Ecuyer-CMRG",
              normal.kind = "Inversion", sample.kind = "Rejection")
     stream_state <- .Random.seed
@@ -1161,9 +1243,25 @@ ss_unified <- function(prior_se = c(17, 3),
   }
 
   found <- !is.na(optimal_N)
+
+  # --- explicit convergence status: see @return, "status" ------------------
+  # Versions <= 0.6.2 signalled "no solution" only through a warning plus
+  # joint_assurance == NA (skip_search) or a real-but-target-missing value
+  # (!found), while N_effective and n_total were both still populated with
+  # max(N_range) -- a real, usable-looking integer. A caller who reads only
+  # n_total (the field print.dtasamplesize() headlines as "N_total") saw a
+  # concrete number with no indication it carries no assurance guarantee at
+  # all, unless they also happened to inspect joint_assurance or catch the
+  # warning. `status` makes the three possible outcomes machine-checkable
+  # without parsing warning text, and N_effective/n_total (see below, after
+  # N_enrolled is computed) are set to NA in both non-convergent cases so
+  # that reading n_total alone can no longer be mistaken for a validated
+  # design.
+  status <- "converged"
   if (skip_search) {
     # Replaces (not joins) the generic "expand N_range" message: expanding
     # N_range cannot help when the criterion is unreachable at any N.
+    status <- "unreachable"
     warning(
       "check_nb's net-benefit criterion cannot reach target_assurance = ",
       target_assurance, " at ANY N with these priors, Se_ref = ", Se_ref,
@@ -1174,7 +1272,9 @@ ss_unified <- function(prior_se = c(17, 3),
       "Expanding N_range cannot help. Lower target_assurance below the ",
       "ceiling, narrow pt_range, or use more informative priors for Se, ",
       "Sp and prevalence; see nb_ceiling in the returned object and ",
-      "?ss_unified for the structural reason a wide pt_range lowers it.",
+      "?ss_unified for the structural reason a wide pt_range lowers it. ",
+      "N_effective and n_total are NA (status = \"unreachable\"): there is ",
+      "no N this search can recommend.",
       call. = FALSE
     )
     optimal_N <- max(N_range)
@@ -1182,8 +1282,14 @@ ss_unified <- function(prior_se = c(17, 3),
     assurance_mcse_achieved <- NA_real_
     assurance_lower_achieved <- NA_real_
   } else if (!found) {
+    status <- "grid_exhausted"
     warning("No N in N_range achieved target assurance. ",
-            "Consider expanding N_range.")
+            "Consider expanding N_range. N_effective and n_total are NA ",
+            "(status = \"grid_exhausted\"): there is no N in the searched ",
+            "range this search can recommend. See grid_results and ",
+            "joint_assurance (the assurance actually observed at ",
+            "max(N_range)) for diagnostics.",
+            call. = FALSE)
     optimal_N <- max(N_range)
     # Report the RAW assurance actually observed AT the N being returned
     # (max(N_range)), not whichever N happened to be evaluated LAST by the
@@ -1267,13 +1373,35 @@ ss_unified <- function(prior_se = c(17, 3),
 
   n_d_final <- floor(optimal_N * E_prev)
 
+  # --- A2 fix: NA out the recommended-design fields when there is no
+  # solution -----------------------------------------------------------
+  # optimal_N/N_enrolled/n_d_final above are still computed from
+  # max(N_range) even when status != "converged" (skip_search and !found
+  # both reassign optimal_N to max(N_range); see above) -- kept as internal
+  # working values so the comparison table's OTHER rows (Buderer, imperfect
+  # reference) and the diagnostics already reported in the warning above
+  # are unaffected. Only the fields that read as "the recommended design"
+  # are replaced with NA here: N_effective, n_total/N_enrolled (the same
+  # quantity under two names) and n_diseased, none of which mean anything
+  # when there is no N to recommend. joint_assurance/assurance_mcse/
+  # assurance_lower are NOT touched here -- they already carry the correct
+  # diagnostic values (NA for "unreachable"; the real observed assurance at
+  # max(N_range) for "grid_exhausted") and remain useful for troubleshooting
+  # even though no design was found.
+  not_converged <- status != "converged"
+  N_effective_out <- if (not_converged) NA_integer_ else as.integer(optimal_N)
+  N_enrolled_out  <- if (not_converged) NA_integer_ else N_enrolled
+  n_diseased_out  <- if (not_converged) NA_integer_ else n_d_final
+  comparison$N[comparison$method == "Unified (this method)"] <- N_enrolled_out
+
   structure(
     list(
       method = "Unified Monte Carlo Framework for DTA Sample Size",
-      n_diseased = n_d_final,
-      n_total = N_enrolled,
-      N_effective = optimal_N,
-      N_enrolled = N_enrolled,
+      status = status,
+      n_diseased = n_diseased_out,
+      n_total = N_enrolled_out,
+      N_effective = N_effective_out,
+      N_enrolled = N_enrolled_out,
       joint_assurance = joint_assurance_achieved,
       assurance_mcse = assurance_mcse_achieved,
       assurance_lower = assurance_lower_achieved,

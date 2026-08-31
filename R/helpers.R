@@ -1,3 +1,55 @@
+#' Maximum Allowed Evaluation Budget for the Net-Benefit Ceiling
+#'
+#' Hard upper bound on \code{ss_unified}'s \code{nb_B_ceiling} argument (and
+#' on \code{nb_assurance_ceiling}'s own \code{B_ceiling}), enforced with a
+#' clear \code{stop()} rather than silently attempting the computation. This
+#' guards against a pathologically large request (a typo, or a value copied
+#' from an unrelated context) consuming excessive compute time; see
+#' \code{\link{nb_assurance_ceiling}} for why the default sits far below
+#' this cap and for the memory-exhaustion incident this cap and the lower
+#' default were both introduced to prevent.
+#' @keywords internal
+#' @noRd
+NB_B_CEILING_MAX <- 20000000L  # 2e7
+
+#' Deterministic Gauss-Legendre Quadrature Nodes and Weights on [0, 1]
+#'
+#' Nodes and weights for \code{n}-point Gauss-Legendre quadrature on the
+#' unit interval, computed by the Golub-Welsch algorithm: the nodes are the
+#' eigenvalues of the symmetric tridiagonal Jacobi matrix for the Legendre
+#' three-term recurrence, and the weights are \code{2 * (first component of
+#' each normalized eigenvector)^2} (Golub & Welsch 1969); both are then
+#' mapped from the canonical interval \eqn{[-1, 1]} to \eqn{[0, 1]}. Used by
+#' \code{\link{nb_assurance_ceiling}} to integrate over the Se and Sp priors
+#' deterministically, in place of Monte Carlo sampling.
+#'
+#' @param n Number of nodes (positive integer).
+#' @return List with elements \code{x} (nodes in \eqn{(0, 1)}, strictly
+#'   interior and ascending -- so a Beta density that diverges at 0 or 1,
+#'   e.g. under a shape parameter below 1, is never evaluated exactly at the
+#'   singularity) and \code{w} (weights, summing to 1).
+#' @references
+#' Golub GH, Welsch JH (1969). Calculation of Gauss quadrature rules.
+#' \emph{Math Comp} 23:221-230. \doi{10.1090/S0025-5718-69-99647-1}
+#' @keywords internal
+#' @noRd
+gauss_legendre_unit <- function(n) {
+  if (n < 1L) {
+    stop("gauss_legendre_unit(): n must be a positive integer.", call. = FALSE)
+  }
+  if (n == 1L) return(list(x = 0.5, w = 1))
+  i <- seq_len(n - 1L)
+  off_diag <- i / sqrt(4 * i^2 - 1)
+  J <- matrix(0, n, n)
+  J[cbind(i, i + 1L)] <- off_diag
+  J[cbind(i + 1L, i)] <- off_diag
+  eig <- eigen(J, symmetric = TRUE)
+  ord <- order(eig$values)
+  x <- eig$values[ord]
+  w <- 2 * (eig$vectors[1, ord])^2
+  list(x = (x + 1) / 2, w = w / 2)
+}
+
 #' Wilson Score Confidence Interval for a Proportion
 #'
 #' Computes the Wilson score confidence interval for a binomial proportion.

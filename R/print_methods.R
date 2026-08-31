@@ -6,6 +6,11 @@
 #' @export
 print.dtasamplesize <- function(x, ...) {
   cat("\n", x$method, "\n\n")
+  if (!is.null(x$status) && x$status != "converged") {
+    cat("  status:", x$status,
+        "-- NO N SATISFIES target_assurance; N_total/n_diseased are NA.\n")
+    cat("  (see the warning issued by this call for diagnostic detail)\n")
+  }
   cat("  n_diseased:", x$n_diseased, "\n")
   if (!is.null(x$n_non_diseased))
     cat("  n_non_diseased:", x$n_non_diseased, "\n")
