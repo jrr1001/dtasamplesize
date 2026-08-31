@@ -9,6 +9,19 @@
 # byte-for-byte, because every quantity is either a closed-form calculation
 # or a Monte Carlo simulation under a fixed seed.
 #
+# SCOPE (article now reduced to two figures and four tables). The article
+# describes only bam_sample_size(), mc_validate_buderer() and
+# joint_sample_size(); ss_unified(), the AUC gate inside it, ss_net_benefit(),
+# ss_imperfect_ref(), ss_adaptive_prevalence() and ss_time_dependent_roc()
+# remain in the package but are no longer described in this article, and this
+# script no longer builds figures or tables for them. This script writes
+# Figure 1 (unchanged), Figure 2 (the joint-assurance-vs-N curve, new in this
+# revision), Table 1 (the three estimators described in the article), Table 3
+# (the feature matrix, read from table3_feature_matrix_source.csv) and
+# Table 4 (the three surviving methods compared under common assumptions).
+# Table 2 (cross-validation of core formulas) is written separately by
+# cross_validation.R, not by this script -- see validation/README.md.
+#
 # Run after installing the package, e.g. from the package root:
 #   Rscript validation/make_manuscript_assets.R
 # (the script locates the repository layout from its own path, so it does
@@ -116,23 +129,28 @@ run_checked <- function(label, expr) {
 }
 
 ## Shared design parameters, used throughout (see the article's Methods):
-## a moderately informative Se prior, a fairly tight Sp prior, a
-## prevalence prior centred at 0.20, and the half-width precision targets
-## Se +/- 0.07 and Sp +/- 0.05 at 80% assurance. loss_rate = 0 keeps the
-## reported N as "enrolled = analysed", so it is directly comparable
-## across methods that do and do not model attrition.
+## a moderately informative Se prior, a prevalence prior centred at 0.20,
+## and the half-width precision targets Se +/- 0.07 and Sp +/- 0.05 at 80%
+## assurance. PRIOR_SP is the HARMONIZED, informative specificity prior
+## (Beta(18, 2), mean 0.90) used only in Table 4, where it is compared
+## against the classical and Monte Carlo methods under matched point
+## assumptions (Se = 0.85, Sp = 0.90, prevalence = 0.20); it is NOT the
+## package's own default Sp prior. Figure 2 instead uses the package's
+## actual default, vague Sp prior, Beta(2, 2) -- see PRIOR_SP_VAGUE below
+## and the article's Results/Limitations for why the two differ (N = 678
+## under the vague default vs. N = 672 under the harmonized informative
+## prior).
 PRIOR_SE   <- c(17, 3)
-PRIOR_SP   <- c(18, 2)
+PRIOR_SP   <- c(18, 2)                 # harmonized (informative), Table 4 only
 PRIOR_PREV <- c(4, 16)                 # Beta(4, 16): mean 0.20
-DELTA_SE   <- 0.07
-DELTA_SP   <- 0.05
+DELTA_SE   <- 0.07                     # half-width, as used by the classical
+DELTA_SP   <- 0.05                     # and Monte Carlo methods in Table 4
 TARGET_ASSURANCE <- 0.80
-LOSS_RATE  <- 0
 B_MAIN     <- 20000
 SEED       <- 2026
 
 E_SE   <- PRIOR_SE[1]   / sum(PRIOR_SE)     # 0.85
-E_SP   <- PRIOR_SP[1]   / sum(PRIOR_SP)     # 0.90
+E_SP   <- PRIOR_SP[1]   / sum(PRIOR_SP)     # 0.90 (harmonized prior mean)
 E_PREV <- PRIOR_PREV[1] / sum(PRIOR_PREV)   # 0.20
 
 ## ===========================================================================
@@ -176,254 +194,136 @@ cat(sprintf("Figure 1: Buderer n=%d -> assurance %.4f; n for 0.80 assurance = %s
             n_bud_fig1, assur_fig1[ns == n_bud_fig1], n_80_fig1))
 
 ## ===========================================================================
-## FIGURE 2 -- Required Se-variance multiplier for an imperfect reference
-##             standard, at the estimand a study actually plans for
+## FIGURE 2 -- Joint assurance for sensitivity and specificity as a
+##             function of total sample size N (exact Beta-Binomial)
 ## ===========================================================================
-## REPLACES the previous release's heat map of the Rogan-Gladen prevalence
-## factor 1/(Se_ref + Sp_ref - 1)^2 relabelled as a sample-size multiplier.
-## That relabelling was structurally invalid: as documented in
-## ss_imperfect_ref()'s Details ("The retired VIF"), the multiplier that
-## actually governs the corrected-Se sample size is not a function of
-## (Se_ref, Sp_ref) alone -- it also depends on prevalence, Se and Sp -- so
-## no function of (Se_ref, Sp_ref) alone can represent it, and no amount of
-## relabelling the old heat map fixes that. This figure instead plots the
-## quantity ss_imperfect_ref() itself reports for exactly this purpose,
-## multiplier_se_corrected, over the same (Se_ref, Sp_ref) grid as before,
-## with Se, Sp and prevalence held fixed at the article's harmonized
-## planning values (E_SE = 0.85, E_SP = 0.90, E_PREV = 0.20, defined
-## above). B = 0 and sensitivity_table = FALSE because multiplier_se_corrected
-## is a closed-form delta-method ratio (see ss_imperfect_ref()'s Details) --
-## there is no Monte Carlo replicate to validate here, and the function's
-## own internal sensitivity_table uses a coarser grid built for a different
-## purpose.
-se_ref_grid <- seq(0.80, 0.99, by = 0.01)
-sp_ref_grid <- seq(0.80, 0.99, by = 0.01)
+## NEW in this revision. REPLACES the previous release's imperfect-reference
+## multiplier heat map (Figure 2), the net-benefit-by-threshold plot
+## (Figure 3) and the nested-sequence bar chart (Figure 4) -- none of ss_
+## unified(), ss_net_benefit(), ss_imperfect_ref() and the AUC gate is
+## described by the article any more (see the SCOPE note at the top of this
+## file). This is the single figure the article's Results and Figure 2
+## legend refer to: bam_sample_size(method = "exact")'s joint assurance for
+## Se and Sp, as a function of the total sample size N, under the package's
+## own DEFAULT priors -- Se ~ Beta(17, 3), Sp ~ Beta(2, 2) (vague; see
+## PRIOR_SP_VAGUE below, deliberately NOT the harmonized informative Sp
+## prior used in Table 4), prevalence ~ Beta(4, 16) -- and full-width
+## targets delta_se = 0.14, delta_sp = 0.10 (2x the half-widths used
+## elsewhere in this script for the classical/Monte Carlo comparators),
+## crossing the 0.80 target at N = 678 (article Results: "the required
+## total sample size is N = 678, at which the joint assurance is
+## 0.8003489948 ... at N = 677 the assurance is 0.7996848824").
+##
+## The curve is built by calling the SAME internal exact-calculation
+## helpers that bam_sample_size(method = "exact") itself calls
+## (.bam_exact_width_prob() / .bam_exact_joint_assurance(); see
+## ?bam_sample_size, @details, for the closed-form Beta-Binomial derivation
+## these implement) rather than calling the exported bam_sample_size()
+## once per candidate N: that search function stops at the FIRST N whose
+## assurance reaches target_assurance, so it cannot supply the points
+## beyond the crossing needed to draw a curve. Calling the internal helpers
+## directly evaluates the identical formula at every N, with no early stop,
+## and builds the O(N^2) per-arm qbeta cache once for the whole curve
+## rather than once per point -- the same caching bam_sample_size() itself
+## relies on to stay fast.
+PRIOR_SP_VAGUE <- c(2, 2)   # bam_sample_size()'s own default prior_sp
+ALPHA_CI_FIG2  <- 0.95      # bam_sample_size()'s own default alpha_ci
 
-## ss_imperfect_ref() enforces both Se_ref + Sp_ref > 1 and the min_youden
-## guard (default 0.5, i.e. Se_ref + Sp_ref >= 1.5) as hard errors, not as
-## NAs in a vectorised return. A grid point that fails either is caught
-## here and recorded as excluded (NA in the matrix, left uncoloured by
-## image() and skipped by contour()) instead of aborting the whole figure.
-mult_se_corrected <- function(se_ref, sp_ref) {
-  res <- tryCatch(
-    ss_imperfect_ref(Se = E_SE, Sp = E_SP, prev = E_PREV,
-                      d_se = DELTA_SE, d_sp = DELTA_SP,
-                      Se_ref = se_ref, Sp_ref = sp_ref,
-                      loss_rate = LOSS_RATE, B = 0,
-                      sensitivity_table = FALSE, seed = SEED),
-    error = function(e) NULL
-  )
-  if (is.null(res)) NA_real_ else res$multiplier_se_corrected
-}
-mult_fig2 <- outer(se_ref_grid, sp_ref_grid, Vectorize(mult_se_corrected))
-n_excluded_fig2 <- sum(is.na(mult_fig2))
-if (n_excluded_fig2 > 0) {
-  cat(sprintf(
-    "  [Figure 2] %d/%d grid points excluded (reference Youden index below the min_youden guard)\n",
-    n_excluded_fig2, length(mult_fig2)))
-}
+N_grid_fig2 <- seq(350, 850, by = 1)
+N_max_fig2  <- max(N_grid_fig2)
+ci_lower_q_fig2 <- (1 - ALPHA_CI_FIG2) / 2
+ci_upper_q_fig2 <- 1 - ci_lower_q_fig2
 
-## Anchor check: at Se_ref = 0.90, Sp_ref = 0.95 (Se = 0.85, Sp = 0.90,
-## prev = 0.20) the required multiplier was independently verified to be
-## 2.470, against 1.384 for the retired Rogan-Gladen factor at the same
-## point. Refuse to draw the figure if this stops reproducing, rather than
-## silently plotting a value nobody checked.
-anchor_fig2 <- mult_se_corrected(0.90, 0.95)
-if (!isTRUE(all.equal(anchor_fig2, 2.470, tolerance = 0.001))) {
+P_se_fig2 <- dtasamplesize:::.bam_exact_width_prob(
+  N_max_fig2, PRIOR_SE[1], PRIOR_SE[2], 2 * DELTA_SE,
+  ci_lower_q_fig2, ci_upper_q_fig2)
+P_sp_fig2 <- dtasamplesize:::.bam_exact_width_prob(
+  N_max_fig2, PRIOR_SP_VAGUE[1], PRIOR_SP_VAGUE[2], 2 * DELTA_SP,
+  ci_lower_q_fig2, ci_upper_q_fig2)
+## Degenerate-arm convention (n_d = 0 or n_nd = 0 always counts as a
+## failure): the same convention bam_sample_size() enforces internally,
+## both under method = "exact" and method = "monte_carlo" -- see
+## ?bam_sample_size, @details.
+P_se_fig2[1] <- 0
+P_sp_fig2[1] <- 0
+
+assur_fig2 <- vapply(N_grid_fig2, function(N) {
+  dtasamplesize:::.bam_exact_joint_assurance(
+    N, PRIOR_PREV[1], PRIOR_PREV[2], P_se_fig2, P_sp_fig2)
+}, numeric(1))
+
+n_cross_fig2 <- N_grid_fig2[which(assur_fig2 >= TARGET_ASSURANCE)[1]]
+assur_at_cross_fig2 <- assur_fig2[N_grid_fig2 == n_cross_fig2]
+assur_at_prev_fig2  <- assur_fig2[N_grid_fig2 == (n_cross_fig2 - 1L)]
+
+## Anchor check, same pattern as the rest of this script (see Figure 1's
+## companion check in reproduce_manuscript.R): refuse to draw the figure if
+## the published crossing does not reproduce, rather than silently plotting
+## a curve nobody checked. The comparison values carry full precision
+## because they are computed exactly, with no Monte Carlo error to round
+## away.
+if (!isTRUE(all.equal(n_cross_fig2, 678L)) ||
+    !isTRUE(all.equal(assur_at_cross_fig2, 0.8003489948, tolerance = 1e-8)) ||
+    !isTRUE(all.equal(assur_at_prev_fig2, 0.7996848824, tolerance = 1e-8))) {
   stop(sprintf(
-    paste("Figure 2 anchor check failed: multiplier_se_corrected(Se_ref=0.90,",
-          "Sp_ref=0.95 | Se=%.2f, Sp=%.2f, prev=%.2f) = %.6f, expected",
-          "approximately 2.470. Refusing to draw a figure whose verified",
-          "anchor point does not reproduce."),
-    E_SE, E_SP, E_PREV, anchor_fig2
+    paste("Figure 2 anchor check failed: crossing at N = %s (assurance",
+          "%.10f), N-1 assurance %.10f; expected crossing at N = 678,",
+          "assurance 0.8003489948 at N = 678 and 0.7996848824 at N = 677.",
+          "Refusing to draw a figure whose verified crossing does not",
+          "reproduce."),
+    n_cross_fig2, assur_at_cross_fig2, assur_at_prev_fig2
   ), call. = FALSE)
 }
 
-## Colour scale: LINEAR, not logarithmic. Over this grid the multiplier
-## spans about an 8.6-fold range (observed range printed below) -- wide,
-## but not the multiple-orders-of-magnitude spread that would make a
-## linear ramp unreadable, and the intended reading ("this reference
-## standard needs roughly this many times the classical N") is direct on
-## a linear scale and requires translation on a log one. zlim is anchored
-## at 1 (no inflation, i.e. a perfect reference, same convention as the
-## retired figure) up to the grid's observed maximum, rounded up; unlike
-## the retired figure, nothing is pmin()-capped, because the real range
-## here does not need it to stay legible.
-zlim_fig2 <- c(1, ceiling(max(mult_fig2, na.rm = TRUE)))
-
 draw_fig2 <- function() {
-  layout(matrix(c(1, 2), nrow = 1), widths = c(6, 1))
-  cols <- hcl.colors(50, "YlOrRd", rev = TRUE)
   par(mar = c(4.3, 4.6, 1.2, 1))
-  image(se_ref_grid, sp_ref_grid, mult_fig2, col = cols, zlim = zlim_fig2,
-        xlab = "Reference sensitivity (Se_ref)",
-        ylab = "Reference specificity (Sp_ref)")
-  ## Levels 2/4/6/8 verified against mult_fig2 to fall strictly inside the
-  ## observed range [1.22, 10.54] with a substantial area of the grid on
-  ## both sides of each -- none of them touches an edge of the domain or
-  ## of the data range.
-  contour(se_ref_grid, sp_ref_grid, mult_fig2, add = TRUE,
-          levels = c(2, 4, 6, 8), labcex = 0.7, col = "grey20")
-  par(mar = c(4.3, 0.5, 1.2, 3.6))
-  zseq <- seq(zlim_fig2[1], zlim_fig2[2], length.out = 50)
-  image(1, zseq, matrix(zseq, nrow = 1), col = cols, zlim = zlim_fig2,
-        axes = FALSE, xlab = "", ylab = "")
-  axis(4, at = c(1, 2, 4, 6, 8, zlim_fig2[2]), las = 1)
-  mtext("Se multiplier", side = 4, line = 2.3, cex = 0.9); box()
-  layout(1)
+  plot(N_grid_fig2, assur_fig2, type = "l", lwd = 2, col = "#1f4e79",
+       xlab = "Total sample size (N)",
+       ylab = "Joint assurance for Se and Sp", ylim = c(0, 1))
+  abline(h = TARGET_ASSURANCE, lty = 3, col = "grey40")
+  abline(v = n_cross_fig2, lty = 2, col = "#c00000")
+  points(n_cross_fig2, assur_at_cross_fig2, pch = 19, col = "#c00000")
+  text(n_cross_fig2 + 14, 0.28,
+       sprintf("N=%d\nassurance=%.4f", n_cross_fig2, assur_at_cross_fig2),
+       col = "#c00000", cex = 0.78, pos = 4)
+  legend("bottomright", bty = "n", cex = 0.8,
+         legend = c("Exact joint assurance", "0.80 target",
+                    sprintf("N=%d (selected)", n_cross_fig2)),
+         col = c("#1f4e79", "grey40", "#c00000"),
+         lty = c(1, 3, 2), lwd = c(2, 1, 1))
 }
-emit("Figure_2", draw_fig2, 8, 5)
+emit("Figure_2", draw_fig2, 7, 5)
 cat(sprintf(
-  "Figure 2: multiplier_se_corrected(Se_ref=0.90,Sp_ref=0.95)=%.3f (Rogan-Gladen VIF=%.3f at same point) ; range over grid = [%.3f, %.3f]\n",
-  anchor_fig2, 1 / (0.90 + 0.95 - 1)^2,
-  min(mult_fig2, na.rm = TRUE), max(mult_fig2, na.rm = TRUE)))
+  "Figure 2: crossing at N=%d, assurance=%.10f (N-1=%d, assurance=%.10f)\n",
+  n_cross_fig2, assur_at_cross_fig2, n_cross_fig2 - 1L, assur_at_prev_fig2))
 
 ## ===========================================================================
-## FIGURE 3 -- Sample size for conclusive net benefit
+## TABLE 4 -- the three surviving methods for the joint precision of Se
+##            and Sp, under a common set of point assumptions
 ## ===========================================================================
-## Unchanged: required total N, by decision threshold, for the lower 95%
-## confidence limit of net benefit to exceed both default strategies,
-## under the prospective-cohort (design = "cohort", the default) variance.
-nb_fig3 <- run_checked("Figure 3 (net benefit)",
-                        ss_net_benefit(B = 4000, seed = SEED))
-dnb_fig3 <- nb_fig3$N_by_pt
+## Reduced from the previous release's five-method comparison: only the
+## three methods the article still describes (Buderer classical, BAM exact
+## mode with harmonized priors, and joint_sample_size()) remain. The
+## imperfect-reference and unified-framework rows are removed along with
+## Figures 3-4 above (see the SCOPE note at the top of this file). Each
+## method contributes the N it actually produces under the article's common
+## assumptions (Se = 0.85, Sp = 0.90, prevalence = 0.20; for the Bayesian
+## method, the harmonized prior means Se ~ Beta(17, 3), Sp ~ Beta(18, 2),
+## prevalence ~ Beta(4, 16)) -- not a value read off a figure, since neither
+## remaining figure sweeps this comparison.
 
-draw_fig3 <- function() {
-  par(mar = c(4.3, 4.6, 1.2, 1))
-  plot(dnb_fig3$pt, dnb_fig3$N_required, type = "b", pch = 19, lwd = 2,
-       col = "#6a1b9a",
-       xlab = "Threshold probability (p_t)", ylab = "Required total N")
-  grid(col = "grey85")
-}
-emit("Figure_3", draw_fig3, 7, 5)
-cat("Figure 3 N by threshold:", paste(dnb_fig3$N_required, collapse = ", "),
-    " (conservative N =", nb_fig3$N_conservative, ")\n")
-
-## ===========================================================================
-## FIGURE 4 -- Required N as a NESTED sequence of added uncertainty sources
-## ===========================================================================
-## Five bars, each adding exactly one source of uncertainty on top of the
-## previous bar, all else held fixed. This replaces the earlier "method
-## comparison" framing (five unrelated methods, each with its own default
-## assumptions) with a design in which each step is a strict superset of
-## the one before it, so that the increase from bar to bar is attributable
-## to the single feature that step turns on.
-##
-## Step 1 (Buderer, deterministic) has no Monte Carlo component. Steps 2-5
-## all go through ss_unified(): step 2 turns on joint Se/Sp precision by
-## simulating estimation uncertainty against a PERFECT reference standard
-## (Se_ref = Sp_ref = 1, so the "apparent" accuracy in that call is the
-## true accuracy); step 3 additionally requires the AUC half-width target;
-## step 4 replaces the perfect reference with the imperfect one actually
-## assumed elsewhere in the article (Se_ref = 0.90, Sp_ref = 0.95); step 5
-## additionally requires a conclusive (CI-based) net benefit at every
-## threshold in the default pt_range.
-##
-## IMPORTANT: ss_unified()'s default N_range (seq(200, 1000, by = 20)) is
-## too narrow for steps 4-5 -- the search would exhaust the range, return
-## max(N_range) without a real crossing, and silently look like a smaller
-## (wrong) answer instead of failing loudly. Each call below is given an
-## explicit N_range verified to bracket the true crossing comfortably
-## inside its interior, and run_checked() aborts if any call nonetheless
-## fails to converge.
-
-## Step 1: classical Buderer, applied per-arm and then combined across the
-## Se and Sp requirements via the common prevalence -- no simulation.
+## Method 1: Buderer (classical, deterministic) -- per-arm requirement
+## combined across Se and Sp via the common prevalence.
 se_arm_n <- buderer_n(0.85, 0.07)
 sp_arm_n <- buderer_n(0.90, 0.05)
-N_step1  <- ceiling(max(se_arm_n / 0.20, sp_arm_n / 0.80))
-
-## Step 2: + joint Se/Sp precision (perfect reference, no AUC, no NB).
-u_step2 <- run_checked("Figure 4 step 2 (joint Se/Sp precision)",
-  ss_unified(prior_se = PRIOR_SE, prior_sp = PRIOR_SP, prior_prev = PRIOR_PREV,
-             Se_ref = 1, Sp_ref = 1, loss_rate = LOSS_RATE,
-             delta_se = DELTA_SE, delta_sp = DELTA_SP, delta_auc = 0,
-             check_nb = FALSE, target_assurance = TARGET_ASSURANCE,
-             N_range = seq(750, 1000, by = 10), B = B_MAIN, seed = SEED))
-N_step2 <- u_step2$n_total
-
-## Step 3: + AUC gate (perfect reference still; delta_auc turned on).
-u_step3 <- run_checked("Figure 4 step 3 (+ AUC gate)",
-  ss_unified(prior_se = PRIOR_SE, prior_sp = PRIOR_SP, prior_prev = PRIOR_PREV,
-             Se_ref = 1, Sp_ref = 1, loss_rate = LOSS_RATE,
-             delta_se = DELTA_SE, delta_sp = DELTA_SP, delta_auc = 0.06,
-             check_nb = FALSE, target_assurance = TARGET_ASSURANCE,
-             N_range = seq(750, 1000, by = 10), B = B_MAIN, seed = SEED))
-N_step3 <- u_step3$n_total
-
-## Step 4: + imperfect reference standard (Se_ref/Sp_ref no longer perfect).
-u_step4 <- run_checked("Figure 4 step 4 (+ imperfect reference)",
-  ss_unified(prior_se = PRIOR_SE, prior_sp = PRIOR_SP, prior_prev = PRIOR_PREV,
-             Se_ref = 0.90, Sp_ref = 0.95, loss_rate = LOSS_RATE,
-             delta_se = DELTA_SE, delta_sp = DELTA_SP, delta_auc = 0.06,
-             check_nb = FALSE, target_assurance = TARGET_ASSURANCE,
-             N_range = seq(1050, 1400, by = 10), B = B_MAIN, seed = SEED))
-N_step4 <- u_step4$n_total
-
-## Step 5: + net benefit (inference-based, both default comparisons).
-u_step5 <- run_checked("Figure 4 step 5 (+ net benefit)",
-  ss_unified(prior_se = PRIOR_SE, prior_sp = PRIOR_SP, prior_prev = PRIOR_PREV,
-             Se_ref = 0.90, Sp_ref = 0.95, loss_rate = LOSS_RATE,
-             delta_se = DELTA_SE, delta_sp = DELTA_SP, delta_auc = 0.06,
-             check_nb = TRUE, target_assurance = TARGET_ASSURANCE,
-             N_range = seq(1950, 2600, by = 10), B = B_MAIN, seed = SEED))
-N_step5 <- u_step5$n_total
-
-fig4_vals <- c(N_step1, N_step2, N_step3, N_step4, N_step5)
-fig4_labels <- c(
-  "1. Buderer\n(deterministic)",
-  "2. + joint Se/Sp\nprecision",
-  "3. + AUC\ngate",
-  "4. + imperfect\nreference",
-  "5. + net\nbenefit"
-)
-fig4_deltas <- diff(fig4_vals)
-
-draw_fig4 <- function() {
-  ## Sequential, single-hue ramp: distinguishable by lightness alone, so it
-  ## reads correctly in grayscale print and under the common forms of
-  ## color-vision deficiency.
-  pal <- grDevices::colorRampPalette(c("#deebf7", "#08306b"))(5)
-  par(mar = c(6.4, 4.8, 1.4, 1))
-  bp <- barplot(fig4_vals, col = pal, border = "grey20",
-                names.arg = fig4_labels, las = 1, cex.names = 0.72,
-                ylab = "Total required sample size (N)",
-                ylim = c(0, max(fig4_vals) * 1.20))
-  text(bp, fig4_vals, labels = fig4_vals, pos = 3, cex = 0.88, font = 2)
-  ## Delta labels between consecutive bars, so the flat step (2 -> 3) is
-  ## shown exactly as it is: the AUC gate adds nothing at this operating
-  ## point, and that is a real result, not an omission.
-  for (i in seq_along(fig4_deltas)) {
-    xmid <- mean(bp[i:(i + 1)])
-    ymid <- max(fig4_vals[i], fig4_vals[i + 1]) + 0.06 * max(fig4_vals)
-    is_flat <- fig4_deltas[i] == 0
-    text(xmid, ymid, sprintf("%+d", fig4_deltas[i]), cex = 0.76,
-         col = if (is_flat) "grey45" else "grey15",
-         font = if (is_flat) 3 else 1)
-  }
-}
-emit("Figure_4", draw_fig4, 8, 5.5)
-cat("Figure 4 nested-sequence values:",
-    paste(sprintf("step%d=%d", seq_along(fig4_vals), fig4_vals), collapse = ", "), "\n")
-cat("Figure 4 deltas between consecutive steps:",
-    paste(sprintf("%+d", fig4_deltas), collapse = ", "), "\n")
-
-## ===========================================================================
-## TABLE -- harmonized comparison of the five planning approaches
-## ===========================================================================
-## The five methods evaluated under the same common assumptions (Methods),
-## each contributing the N it actually produces under those assumptions --
-## not a value read off Figure 4, since three of the five methods (BAM,
-## the joint Se/Sp+AUC gate, and the imperfect-reference correction) are
-## not part of the nested Figure 4 sequence at all.
-
-## Method 1: Buderer (classical, deterministic) -- identical to Figure 4
-## step 1, reused here rather than recomputed.
-h_buderer <- list(N = N_step1, assurance = NA_real_,
+N_buderer <- ceiling(max(se_arm_n / 0.20, sp_arm_n / 0.80))
+h_buderer <- list(N = N_buderer, assurance = NA_real_,
                    assurance_type = "deterministic (normal-approximation target width; not a simulated assurance)")
 
-## Method 2: BAM, exact joint Beta-Binomial search, full-width deltas.
-bam_res <- run_checked("Harmonized table: BAM (exact)",
+## Method 2: BAM, exact joint Beta-Binomial search, full-width deltas,
+## HARMONIZED (informative) Sp prior -- see the shared-parameters note
+## above for why this differs from Figure 2's vague default.
+bam_res <- run_checked("Table 4: BAM (exact, harmonized priors)",
   bam_sample_size(prior_se = PRIOR_SE, prior_sp = PRIOR_SP, prior_prev = PRIOR_PREV,
                    delta_se = 2 * DELTA_SE, delta_sp = 2 * DELTA_SP,
                    target_assurance = TARGET_ASSURANCE, method = "exact",
@@ -431,192 +331,118 @@ bam_res <- run_checked("Harmonized table: BAM (exact)",
 h_bam <- list(N = bam_res$N_total, assurance = bam_res$joint_assurance,
                assurance_type = "exact Bayesian (Beta-Binomial), closed form, no Monte Carlo error")
 
-## Method 3: joint Se + Sp precision with a deterministic AUC gate,
-## prospective-cohort variance for the Se/Sp Monte Carlo (package defaults
-## for AUC = 0.90 and delta_auc = 0.05, which are not part of the five
-## common parameters above because this method, unlike ss_unified(), has
-## no prior on Se/Sp/prevalence to harmonize).
-joint_res <- run_checked("Harmonized table: joint Se/Sp + AUC",
+## Method 3: joint Se + Sp precision by direct Monte Carlo, prospective-
+## cohort design (joint_sample_size()'s default). AUC and delta_auc are
+## left at the function's own defaults (AUC = 0.90, delta_auc = 0.05):
+## joint_sample_size() always evaluates a deterministic AUC gate
+## internally (see ?joint_sample_size, @details), but the article no
+## longer describes that gate, and it is not part of the joint_prob_se_sp
+## estimand compared here (see the "notes" column below).
+joint_res <- run_checked("Table 4: joint Se/Sp (joint_sample_size)",
   joint_sample_size(Se = E_SE, Sp = E_SP, delta_se = DELTA_SE, delta_sp = DELTA_SP,
                      prev = E_PREV, design = "cohort",
                      target_prob = TARGET_ASSURANCE, B = B_MAIN, seed = SEED))
 h_joint <- list(N = joint_res$n_total, assurance = joint_res$joint_prob_se_sp,
-                 assurance_type = "Monte Carlo (cohort design) for Se & Sp jointly; AUC via a deterministic Hanley-McNeil gate")
+                 assurance_type = "Monte Carlo (cohort design) for Se & Sp jointly")
 
-## Method 4: imperfect reference, apparent-sensitivity estimand --
-## deterministic given Se, Sp, prev, Se_ref, Sp_ref; B = 0 skips the
-## optional Monte Carlo bias check (see ss_imperfect_ref()'s
-## mc_validation), which is not needed for the sample size itself.
-imp_res <- ss_imperfect_ref(Se = E_SE, Sp = E_SP, d_se = DELTA_SE, d_sp = DELTA_SP,
-                             prev = E_PREV, Se_ref = 0.90, Sp_ref = 0.95,
-                             loss_rate = LOSS_RATE, B = 0, seed = SEED)
-h_imperfect <- list(N = imp_res$n_total, assurance = NA_real_,
-                      assurance_type = paste(
-                        "deterministic closed form for the apparent",
-                        "(reference-biased) sensitivity; no variance",
-                        "inflation factor is applied; not simulated"))
-
-## Method 5: unified framework with every source of uncertainty active --
-## identical to Figure 4 step 5, reused here rather than recomputed.
-h_unified <- list(N = N_step5, assurance = u_step5$joint_assurance,
-                    assurance_type = "Monte Carlo, joint over Se, Sp, AUC and net benefit simultaneously; lower-bound decision rule")
-
-## joint_sample_size() does not echo delta_auc back in its return value;
-## the call above left it at the function's own default (0.05), so that
-## default is recorded here as a literal, not re-derived at runtime.
-JOINT_DELTA_AUC_DEFAULT <- 0.05
-
-harmonized <- data.frame(
-  method = c("Buderer (classical)", "BAM (exact mode)",
-             "Joint Se/Sp + AUC", "Imperfect reference", "Unified (all sources active)"),
-  N = c(h_buderer$N, h_bam$N, h_joint$N, h_imperfect$N, h_unified$N),
-  assurance_achieved = c(h_buderer$assurance, h_bam$assurance, h_joint$assurance,
-                          h_imperfect$assurance, h_unified$assurance),
-  assurance_type = c(h_buderer$assurance_type, h_bam$assurance_type, h_joint$assurance_type,
-                      h_imperfect$assurance_type, h_unified$assurance_type),
-  Se = c(0.85, E_SE, E_SE, E_SE, NA),
-  Sp = c(0.90, E_SP, E_SP, E_SP, NA),
-  prevalence = c(0.20, E_PREV, E_PREV, E_PREV, NA),
-  prior_se = c(NA, "17,3", NA, NA, "17,3"),
-  prior_sp = c(NA, "18,2", NA, NA, "18,2"),
-  prior_prev = c(NA, "4,16", NA, NA, "4,16"),
-  delta_se = c(DELTA_SE, 2 * DELTA_SE, DELTA_SE, DELTA_SE, DELTA_SE),
-  delta_sp = c(DELTA_SP, 2 * DELTA_SP, DELTA_SP, DELTA_SP, DELTA_SP),
-  AUC = c(NA, NA, joint_res$AUC, NA, NA),
-  delta_auc = c(NA, NA, JOINT_DELTA_AUC_DEFAULT, NA, 0.06),
-  Se_ref = c(NA, NA, NA, 0.90, 0.90),
-  Sp_ref = c(NA, NA, NA, 0.95, 0.95),
-  loss_rate = c(NA, NA, NA, LOSS_RATE, LOSS_RATE),
-  check_net_benefit = c(NA, NA, NA, NA, TRUE),
-  B = c(NA, B_MAIN, B_MAIN, 0, B_MAIN),
-  seed = c(NA, SEED, SEED, SEED, SEED),
+table4 <- data.frame(
+  method = c("Buderer (classical)", "BAM (exact mode, harmonized priors)",
+             "Joint Se/Sp (joint_sample_size)"),
+  N = c(h_buderer$N, h_bam$N, h_joint$N),
+  assurance_achieved = c(h_buderer$assurance, h_bam$assurance, h_joint$assurance),
+  assurance_type = c(h_buderer$assurance_type, h_bam$assurance_type, h_joint$assurance_type),
+  Se = c(0.85, E_SE, E_SE),
+  Sp = c(0.90, E_SP, E_SP),
+  prevalence = c(0.20, E_PREV, E_PREV),
+  prior_se = c(NA, "17,3", NA),
+  prior_sp = c(NA, "18,2", NA),
+  prior_prev = c(NA, "4,16", NA),
+  delta_se = c(DELTA_SE, 2 * DELTA_SE, DELTA_SE),
+  delta_sp = c(DELTA_SP, 2 * DELTA_SP, DELTA_SP),
+  B = c(NA, B_MAIN, B_MAIN),
+  seed = c(NA, SEED, SEED),
   notes = c(
     "N = ceiling(max(buderer_n(0.85,0.07)/0.20, buderer_n(0.90,0.05)/0.80))",
-    "delta_se/delta_sp given as full CI widths (2x the half-width used elsewhere); prior_prev harmonized to Beta(4,16) (package default is Beta(6,14))",
-    "AUC and delta_auc left at joint_sample_size()'s own defaults (0.90 and 0.05); not part of the five harmonized parameters, since this method has no Se/Sp/prevalence prior to harmonize",
-    "Se_ref/Sp_ref harmonized to the values used in Figure 4 steps 4-5 (package defaults are 0.92/0.95)",
-    "identical configuration to Figure 4 step 5"
+    "delta_se/delta_sp given as full CI widths (2x the half-width used elsewhere); prior_sp harmonized to Beta(18,2) (package/article-default prior_sp for Figure 2 is the vague Beta(2,2))",
+    sprintf(paste("AUC and delta_auc left at joint_sample_size()'s own defaults",
+                   "(%.2f and %.2f); the function evaluates a deterministic AUC",
+                   "gate internally but the article no longer describes it, and",
+                   "it is not part of the joint_prob_se_sp estimand reported here"),
+            joint_res$AUC, 0.05)
   ),
   stringsAsFactors = FALSE
 )
-write.csv(harmonized, file.path(assets_dir, "table_harmonized_comparison.csv"), row.names = FALSE)
-cat("\nHarmonized comparison table:\n")
-print(harmonized[, c("method", "N", "assurance_achieved")], row.names = FALSE)
+write.csv(table4, file.path(assets_dir, "table4_method_comparison.csv"), row.names = FALSE)
+cat("\nTable 4 (method comparison):\n")
+print(table4[, c("method", "N", "assurance_achieved")], row.names = FALSE)
 
-## ===========================================================================
-## TABLE 5 -- feasibility ceiling of the net-benefit criterion, by
-##            decision-threshold range
-## ===========================================================================
-## ss_unified()'s nb_ceiling is the largest joint assurance the check_nb
-## criterion could ever reach as N -> Inf (see ?ss_unified, "The CI-based
-## net-benefit criterion has a hard ceiling"). It is computed BEFORE the
-## grid search, from the priors, Se_ref, Sp_ref, pt_range and seed alone --
-## not from N_range or from the search's own B -- so the cheapest possible
-## call that still returns it uses a single-value N_range and a small B.
-## Whether that one-point search itself "converges" is irrelevant here
-## (only nb_ceiling is read off the return value), so its warnings --
-## either "criterion unreachable at this target_assurance" for a ceiling
-## below TARGET_ASSURANCE, or "no N reached target assurance" for the
-## single grid point -- are expected for several of the ranges below and
-## are deliberately suppressed rather than treated as failures.
-table5_pt_ranges <- list(
-  c(0.15, 0.40),   # used throughout the article (Figure 4 step 5, Table 4)
-  c(0.20, 0.30),
-  c(0.15, 0.25),
-  c(0.10, 0.40),
-  c(0.10, 0.30),
-  c(0.05, 0.50)
-)
-
-nb_ceiling_for <- function(pt_range) {
-  suppressWarnings(ss_unified(
-    prior_se = PRIOR_SE, prior_sp = PRIOR_SP, prior_prev = PRIOR_PREV,
-    Se_ref = 0.90, Sp_ref = 0.95, loss_rate = LOSS_RATE,
-    delta_se = DELTA_SE, delta_sp = DELTA_SP, delta_auc = 0.06,
-    check_nb = TRUE, pt_range = pt_range,
-    target_assurance = TARGET_ASSURANCE,
-    N_range = 500, B = 100, seed = SEED
-  ))$nb_ceiling
-}
-table5_ceiling <- vapply(table5_pt_ranges, nb_ceiling_for, numeric(1))
-
-## Anchor check: the range actually used throughout the article (0.15-0.40)
-## is checked against 0.8796, NOT against a value read off this package's
-## own Monte Carlo output. 0.8796 was derived independently of
-## nb_assurance_ceiling() entirely, by tensor-product Gauss-Legendre
-## quadrature over the (prev, Se, Sp) priors (n = 300 and n = 600 nodes
-## per dimension agree to six decimals: 0.879606), and cross-checked
-## against a 5e6-draw Monte Carlo run. Anchoring against a number the
-## package computed itself would only confirm that the code reproduces
-## its own prior output, not that the output is correct -- exactly the
-## failure this check exists to rule out. The tolerance (2e-4) is set
-## against nb_assurance_ceiling()'s own documented Monte Carlo error
-## (below 1e-4 at its default B_ceiling; see ?ss_unified's internal
-## nb_assurance_ceiling), with headroom for ordinary run-to-run varia-
-## tion. Refuse to write the table if this stops reproducing, rather
-## than silently publishing a value nobody checked.
-if (!isTRUE(all.equal(table5_ceiling[1], 0.8796, tolerance = 2e-4))) {
-  stop(sprintf(
-    paste("Table 5 anchor check failed: nb_ceiling(pt_range = [0.15, 0.40])",
-          "= %.6f, expected approximately 0.8796 (independently derived by",
-          "Gauss-Legendre quadrature, not by this package). Refusing to",
-          "write a table whose verified anchor point does not reproduce."),
-    table5_ceiling[1]
-  ), call. = FALSE)
+## A stale copy of the previous (five-method) version of this table may be
+## left over from an earlier release under its old filename; remove it so
+## manuscript_assets/ does not carry two versions of the same table.
+old_table4_path <- file.path(assets_dir, "table_harmonized_comparison.csv")
+if (file.exists(old_table4_path)) {
+  file.remove(old_table4_path)
+  cat("Removed stale", old_table4_path, "(superseded by table4_method_comparison.csv)\n")
 }
 
-table5 <- data.frame(
-  pt_range = vapply(table5_pt_ranges,
-                     function(pr) sprintf("%.2f-%.2f", pr[1], pr[2]),
-                     character(1)),
-  ceiling = table5_ceiling,
-  reaches_target_0.80 = ifelse(table5_ceiling >= TARGET_ASSURANCE, "Yes", "No"),
-  stringsAsFactors = FALSE
-)
-write.csv(table5, file.path(assets_dir, "table5_nb_ceiling.csv"), row.names = FALSE)
-cat("\nTable 5 (net-benefit feasibility ceiling by threshold range):\n")
-print(table5, row.names = FALSE)
-
 ## ===========================================================================
-## TABLE 1 -- functions exported by dtasamplesize, derived from NAMESPACE
+## TABLE 1 -- the estimators described in this article
 ## ===========================================================================
-## Read the actual NAMESPACE rather than maintaining a hand-written list,
-## so the table cannot silently drift out of sync with the package's
-## exports. The one-line description of each function is its Rd \title{},
-## read from the installed help database -- again, not retyped by hand.
+## The article's Table 1 caption is explicit that this table lists only the
+## three estimators actually DESCRIBED in this article (mc_validate_buderer,
+## bam_sample_size, joint_sample_size); the package's other exported
+## helpers and its further, currently experimental modules are named in the
+## caption text itself, not as additional table rows (see manuscript.md).
+## This differs from the previous release, which listed every function
+## exported in NAMESPACE. The three purposes below are the article's own
+## Table 1 wording verbatim, not the functions' \title{} (those are
+## one-line Rd titles written for a different audience and do not match
+## the article's phrasing -- e.g. bam_sample_size()'s \title{} is
+## "Bayesian Assurance Method for DTA Sample Size", not the fuller
+## description the article's table gives).
+##
+## The guard below still checks against NAMESPACE, not to derive the
+## purposes, but to catch silent drift in the other direction: if one of
+## these three functions were ever removed from NAMESPACE, this script
+## must fail loudly rather than publish a table for a function the
+## installed package no longer exports.
 ns_lines <- readLines(file.path(pkg_root, "NAMESPACE"), warn = FALSE)
 export_lines <- grep("^export\\(", ns_lines, value = TRUE)
-fn_names <- sort(sub("^export\\(([^)]+)\\)$", "\\1", export_lines))
+fn_names <- sub("^export\\(([^)]+)\\)$", "\\1", export_lines)
 
-rd_title <- function(fn) {
-  rd_path <- file.path(pkg_root, "man", paste0(fn, ".Rd"))
-  if (!file.exists(rd_path)) return(NA_character_)
-  rd_lines <- readLines(rd_path, warn = FALSE)
-  title_line <- grep("\\\\title\\{", rd_lines, value = TRUE)[1]
-  if (is.na(title_line)) return(NA_character_)
-  sub(".*\\\\title\\{(.*)\\}.*", "\\1", title_line)
-}
-purposes <- vapply(fn_names, rd_title, character(1))
-if (anyNA(purposes)) {
-  stop("Table 1: no \\title{} found for: ",
-       paste(fn_names[is.na(purposes)], collapse = ", "),
-       ". Check that man/ is in sync with NAMESPACE.", call. = FALSE)
+table1_functions <- c("mc_validate_buderer", "bam_sample_size", "joint_sample_size")
+table1_purposes <- c(
+  mc_validate_buderer = "Monte Carlo validation of the classical formula (diagnostic, not a planner)",
+  bam_sample_size     = "Bayesian assurance sample size for the joint precision of Se and Sp, under uncertain prevalence (closed-form exact mode available)",
+  joint_sample_size   = "Joint Se and Sp precision by direct Monte Carlo simulation, cohort design"
+)
+missing_from_namespace <- setdiff(table1_functions, fn_names)
+if (length(missing_from_namespace)) {
+  stop("Table 1: the following functions are described in the article's ",
+       "Table 1 but are no longer exported by the installed package's ",
+       "NAMESPACE: ", paste(missing_from_namespace, collapse = ", "),
+       ". Check that R-package/dtasamplesize/NAMESPACE and the article ",
+       "are still in sync.", call. = FALSE)
 }
 
-table1 <- data.frame(Function = fn_names, Purpose = unname(purposes),
+table1 <- data.frame(Function = table1_functions,
+                      Purpose = unname(table1_purposes[table1_functions]),
                       stringsAsFactors = FALSE)
 write.csv(table1, file.path(assets_dir, "table1_functions.csv"), row.names = FALSE)
-cat("\nTable 1: ", nrow(table1), " exported functions (from NAMESPACE)\n", sep = "")
+cat("\nTable 1: ", nrow(table1), " estimators described in the article\n", sep = "")
 
 ## ===========================================================================
 ## TABLE 3 -- feature comparison with existing R packages
 ## ===========================================================================
-## This matrix is curated by hand -- it records a judgment about what each
-## comparator package's public functions actually do, not something that
-## can be derived mechanically -- and lives as a separate, versioned CSV
-## (table3_feature_matrix_source.csv) precisely so that the curation is
-## visible and diffable on its own, independent of this script. The block
-## below only re-emits it, together with a provenance note.
+## Unchanged: this matrix is curated by hand -- it records a judgment about
+## what each comparator package's public functions actually do, not
+## something that can be derived mechanically -- and lives as a separate,
+## versioned CSV (table3_feature_matrix_source.csv) precisely so that the
+## curation is visible and diffable on its own, independent of this script.
+## The block below only re-emits it, together with a provenance note. The
+## capability content (which comparator does what) has not changed in this
+## revision; only the cell-text wording shown in the manuscript's rendered
+## table is more compact than this source CSV's fuller annotations.
 table3_source_path <- file.path(script_dir, "table3_feature_matrix_source.csv")
 table3 <- read.csv(table3_source_path, stringsAsFactors = FALSE, check.names = FALSE)
 

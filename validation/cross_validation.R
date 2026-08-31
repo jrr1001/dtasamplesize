@@ -10,6 +10,19 @@
 # report uses, and if a computed value does not match what the
 # manuscript prose claims, the CSV's `note` column says so instead of
 # being forced to agree.
+#
+# SCOPE (article now reduced to a single joint estimand; see the SCOPE
+# note in reproduce_manuscript.R). Table 2 in the article has four rows:
+# Wilson CI, Wald CI, buderer_n, and the Beta-Binomial posterior (checks
+# V1, V2, V3, V7 below). ss_net_benefit(), ss_imperfect_ref() and the
+# Hanley-McNeil AUC variance used by the AUC gate inside ss_unified() are
+# no longer described in the article, so checks V4 (Hanley-McNeil vs
+# Monte Carlo), V5-V6 (net benefit point estimate and variance) and V8
+# (imperfect-reference VIF and apparent sensitivity) are kept below as
+# internal verification of package code that still ships -- they still
+# print PASS/**CHECK** to the console -- but they are deliberately NOT
+# added to table2_rows, so they do not appear in the published CSV.
+#
 # Run after installing the package:  R -f validation/cross_validation.R
 # Required reference package: Hmisc. pROC is listed as an optional
 # reference package but is not called by any check below, so it is
@@ -182,12 +195,12 @@ cat("Note: Hanley-McNeil (1982) assumes a negative-exponential score model;\n",
     "the small deviation from binormal MC (larger when groups are imbalanced)\n",
     "is the expected, conservative behaviour of the approximation.\n")
 
-## -- capture for Table 2 (recomputes formula/MC ratios per config above;
-## same functions, same seeds, so identical to the loop's own values).
-## Table 2's row is scoped to "(balanced)" configurations only (nC ==
-## nK); the imbalanced configuration is recorded in `note` for audit,
-## exactly as printed above, since the manuscript cell only claims
-## "conservative for imbalanced" qualitatively, not a numeric tolerance. --
+## -- NOT added to Table 2: the Hanley-McNeil AUC variance backs the AUC
+## gate inside ss_unified(), which the article no longer describes (see
+## SCOPE note at the top of this file). Computed here only as an internal
+## check that the formula still tracks its Monte Carlo reference; kept as
+## plain variables (no add_row() call) so it stays out of the published
+## CSV. --
 v4_ratios <- sapply(v4_configs, function(cfg) {
   AUC <- cfg[1]; nc <- cfg[2]; nk <- cfg[3]
   hanley_mcneil_var(AUC, nc, nk) / emp_auc_var(AUC, nc, nk)
@@ -197,30 +210,6 @@ v4_bal_ratios <- v4_ratios[v4_balanced]
 v4_imb_ratio  <- v4_ratios[!v4_balanced]
 v4_maxdev <- max(abs(v4_bal_ratios - 1))
 v4_pass <- all(abs(v4_bal_ratios - 1) < 0.20)      # same tolerance as ok() above
-add_row(
-  quantity = "Hanley-McNeil AUC variance (balanced)", reference = "Monte Carlo",
-  result = sprintf(
-    "close, ratio %s (max %.1f%% deviation); conservative for imbalanced (ratio %.3f)",
-    paste(sprintf("%.3f", v4_bal_ratios), collapse = ", "), 100 * v4_maxdev, v4_imb_ratio
-  ),
-  observed = paste(sprintf("%.4f", v4_bal_ratios), collapse = ", "),
-  reference_value = "1 (formula == MC variance)", tolerance = 0.20, pass = v4_pass,
-  n_cases = length(v4_bal_ratios),
-  note = sprintf(
-    paste(
-      "Manuscript text now states the two balanced-configuration ratios",
-      "explicitly (%.3f and %.3f, max %.1f%% from unity), matching the",
-      "values computed here -- both remain within the script's own 20%%",
-      "pass tolerance. Imbalanced configuration (AUC=%.2f, nC=%d, nK=%d)",
-      "gives ratio %.3f, outside the 20%% tolerance (printed above as",
-      "**CHECK**), which is the expected conservative behaviour the",
-      "manuscript describes for that case, not a numeric claim being tested."
-    ),
-    v4_bal_ratios[1], v4_bal_ratios[2], 100 * v4_maxdev,
-    v4_configs[!v4_balanced][[1]][1], v4_configs[!v4_balanced][[1]][2],
-    v4_configs[!v4_balanced][[1]][3], v4_imb_ratio
-  )
-)
 
 ## ---- V5. Net benefit point estimate vs standard Vickers definition ----
 sep("V5. Net benefit identity: prev-weighted form == (TP - w*FP)/N")
@@ -232,16 +221,12 @@ nb_vickers <- (TP - w*FP)/N                                # Vickers 2006 def
 cat(sprintf("package=%.6f  Vickers=%.6f  %s\n", nb_pkgform, nb_vickers,
     ok(abs(nb_pkgform - nb_vickers) < 1e-9)))
 
-## -- capture for Table 2 --
+## -- NOT added to Table 2: ss_net_benefit() is no longer described in
+## the article (see SCOPE note at the top of this file). Computed here
+## only as an internal check that the package's net-benefit algebra still
+## matches the Vickers definition; no add_row() call. --
 v5_diff <- abs(nb_pkgform - nb_vickers)
 v5_pass <- v5_diff < 1e-9
-add_row(
-  quantity = "Net benefit point estimate", reference = "Vickers definition",
-  result = if (v5_pass) sprintf("exact identity (abs diff %.1e)", v5_diff) else
-    sprintf("MISMATCH: abs diff %.1e exceeds 1e-9", v5_diff),
-  observed = sprintf("%.6f vs %.6f", nb_pkgform, nb_vickers),
-  reference_value = "0 (identical)", tolerance = 1e-9, pass = v5_pass, n_cases = 1
-)
 
 ## ---- V6. Net benefit variance vs Monte Carlo SD (COHORT design, package default) ----
 sep("V6. Net benefit analytic SE vs Monte Carlo SD of NB_hat (cohort design)")
@@ -286,39 +271,14 @@ cat("Note: row 1 is the manuscript's headline configuration (Se=0.85, Sp=0.90, p
     "at R=400000, where the SD estimator's own sampling noise (~0.11%) is fine enough\n",
     "to resolve that claim (see comment above nb_se_cohort()).\n")
 
-## -- capture for Table 2 (recomputes both configurations with the same
-## seed; row 1, Se=0.85/Sp=0.90/prev=0.20/pt=0.20/N=500, is the headline
-## configuration named in the comment above, so it is the value reported
-## in the Result column; row 2's ratio is kept in `note`) --
+## -- NOT added to Table 2: ss_net_benefit() is no longer described in
+## the article (see SCOPE note at the top of this file). Computed here
+## only as an internal check that the analytic cohort-variance formula
+## still tracks its Monte Carlo reference; no add_row() call. --
 v6_results <- lapply(v6_configs, function(cfg) do.call(nb_se_cohort, as.list(cfg)))
 v6_head <- v6_results[[1]]
 v6_dev  <- abs(v6_head["ratio"] - 1)
 v6_pass <- all(sapply(v6_results, function(r) abs(r["ratio"] - 1) < 0.02))
-add_row(
-  quantity = "Net benefit variance (cohort)", reference = "cohort Monte Carlo SD",
-  result = sprintf("agrees to within about 0.2%% (ratio %.3f, %.2f%% diff, R=%d)",
-    v6_head["ratio"], 100 * v6_dev, R6),
-  observed = sprintf("analytic=%.5f MC_sd=%.5f", v6_head["analytic"], v6_head["mc_sd"]),
-  reference_value = "ratio 1 (analytic == MC SD)", tolerance = 0.02, pass = v6_pass,
-  n_cases = length(v6_configs),
-  note = sprintf(
-    paste(
-      "Manuscript text states the cohort net-benefit variance agrees with",
-      "cohort Monte Carlo to within about 0.2%%, a magnitude-only claim with",
-      "no ratio digit or direction (an earlier draft quoted \"ratio ~1.002\",",
-      "which was not reproducible across seeds -- the ratio is centred on",
-      "1.000 and its sign varies by seed). At R=%d, chosen so the SD",
-      "estimator's own sampling noise (~1/sqrt(2R) = %.2f%%) is fine enough",
-      "to resolve a 0.2%% claim, the headline configuration gives ratio",
-      "%.4f (%.2f%% from unity) and the second configuration gives ratio",
-      "%.4f (%.2f%% from unity); both are consistent with \"to within about",
-      "0.2%%\" and within the script's own 2%% pass tolerance."
-    ),
-    R6, 100 / sqrt(2 * R6),
-    v6_head["ratio"], 100 * v6_dev,
-    v6_results[[2]]["ratio"], 100 * abs(v6_results[[2]]["ratio"] - 1)
-  )
-)
 
 ## ---- V7. BAM Beta-Binomial conjugacy vs numerical Bayes posterior ----
 sep("V7. Beta-Binomial posterior CI (conjugate) vs numerical integration")
@@ -357,19 +317,13 @@ app_theo <- (prev*Se*Se_ref + (1-prev)*(1-Sp)*(1-Sp_ref)) /
 cat(sprintf("apparent Se: MC=%.4f  closed-form=%.4f  %s\n", app_emp, app_theo,
     ok(abs(app_emp-app_theo) < 0.01)))
 
-## -- capture for Table 2 (Table 2's row scopes only the VIF vs
-## Rogan-Gladen comparison; the apparent-Se Monte Carlo check above is
-## reported in the manuscript's narrative text, not as a separate Table 2
-## row, so it is not folded in here) --
+## -- NOT added to Table 2: ss_imperfect_ref() is no longer described in
+## the article (see SCOPE note at the top of this file). Computed here
+## only as an internal check that the VIF and the apparent-sensitivity
+## closed form still match their independent references; no add_row()
+## call. --
 v8_diff <- abs(vif_pkg - vif_rg)
 v8_pass <- v8_diff < 1e-9
-add_row(
-  quantity = "Imperfect-reference VIF", reference = "Rogan-Gladen",
-  result = if (v8_pass) sprintf("exact (abs diff %.1e)", v8_diff) else
-    sprintf("MISMATCH: abs diff %.1e exceeds 1e-9", v8_diff),
-  observed = sprintf("%.6f vs %.6f", vif_pkg, vif_rg), reference_value = "0 (identical)",
-  tolerance = 1e-9, pass = v8_pass, n_cases = 1
-)
 
 ## ---------------------------------------------------------------------
 ## Write Table 2 ("Cross-validation of core formulas against independent
