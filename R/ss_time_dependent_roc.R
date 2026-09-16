@@ -185,9 +185,21 @@ ss_time_dependent_roc <- function(mu_case = 4.5,
           if (n_events < 5 || n_nonevents < 5) {
             FALSE
           } else {
-            roc_obj <- timeROC::timeROC(
-              T = Y, delta = delta, marker = marker,
-              cause = 1, times = t_horizon, iid = TRUE
+            # timeROC triggers the R-devel (R >= 4.6) warning "object length is
+            # not a multiple of subscript length" from its internal indexing;
+            # it is muffled here, only for this exact message, because it is
+            # upstream and does not change the result under current R releases.
+            roc_obj <- withCallingHandlers(
+              timeROC::timeROC(
+                T = Y, delta = delta, marker = marker,
+                cause = 1, times = t_horizon, iid = TRUE
+              ),
+              warning = function(w) {
+                if (identical(conditionMessage(w),
+                              "object length is not a multiple of subscript length")) {
+                  invokeRestart("muffleWarning")
+                }
+              }
             )
             auc_hat <- roc_obj$AUC[2]
             se_auc <- roc_obj$inference$vect_sd_1[2]
