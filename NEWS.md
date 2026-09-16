@@ -60,6 +60,12 @@ changes: every quantity reported in the manuscript and reproduced by
   used to cross-check the R package's results against a second,
   independently written implementation.
 
+## Compatibility
+
+* `ss_time_dependent_roc()` no longer lets an upstream `timeROC` warning
+  introduced in R-devel ("object length is not a multiple of subscript
+  length") escape; only that exact message is muffled.
+
 ## Infrastructure
 
 * New `.github/workflows/R-CMD-check.yaml` runs `R CMD check` on Windows,
