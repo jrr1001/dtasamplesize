@@ -24,7 +24,7 @@ R -f validation/integration_check.R       # end-to-end run + reproducibility
   AUC gate inside it, `ss_net_benefit()`, `ss_imperfect_ref()`,
   `ss_adaptive_prevalence()` and `ss_time_dependent_roc()` remain in the
   package but are no longer described in the article, so this script no
-  longer checks their numbers. It requires version 0.6.3 exactly and stops
+  longer checks their numbers. It requires version 0.6.4 exactly and stops
   with an explanatory message on any other installed version, whose results
   are not guaranteed to reproduce the article's bit-for-bit.
 - **`make_manuscript_assets.R`** — the public generator behind every figure
@@ -66,15 +66,28 @@ R -f validation/integration_check.R       # end-to-end run + reproducibility
   Rogan–Gladen formula. Those checks still print PASS/`**CHECK**` to the
   console as an internal sanity check on package code that ships, but they
   are deliberately not written to the CSV, since they no longer correspond
-  to a row the article publishes. `Hmisc` is a required reference package;
-  `pROC` is listed as an optional one and is loaded only if available (no
-  check currently calls it).
+  to a row the article publishes. In the Hanley–McNeil check the 0.20
+  tolerance is applied only to the balanced configurations: that formula
+  assumes a negative-exponential score model while the Monte Carlo
+  reference is binormal, so the imbalanced configuration is reported as an
+  expected deviation rather than as a failure. That is the criterion the
+  script's own summary variable has always used. `Hmisc` is a required
+  reference package; `pROC` is listed as an optional one and is loaded only
+  if available (no check currently calls it).
 - **`integration_check.R`** — a package-wide smoke test, not scoped to the
   article: it runs every exported estimator, including the ones the article
   no longer describes (`ss_net_benefit`, `ss_imperfect_ref`,
-  `ss_adaptive_prevalence`, `ss_time_dependent_roc`, `ss_unified`), confirms
-  the "more uncertainty → larger N" ordering, and verifies reproducibility
-  under a fixed seed.
+  `ss_adaptive_prevalence`, `ss_time_dependent_roc`, `ss_unified`), prints
+  the sample size each one returns, and verifies reproducibility under a
+  fixed seed. It also asserts the "more uncertainty → larger N" ordering,
+  in a clearly delimited "Ordering check" section near the end of the
+  script: it computes `bam_sample_size(prior_se = p, method = "exact")`
+  (all other arguments default) for the Se prior triple Beta(34, 6),
+  Beta(17, 3), Beta(8.5, 1.5), prints the three `N_total` values the script
+  actually computes, and `stop()`s the script if they are not strictly
+  increasing. (Earlier versions of this file and of the script's own header
+  asserted the ordering only in prose, with no code behind the claim; that
+  gap is what this section closes.)
 
 ## A note on what these scripts prove
 

@@ -1,0 +1,28 @@
+rows = 145   elapsed = 8.3s
+max |quad_full  - closed_form| = 3.708e-14
+max |enum_trip  - closed_form| = 6.217e-15
+max |quad_full  - enum_trip  | = 3.608e-14
+
+per-scenario max |quad - closed| and assurance range:
+  D1 vague/vague wide-delta    maxdiff=2.087e-14  A(2)=0.000000 A(30)=0.758441
+  D2 informative Se            maxdiff=3.131e-14  A(2)=0.000000 A(30)=0.998039
+  D3 skewed prevalence         maxdiff=3.708e-14  A(2)=0.304762 A(30)=0.981706
+  D4 near-uniform prev         maxdiff=8.993e-15  A(2)=0.000000 A(30)=0.821994
+  D5 asymmetric deltas         maxdiff=1.454e-14  A(2)=0.360000 A(30)=0.931003
+
+Monte Carlo cross-check (B=160000, MCSE~0.0012):
+  D1 vague/vague wide-delta    N= 10 exact=0.034105 mc=0.034563 mcse=0.00046 z=+1.00
+  D1 vague/vague wide-delta    N= 20 exact=0.483641 mc=0.483844 mcse=0.00125 z=+0.16
+  D1 vague/vague wide-delta    N= 30 exact=0.758441 mc=0.760675 mcse=0.00107 z=+2.09
+  D2 informative Se            N= 10 exact=0.882090 mc=0.881975 mcse=0.00081 z=-0.14
+  D2 informative Se            N= 20 exact=0.990993 mc=0.991281 mcse=0.00023 z=+1.24
+  D2 informative Se            N= 30 exact=0.998039 mc=0.997981 mcse=0.00011 z=-0.52
+  D3 skewed prevalence         N= 10 exact=0.836793 mc=0.837131 mcse=0.00092 z=+0.37
+  D3 skewed prevalence         N= 20 exact=0.952876 mc=0.953050 mcse=0.00053 z=+0.33
+  D3 skewed prevalence         N= 30 exact=0.981706 mc=0.981838 mcse=0.00033 z=+0.39
+  D4 near-uniform prev         N= 10 exact=0.498347 mc=0.498569 mcse=0.00125 z=+0.18
+  D4 near-uniform prev         N= 20 exact=0.737229 mc=0.738413 mcse=0.00110 z=+1.08
+  D4 near-uniform prev         N= 30 exact=0.821994 mc=0.823037 mcse=0.00095 z=+1.09
+  D5 asymmetric deltas         N= 10 exact=0.799504 mc=0.800175 mcse=0.00100 z=+0.67
+  D5 asymmetric deltas         N= 20 exact=0.888960 mc=0.888631 mcse=0.00079 z=-0.42
+  D5 asymmetric deltas         N= 30 exact=0.931003 mc=0.930656 mcse=0.00064 z=-0.55

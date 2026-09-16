@@ -1,0 +1,20 @@
+
+========== 1. Assurance gap of the classical Buderer sample size ==========
+buderer_n(Se=0.85, d=0.07) = 100   (article: 100)   PASS
+buderer_n(Se=0.90, d=0.05) = 139   (article: 139)   PASS
+P(CI width <= target) = 0.5730   (article: 0.5730)   PASS
+Wald coverage         = 0.9380   (article: 0.9380)   PASS
+
+========== 2. Joint assurance for Se and Sp: exact crossing at N = 678 (Figure 2) ==========
+N_total = 678   (article: 678)   PASS
+joint assurance at N=678 = 0.8003489948   (article: 0.8003489948)   PASS
+joint assurance at N=677 = 0.7996848824   (article: 0.7996848824)   PASS
+
+========== 3. Table 4: Buderer, BAM (exact, harmonized priors), joint Se/Sp ==========
+Buderer (classical), combined N = 500   (article: 500)   PASS
+BAM (exact, harmonized priors), N = 672   (article: 672)   PASS
+  joint assurance at N=672  = 0.8002692084   (article: 0.8002692084)   PASS
+Joint Se/Sp (joint_sample_size), N = 580   (article: 580)   PASS
+  joint assurance at N=580  = 0.8041   (article: 0.8041)   PASS
+
+=== reproduce_manuscript done ===

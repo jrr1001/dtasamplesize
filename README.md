@@ -1,7 +1,7 @@
 # dtasamplesize
 
 Simulation-based sample size estimation for diagnostic test accuracy
-(DTA) studies. Version 0.6.3.
+(DTA) studies. Version 0.6.4.
 
 Every simulation function takes a `seed`, is exactly reproducible, and
 restores the caller's random-number state on exit, so calling it never

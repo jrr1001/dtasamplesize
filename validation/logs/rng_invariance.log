@@ -1,0 +1,93 @@
+R.version.string: R version 4.5.2 (2025-10-31 ucrt) 
+RNGkind() documented kinds (per ?RNGkind, 'all five ... available in R' in
+the manuscript is a selection of these eight, not literally all of them):
+  Wichmann-Hill, Marsaglia-Multicarry, Super-Duper, Mersenne-Twister,
+  Knuth-TAOCP, Knuth-TAOCP-2002, L'Ecuyer-CMRG, user-supplied
+Kinds tested here (the five the manuscript names):
+  Mersenne-Twister, L'Ecuyer-CMRG, Wichmann-Hill, Marsaglia-Multicarry,
+  Knuth-TAOCP-2002
+
+
+========== Per-kind results (all numbers should be identical across rows) ==========
+                     n_bud_085 n_bud_090 mc_P_width_target N_buderer_combined bam_example_N_total
+Mersenne-Twister           100       139             0.573                500                 678
+L'Ecuyer-CMRG              100       139             0.573                500                 678
+Wichmann-Hill              100       139             0.573                500                 678
+Marsaglia-Multicarry       100       139             0.573                500                 678
+Knuth-TAOCP-2002           100       139             0.573                500                 678
+                     bam_example_assurance bam_harmonized_N_total bam_harmonized_assurance joint_N_total
+Mersenne-Twister              0.8003489948                    672             0.8002692084           580
+L'Ecuyer-CMRG                 0.8003489948                    672             0.8002692084           580
+Wichmann-Hill                 0.8003489948                    672             0.8002692084           580
+Marsaglia-Multicarry          0.8003489948                    672             0.8002692084           580
+Knuth-TAOCP-2002              0.8003489948                    672             0.8002692084           580
+                     joint_assurance
+Mersenne-Twister              0.8041
+L'Ecuyer-CMRG                 0.8041
+Wichmann-Hill                 0.8041
+Marsaglia-Multicarry          0.8041
+Knuth-TAOCP-2002              0.8041
+
+Published (manuscript) values, for reference:
+               n_bud_085                n_bud_090        mc_P_width_target       N_buderer_combined 
+          100.0000000000           139.0000000000             0.5730000000           500.0000000000 
+     bam_example_N_total    bam_example_assurance   bam_harmonized_N_total bam_harmonized_assurance 
+          678.0000000000             0.8003489948           672.0000000000             0.8002692084 
+           joint_N_total          joint_assurance 
+          580.0000000000             0.8041000000 
+
+========== Caller RNG-state preservation (RNGkind()[1] after all calls, under each kind) ==========
+             kind_set        RNGkind_after preserved
+     Mersenne-Twister     Mersenne-Twister      TRUE
+        L'Ecuyer-CMRG        L'Ecuyer-CMRG      TRUE
+        Wichmann-Hill        Wichmann-Hill      TRUE
+ Marsaglia-Multicarry Marsaglia-Multicarry      TRUE
+     Knuth-TAOCP-2002     Knuth-TAOCP-2002      TRUE
+
+========== identical() comparison against Mersenne-Twister ==========
+  L'Ecuyer-CMRG          vs Mersenne-Twister | n_bud_085                  | identical
+  L'Ecuyer-CMRG          vs Mersenne-Twister | n_bud_090                  | identical
+  L'Ecuyer-CMRG          vs Mersenne-Twister | mc_P_width_target          | identical
+  L'Ecuyer-CMRG          vs Mersenne-Twister | N_buderer_combined         | identical
+  L'Ecuyer-CMRG          vs Mersenne-Twister | bam_example_N_total        | identical
+  L'Ecuyer-CMRG          vs Mersenne-Twister | bam_example_assurance      | identical
+  L'Ecuyer-CMRG          vs Mersenne-Twister | bam_harmonized_N_total     | identical
+  L'Ecuyer-CMRG          vs Mersenne-Twister | bam_harmonized_assurance   | identical
+  L'Ecuyer-CMRG          vs Mersenne-Twister | joint_N_total              | identical
+  L'Ecuyer-CMRG          vs Mersenne-Twister | joint_assurance            | identical
+  Wichmann-Hill          vs Mersenne-Twister | n_bud_085                  | identical
+  Wichmann-Hill          vs Mersenne-Twister | n_bud_090                  | identical
+  Wichmann-Hill          vs Mersenne-Twister | mc_P_width_target          | identical
+  Wichmann-Hill          vs Mersenne-Twister | N_buderer_combined         | identical
+  Wichmann-Hill          vs Mersenne-Twister | bam_example_N_total        | identical
+  Wichmann-Hill          vs Mersenne-Twister | bam_example_assurance      | identical
+  Wichmann-Hill          vs Mersenne-Twister | bam_harmonized_N_total     | identical
+  Wichmann-Hill          vs Mersenne-Twister | bam_harmonized_assurance   | identical
+  Wichmann-Hill          vs Mersenne-Twister | joint_N_total              | identical
+  Wichmann-Hill          vs Mersenne-Twister | joint_assurance            | identical
+  Marsaglia-Multicarry   vs Mersenne-Twister | n_bud_085                  | identical
+  Marsaglia-Multicarry   vs Mersenne-Twister | n_bud_090                  | identical
+  Marsaglia-Multicarry   vs Mersenne-Twister | mc_P_width_target          | identical
+  Marsaglia-Multicarry   vs Mersenne-Twister | N_buderer_combined         | identical
+  Marsaglia-Multicarry   vs Mersenne-Twister | bam_example_N_total        | identical
+  Marsaglia-Multicarry   vs Mersenne-Twister | bam_example_assurance      | identical
+  Marsaglia-Multicarry   vs Mersenne-Twister | bam_harmonized_N_total     | identical
+  Marsaglia-Multicarry   vs Mersenne-Twister | bam_harmonized_assurance   | identical
+  Marsaglia-Multicarry   vs Mersenne-Twister | joint_N_total              | identical
+  Marsaglia-Multicarry   vs Mersenne-Twister | joint_assurance            | identical
+  Knuth-TAOCP-2002       vs Mersenne-Twister | n_bud_085                  | identical
+  Knuth-TAOCP-2002       vs Mersenne-Twister | n_bud_090                  | identical
+  Knuth-TAOCP-2002       vs Mersenne-Twister | mc_P_width_target          | identical
+  Knuth-TAOCP-2002       vs Mersenne-Twister | N_buderer_combined         | identical
+  Knuth-TAOCP-2002       vs Mersenne-Twister | bam_example_N_total        | identical
+  Knuth-TAOCP-2002       vs Mersenne-Twister | bam_example_assurance      | identical
+  Knuth-TAOCP-2002       vs Mersenne-Twister | bam_harmonized_N_total     | identical
+  Knuth-TAOCP-2002       vs Mersenne-Twister | bam_harmonized_assurance   | identical
+  Knuth-TAOCP-2002       vs Mersenne-Twister | joint_N_total              | identical
+  Knuth-TAOCP-2002       vs Mersenne-Twister | joint_assurance            | identical
+
+========== Comparison against published manuscript values ==========
+All computed values match the published manuscript values under every kind tested.
+
+========== Verdict ==========
+PASS: all published numbers identical under 5 RNG kinds

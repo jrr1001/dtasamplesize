@@ -42,7 +42,7 @@
 library(dtasamplesize)
 options(width = 110, digits = 6)
 
-# The article reports the numbers produced by version 0.6.3. Earlier releases
+# The article reports the numbers produced by version 0.6.4. Earlier releases
 # contain the validity errors that 0.3.0, 0.5.0 and 0.6.0 correct in turn
 # (see NEWS.md) -- notably a net-benefit sample size of 110 instead of 240,
 # a BAM search that reported the marginal per-arm assurance instead of the
@@ -58,13 +58,13 @@ options(width = 110, digits = 6)
 # older or newer installation is not guaranteed to reproduce today's
 # published numbers bit-for-bit. Stop early rather than let a stale
 # installation look like a discrepancy in the article.
-if (utils::packageVersion("dtasamplesize") != "0.6.3") {
+if (utils::packageVersion("dtasamplesize") != "0.6.4") {
   stop("dtasamplesize ", utils::packageVersion("dtasamplesize"), " is installed, ",
-       "but this script reproduces the numbers of version 0.6.3 ",
+       "but this script reproduces the numbers of version 0.6.4 ",
        "exactly: the published figures were computed under that version, ",
        "and neither an older nor a newer installation is guaranteed to ",
        "reproduce them bit-for-bit.\n",
-       "  Install version 0.6.3 from a local copy of the repository:\n",
+       "  Install version 0.6.4 from a local copy of the repository:\n",
        "    install.packages('.', repos = NULL, type = 'source')",
        call. = FALSE)
 }
@@ -93,21 +93,22 @@ cat(sprintf("Wald coverage         = %.4f   (article: 0.9380)   %s\n",
 
 ## ---- 2. Joint assurance for Se and Sp, exact Beta-Binomial (Figure 2) ----
 sep("2. Joint assurance for Se and Sp: exact crossing at N = 678 (Figure 2)")
-# Package DEFAULT priors -- Se ~ Beta(17,3), Sp ~ Beta(2,2) (vague), prevalence
-# ~ Beta(4,16) -- and full-width targets delta_se = 0.14, delta_sp = 0.10,
-# method = "exact" (closed-form Beta-Binomial, no Monte Carlo error, no
-# dependence on B or seed for this headline result; see ?bam_sample_size).
-# This is the article's central calculation (the "minimal session" code
-# block in Methods) and the curve plotted in Figure 2.
-bam_default <- bam_sample_size(
+# Article's worked-example priors -- Se ~ Beta(17,3) and Sp ~ Beta(2,2) (the
+# package defaults) with prevalence ~ Beta(4,16) (NOT the package default
+# prior_prev, which is c(6, 14)) -- and full-width targets delta_se = 0.14,
+# delta_sp = 0.10, method = "exact" (closed-form Beta-Binomial, no Monte
+# Carlo error, no dependence on B or seed for this headline result; see
+# ?bam_sample_size). This is the article's central calculation (the
+# "minimal session" code block in Methods) and the curve plotted in Figure 2.
+bam_example <- bam_sample_size(
   prior_se = c(17, 3), prior_sp = c(2, 2), prior_prev = c(4, 16),
   delta_se = 0.14, delta_sp = 0.10, target_assurance = 0.80,
   method = "exact", N_range = 600:700, B = 5000, seed = SEED)
 cat(sprintf("N_total = %d   (article: 678)   %s\n",
-            bam_default$N_total, ok(bam_default$N_total == 678)))
+            bam_example$N_total, ok(bam_example$N_total == 678)))
 cat(sprintf("joint assurance at N=678 = %.10f   (article: 0.8003489948)   %s\n",
-            bam_default$joint_assurance,
-            ok(near(bam_default$joint_assurance, 0.8003489948, 1e-8))))
+            bam_example$joint_assurance,
+            ok(near(bam_example$joint_assurance, 0.8003489948, 1e-8))))
 
 # N = 677 is one below the crossing and does not reach the target on its
 # own; bam_sample_size() warns that the search "did not achieve the target

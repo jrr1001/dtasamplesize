@@ -1,0 +1,29 @@
+== PT1  larger target_assurance never reduces N (package) ==
+  [PASS] PT1-C05 targets 0.7/0.8/0.9 -> N 265/289/331
+  [PASS] PT1-C08 targets 0.7/0.8/0.9 -> N 562/662/840
+  [PASS] PT1-C09 targets 0.7/0.8/0.9 -> N 10/12/17
+  [PASS] PT1-C10 targets 0.7/0.8/0.9 -> N 5/6/10
+  [PASS] PT1-C11 targets 0.7/0.8/0.9 -> N 24/34/55
+== PT2  stricter width margin never reduces N (package) ==
+  [PASS] PT2-C05 delta x1/x0.85 -> N 265/376
+  [PASS] PT2-C08 delta x1/x0.85 -> N 607/861
+  [PASS] PT2-C09 delta x1/x0.85 -> N 8/18
+  [PASS] PT2-C10 delta x1/x0.85 -> N 3/3
+  [PASS] PT2-C11 delta x1/x0.85 -> N 24/49
+== PT3  infeasible scenario is not passed off as valid ==
+  [PASS] PT3-C12 raw N_total=400 A=0.000000 (<target 0.80: TRUE), warned: TRUE
+      warning text:  No n in n_range achieved target assurance for Se. Consider expanding n_range. | No n in n_range achieved target assurance for Sp. Consider expanding n_range. | No N in N_range achieved the target JOINT assurance under the exact calculation. Consider expanding N_range. 
+== PT4  monte_carlo reproducible with the same seed ==
+  [PASS] PT4-C09 seed 70118 twice -> N 8/8 A 0.639875/0.639875 ; seed 70119 -> N 8 A 0.638600
+  [PASS] PT4-C10 seed 70118 twice -> N 3/3 A 0.573575/0.573575 ; seed 70119 -> N 3 A 0.569900
+  [PASS] PT4-C11 seed 70118 twice -> N 25/25 A 0.715950/0.715950 ; seed 70119 -> N 25 A 0.713150
+== PT5  RNG state of the calling session is restored ==
+  [PASS] PT5-exact .Random.seed identical: TRUE ; next runif(3) unaffected: TRUE
+  [PASS] PT5-monte_carlo .Random.seed identical: TRUE ; next runif(3) unaffected: TRUE
+== PT6  under method='exact', seed and B do not move the headline ==
+  [PASS] PT6-C09 N unique=1  A unique=1  (N=8 A=0.6391279309)
+  [PASS] PT6-C10 N unique=1  A unique=1  (N=3 A=0.5727272727)
+  [PASS] PT6-C11 N unique=1  A unique=1  (N=24 A=0.7012670385)
+
+---- SUMMARY ----
+19/19 property checks passed

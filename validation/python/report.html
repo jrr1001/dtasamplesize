@@ -1,0 +1,532 @@
+<title>BAM Assurance Confirmation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,600;0,800;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap">
+
+<style>
+:root{
+  --paper:#EFF2EE; --surface:#FAFCF8; --sunk:#E4E9E2;
+  --ink:#13181A; --ink2:#4C5659; --ink3:#727D7E;
+  --rule:#D2D9D0; --rule2:#BFC8BE;
+  --accent:#12554E; --accent2:#0C3E39; --accentsoft:#DAE7E2;
+  --pass:#2C6A43; --passbg:#DEEBE1;
+  --caution:#7F5D0E; --cautionbg:#F0E7CE;
+  --alert:#963528; --alertbg:#F2DED9;
+  --serif:"Spectral",Georgia,"Times New Roman",serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+  --measure:68ch;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#101414; --surface:#171C1C; --sunk:#0B0E0E;
+    --ink:#E7ECE7; --ink2:#9DA8A4; --ink3:#7B8683;
+    --rule:#28302F; --rule2:#3A4443;
+    --accent:#68BFB2; --accent2:#8FD6CA; --accentsoft:#182C2A;
+    --pass:#71C08C; --passbg:#15291D;
+    --caution:#D2A64C; --cautionbg:#2B2413;
+    --alert:#DE8674; --alertbg:#2E1A17;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#101414; --surface:#171C1C; --sunk:#0B0E0E;
+  --ink:#E7ECE7; --ink2:#9DA8A4; --ink3:#7B8683;
+  --rule:#28302F; --rule2:#3A4443;
+  --accent:#68BFB2; --accent2:#8FD6CA; --accentsoft:#182C2A;
+  --pass:#71C08C; --passbg:#15291D;
+  --caution:#D2A64C; --cautionbg:#2B2413;
+  --alert:#DE8674; --alertbg:#2E1A17;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--serif); font-size:17px; line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1120px; margin:0 auto; padding:0 28px 96px}
+.col{max-width:var(--measure)}
+p{margin:0 0 1.05em}
+a{color:var(--accent); text-decoration-thickness:1px; text-underline-offset:2px}
+
+/* ---------- masthead ---------- */
+header.top{
+  border-bottom:2px solid var(--ink); margin-bottom:38px; padding:52px 0 22px;
+}
+.kicker{
+  font-family:var(--mono); font-size:11px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--accent); margin:0 0 18px;
+}
+h1{
+  font-family:var(--serif); font-weight:800; font-size:clamp(34px,5.2vw,54px);
+  line-height:1.04; letter-spacing:-.02em; margin:0 0 16px; text-wrap:balance;
+}
+.standfirst{
+  font-size:20px; line-height:1.5; color:var(--ink2); font-weight:300;
+  max-width:60ch; margin:0 0 26px;
+}
+.provenance{
+  display:flex; flex-wrap:wrap; gap:6px 22px; font-family:var(--mono);
+  font-size:11.5px; color:var(--ink3); letter-spacing:.01em;
+}
+.provenance b{color:var(--ink2); font-weight:500}
+
+/* ---------- section scaffolding ---------- */
+section{margin:0 0 62px}
+h2{
+  font-family:var(--serif); font-weight:600; font-size:27px; letter-spacing:-.012em;
+  margin:0 0 6px; text-wrap:balance;
+}
+.sec-no{
+  font-family:var(--mono); font-size:11px; letter-spacing:.16em; color:var(--accent);
+  text-transform:uppercase; display:block; margin:0 0 9px;
+}
+h3{
+  font-family:var(--mono); font-weight:700; font-size:12.5px; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--ink2); margin:34px 0 12px;
+}
+.lede{color:var(--ink2); font-size:17.5px; margin-bottom:22px}
+
+/* ---------- verdict block ---------- */
+.verdicts{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(214px,1fr));
+  gap:1px; background:var(--rule); border:1px solid var(--rule); margin:8px 0 30px;
+}
+.v{background:var(--surface); padding:20px 20px 18px}
+.v .n{
+  font-family:var(--mono); font-weight:700; font-size:27px; letter-spacing:-.02em;
+  color:var(--accent); display:block; line-height:1.1;
+  font-variant-numeric:tabular-nums;
+}
+.v .l{
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--ink3); margin-top:9px; display:block; line-height:1.5;
+}
+
+/* ---------- chips ---------- */
+.chip{
+  display:inline-block; font-family:var(--mono); font-size:10px; font-weight:700;
+  letter-spacing:.11em; text-transform:uppercase; padding:3px 8px;
+  border-radius:2px; white-space:nowrap;
+}
+.chip.pass{background:var(--passbg); color:var(--pass)}
+.chip.caution{background:var(--cautionbg); color:var(--caution)}
+.chip.alert{background:var(--alertbg); color:var(--alert)}
+.chip.neutral{background:var(--accentsoft); color:var(--accent)}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto; border:1px solid var(--rule); background:var(--surface); margin:0 0 12px}
+table{border-collapse:collapse; width:100%; font-family:var(--mono); font-size:12.5px}
+th,td{
+  padding:8px 13px; text-align:right; white-space:nowrap;
+  border-bottom:1px solid var(--rule); font-variant-numeric:tabular-nums;
+}
+th{
+  font-weight:500; font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--ink3); background:var(--sunk); border-bottom:1px solid var(--rule2);
+  position:sticky; top:0;
+}
+td:first-child,th:first-child{text-align:left; font-weight:700; color:var(--ink)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--accentsoft)}
+td.l,th.l{text-align:left; white-space:normal}
+td.dim{color:var(--ink3)}
+td.hl{color:var(--accent); font-weight:700}
+caption{
+  caption-side:bottom; text-align:left; font-family:var(--serif); font-size:14.5px;
+  color:var(--ink2); padding:12px 13px 13px; border-top:1px solid var(--rule);
+  font-style:italic;
+}
+
+/* ---------- lock receipt ---------- */
+.lock{
+  border:1px solid var(--accent); background:var(--surface); padding:0; margin:22px 0 8px;
+}
+.lock .bar{
+  background:var(--accent); color:var(--on-accent); font-family:var(--mono);
+  font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+  padding:7px 16px; font-weight:700;
+}
+.lock .body{padding:16px 18px; font-family:var(--mono); font-size:12px; line-height:1.85}
+.lock .body .k{color:var(--ink3); display:inline-block; min-width:15em}
+.lock .body .h{word-break:break-all; color:var(--accent)}
+.lock-note{
+  border-top:1px dashed var(--rule2); margin:12px 0 0; padding-top:12px;
+  font-family:var(--serif); font-size:15px; color:var(--ink2); line-height:1.55;
+}
+
+/* ---------- callouts ---------- */
+.note{
+  border-left:3px solid var(--accent); background:var(--surface);
+  padding:16px 20px; margin:22px 0;
+}
+.note.warn{border-left-color:var(--caution)}
+.note p:last-child{margin-bottom:0}
+.note .hd{
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--accent); font-weight:700; margin:0 0 7px;
+}
+.note.warn .hd{color:var(--caution)}
+
+/* ---------- limits list ---------- */
+ol.limits{list-style:none; counter-reset:lim; padding:0; margin:0}
+ol.limits > li{
+  counter-increment:lim; border-top:1px solid var(--rule); padding:18px 0 18px 52px;
+  position:relative;
+}
+ol.limits > li:last-child{border-bottom:1px solid var(--rule)}
+ol.limits > li::before{
+  content:"L" counter(lim,decimal-leading-zero);
+  position:absolute; left:0; top:19px; font-family:var(--mono); font-size:11px;
+  font-weight:700; letter-spacing:.06em; color:var(--accent);
+}
+ol.limits h4{
+  font-family:var(--serif); font-weight:600; font-size:18px; margin:0 0 6px;
+  letter-spacing:-.005em;
+}
+ol.limits p{margin:0; color:var(--ink2); font-size:16px; max-width:64ch}
+ol.limits code{
+  font-family:var(--mono); font-size:.86em; background:var(--accentsoft);
+  color:var(--accent); padding:1px 4px; border-radius:2px;
+}
+
+code{font-family:var(--mono); font-size:.88em}
+p code, li code{background:var(--sunk); padding:1px 5px; border-radius:2px}
+
+ul.plain{list-style:none; padding:0; margin:0 0 18px}
+ul.plain li{
+  padding:9px 0 9px 22px; border-bottom:1px solid var(--rule); position:relative;
+  color:var(--ink2); font-size:16px;
+}
+ul.plain li::before{
+  content:"—"; position:absolute; left:0; color:var(--accent); font-family:var(--mono);
+}
+ul.plain li b{color:var(--ink); font-weight:600}
+
+footer{
+  border-top:2px solid var(--ink); padding:22px 0 0; margin-top:20px;
+  font-family:var(--mono); font-size:11.5px; color:var(--ink3); line-height:1.9;
+}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+@media (max-width:620px){
+  body{font-size:16px}
+  .wrap{padding:0 18px 70px}
+  .lock .body .k{min-width:0; display:block}
+}
+</style>
+
+<div class="wrap">
+
+<header class="top">
+  <p class="kicker">Independent computational confirmation</p>
+  <h1>Confirming the BAM joint‑assurance sample size</h1>
+  <p class="standfirst">A reference implementation of <code>bam_sample_size(method&nbsp;=&nbsp;"exact")</code>, written from the equations in a separate language and toolchain, reproduces the R package's published sizes exactly and agrees with exhaustive enumeration to fourteen decimal places.</p>
+  <div class="provenance">
+    <span><b>Estimand</b> Wilson KJ et al., Stat Med 2022;41:2908–2922</span>
+    <span><b>Package</b> dtasamplesize 0.6.2 → 0.6.3</span>
+    <span><b>R</b> 4.5.2</span>
+    <span><b>Reference</b> Python 3.14.2 · NumPy 2.4.0 · SciPy 1.16.3</span>
+  </div>
+</header>
+
+<section>
+  <span class="sec-no">Result</span>
+  <h2>Top line</h2>
+  <div class="verdicts">
+    <div class="v"><span class="n">2 / 2</span><span class="l">published values<br>reproduced exactly</span></div>
+    <div class="v"><span class="n">12 / 12</span><span class="l">locked confirmatory<br>scenarios agree</span></div>
+    <div class="v"><span class="n">4·10⁻¹⁴</span><span class="l">worst disagreement,<br>3 analytic routes</span></div>
+    <div class="v"><span class="n">41 / 41</span><span class="l">property checks<br>passed</span></div>
+  </div>
+  <div class="col">
+    <p>The methodological core of <code>dtasamplesize</code> is confirmed. An implementation written independently from the stated equations, in a different language, with a different special‑function library and a different search strategy, selects the same total sample size in every scenario tested and returns the same assurance probability to within floating‑point noise.</p>
+    <p>Nothing in this exercise contradicts the package. Section&nbsp;8 states, explicitly and with numbers, what that agreement does <em>not</em> establish.</p>
+  </div>
+</section>
+
+<section>
+  <span class="sec-no">01</span>
+  <h2>The estimand, and how the reference differs</h2>
+  <div class="col">
+    <p>The quantity under test is the smallest total <code>N</code> such that, in a single cohort study of size <code>N</code>, the posterior credible intervals for sensitivity <em>and</em> specificity both meet their target full width <em>in the same study</em>, with probability at least the target assurance:</p>
+  </div>
+
+  <div class="tw" style="border-left:3px solid var(--accent)">
+    <div style="padding:16px 20px; font-family:var(--mono); font-size:13px; line-height:2.1">
+      prev ~ Beta(a<sub>p</sub>, b<sub>p</sub>) &nbsp;·&nbsp; n<sub>d</sub> ~ Binom(N, prev) &nbsp;·&nbsp; n<sub>nd</sub> = N − n<sub>d</sub><br>
+      Se ~ Beta(a<sub>se</sub>, b<sub>se</sub>), x ~ Binom(n<sub>d</sub>, Se) &nbsp;·&nbsp; Sp ~ Beta(a<sub>sp</sub>, b<sub>sp</sub>), y ~ Binom(n<sub>nd</sub>, Sp)<br>
+      success ⟺ n<sub>d</sub> ≥ 1 ∧ n<sub>nd</sub> ≥ 1 ∧ w(x, n<sub>d</sub>) ≤ δ<sub>se</sub> ∧ w(y, n<sub>nd</sub>) ≤ δ<sub>sp</sub>
+    </div>
+  </div>
+  <div class="col">
+    <p style="margin-top:16px">The package's documentation was read to fix three conventions — <code>δ</code> is the <em>full</em> width, <code>alpha_ci</code> is an equal‑tailed level, and a degenerate split counts as a failure — and nothing else. No package source code was read or copied. The reference was then written from the model above and evaluated <strong>four independent ways</strong>:</p>
+  </div>
+
+  <ul class="plain col">
+    <li><b>Closed form.</b> Beta‑Binomial marginalisation plus the conditional‑independence factorisation <code>Σ_k BB(k;N,a_p,b_p)·P_se(k)·P_sp(N−k)</code>. This is the route the package also declares.</li>
+    <li><b>Three‑dimensional Gauss–Jacobi quadrature</b> of the <em>raw</em> generative model over (prev, Se, Sp), with the sum over <code>k</code> left un‑factorised. The integrand is a polynomial of degree ≤ N in each variable, so Jacobi nodes weighted to the Beta densities integrate it <em>exactly</em>. This route never uses the Beta‑Binomial pmf at all, so it tests the marginalisation itself.</li>
+    <li><b>Exhaustive enumeration</b> of every (n<sub>d</sub>, x, y) triple with its mass, summed without factorisation — 1,846,401 successful triples across the enumerable confirmatory scenarios.</li>
+    <li><b>Direct Monte Carlo</b> of the generative model, budgeted by MCSE rather than brute force.</li>
+  </ul>
+
+  <div class="col">
+    <h3>Deliberate differences from the package</h3>
+  </div>
+  <ul class="plain col">
+    <li><b>Different environment.</b> Python/SciPy rather than R; <code>betaincinv</code> rather than <code>qbeta</code> — two independent implementations of the Beta quantile function.</li>
+    <li><b>Different search.</b> The reference scans the whole candidate grid from its lower bound and takes the first N reaching the target. It assumes nothing about monotonicity, so it finds the true minimum even if the assurance curve were non‑monotone.</li>
+    <li><b>A mathematical pattern, not a second approximation.</b> For small N the quadrature and triple enumeration are exact to machine precision, so they constitute a reference standard rather than another estimate.</li>
+  </ul>
+</section>
+
+<section>
+  <span class="sec-no">02</span>
+  <h2>Agreement between exhaustive enumeration, the closed form, and the package</h2>
+  <div class="tw">
+    <table>
+      <thead><tr>
+        <th class="l">Comparison</th><th class="l">Scope</th><th>Points</th><th>Max |difference|</th>
+      </tr></thead>
+      <tbody>
+        <tr><td class="l">3‑D quadrature vs closed form</td><td class="l dim">development grid, 5 scenarios, N = 2…30</td><td>145</td><td class="hl">3.708 × 10⁻¹⁴</td></tr>
+        <tr><td class="l">Triple enumeration vs closed form</td><td class="l dim">development grid, 5 scenarios, N = 2…30</td><td>145</td><td class="hl">6.217 × 10⁻¹⁵</td></tr>
+        <tr><td class="l">3‑D quadrature vs triple enumeration</td><td class="l dim">development grid, 5 scenarios, N = 2…30</td><td>145</td><td class="hl">3.608 × 10⁻¹⁴</td></tr>
+        <tr><td class="l">3‑D quadrature vs closed form</td><td class="l dim">confirmatory C09–C11, N = 2…60</td><td>177</td><td class="hl">4.086 × 10⁻¹⁴</td></tr>
+        <tr><td class="l">Triple enumeration vs closed form</td><td class="l dim">confirmatory C09–C11, N = 2…60</td><td>177</td><td class="hl">5.551 × 10⁻¹⁶</td></tr>
+        <tr><td class="l">Reference vs package</td><td class="l dim">12 locked confirmatory scenarios, at the selected N</td><td>12</td><td class="hl">7.20 × 10⁻¹³</td></tr>
+        <tr><td class="l">Reference vs package</td><td class="l dim">2 published scenarios, 5 values of N each</td><td>10</td><td class="hl">&lt; 1 × 10⁻⁹</td></tr>
+        <tr><td class="l">Monte Carlo vs closed form</td><td class="l dim">B = 160,000; 45 checks across dev, confirmatory, published</td><td>45</td><td class="hl">all |z| ≤ 2.3</td></tr>
+      </tbody>
+      <caption><strong>Worst disagreement across the three exact analytic routes: 4.086 × 10⁻¹⁴.</strong> That is at the level of double‑precision accumulation over sums of several hundred terms, i.e. the routes are algebraically identical.</caption>
+    </table>
+  </div>
+</section>
+
+<section>
+  <span class="sec-no">03</span>
+  <h2>The published values</h2>
+  <div class="col">
+    <p>Both figures reported for the package are confirmed to every digit published, and the reference — searching from N = 2 upward with no monotonicity assumption — independently selects the same N.</p>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr>
+        <th class="l">Scenario</th><th>A(N−2)</th><th>A(N−1)</th><th>A(N)</th><th>A(N+1)</th><th>A(N+2)</th><th>N package</th><th>N reference</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="l">P1 · Sp prior (2,2)</td>
+          <td class="dim">0.7990173941</td><td>0.7996848824</td><td class="hl">0.8003489948</td>
+          <td class="dim">0.8010097649</td><td class="dim">0.8016672255</td>
+          <td>678</td><td class="hl">678</td>
+        </tr>
+        <tr>
+          <td class="l">P2 · Sp prior (18,2)</td>
+          <td class="dim">0.7990476439</td><td>0.7996594780</td><td class="hl">0.8002692084</td>
+          <td class="dim">0.8008768425</td><td class="dim">0.8014823876</td>
+          <td>672</td><td class="hl">672</td>
+        </tr>
+      </tbody>
+      <caption>Se prior (17,3), prevalence prior (4,16), δ<sub>se</sub> = 0.14, δ<sub>sp</sub> = 0.10, target 0.80, 95% equal‑tailed intervals. Package claims: N = 678 with 0.800349 and 0.799685 at N = 677; N = 672 with 0.800269. <strong>All confirmed.</strong></caption>
+    </table>
+  </div>
+  <div class="col">
+    <p>The package's own Monte Carlo engine was also run against its own closed form at these two decision points, at B = 160,000 and three seeds: all six z‑scores fall between −0.29 and +1.75. The closed form and a simulation of the generative model are indistinguishable at MCSE ≈ 0.001.</p>
+  </div>
+</section>
+
+<section>
+  <span class="sec-no">04</span>
+  <h2>Pre‑registration of the confirmatory grid</h2>
+  <div class="col">
+    <p>Development and confirmation were separated. Five scenarios plus the two published cases were used to debug the reference. A second grid — twelve scenarios, three Monte Carlo seeds, six property tests, all disjoint from the development set — was written to disk and hashed <em>before</em> being run, and was not edited afterwards.</p>
+  </div>
+
+  <div class="lock">
+    <div class="bar">Locked before execution</div>
+    <div class="body">
+      <div><span class="k">locked at (UTC)</span> 2026‑08‑27T18:17:19Z</div>
+      <div><span class="k">grid SHA‑256</span> <span class="h">da53f05987f22511634ab085d585f5aef372c176461d9cc6cde8beeb185a4500</span></div>
+      <div><span class="k">reference SHA‑256</span> <span class="h">30a2157ea858f51d2fde70ad675c2cacb523a914bcbe3ff1f5c1e85d4be0bc3d</span></div>
+      <p class="note" style="border:0;background:none;padding:0;margin-top:12px;border-top:1px dashed var(--rule2);padding-top:12px">Both hashes were recomputed after every result in this report was in hand. <strong><code>ref_bam.py</code> is byte‑identical to the file hashed at lock time</strong> — the reference implementation was never adjusted in response to a confirmatory result. The locked file names the excluded development scenarios and the excluded development seed explicitly.</p>
+    </div>
+  </div>
+
+  <div class="note col">
+    <p class="hd">Declaration</p>
+    <p>The confirmatory grid was fixed before it was run. Had the reference disagreed with the package there, that disagreement would be reported here as the result. It did not.</p>
+  </div>
+</section>
+
+<section>
+  <span class="sec-no">05</span>
+  <h2>Confirmatory grid: N−1 / N / N+1</h2>
+  <div class="col">
+    <p>For each locked scenario the package's <code>N_total</code> was taken, and the assurance at N−1, N and N+1 was then evaluated independently by the reference. A pass requires both that the target is reached at N <em>and</em> that it is missed at N−1 — that is, that N is genuinely the smallest adequate size, not merely an adequate one.</p>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr>
+        <th class="l">ID</th><th class="l">Se prior</th><th class="l">Sp prior</th><th class="l">Prev prior</th>
+        <th>δ<sub>se</sub></th><th>δ<sub>sp</sub></th><th>level</th><th>target</th>
+        <th>N pkg</th><th>N ref</th>
+        <th>A(N−1)</th><th>A(N)</th><th>A(N+1)</th>
+        <th>MC A(N)</th><th class="l">Verdict</th>
+      </tr></thead>
+      <tbody>
+        <tr><td class="l">C01</td><td class="l dim">(30,5)</td><td class="l dim">(8,2)</td><td class="l dim">(3,17)</td><td class="dim">0.12</td><td class="dim">0.12</td><td class="dim">0.95</td><td>0.80</td><td>1188</td><td class="hl">1188</td><td>0.79991096</td><td class="hl">0.80021907</td><td class="dim">0.80052659</td><td class="dim">0.7993</td><td class="l"><span class="chip pass">Pass</span></td></tr>
+        <tr><td class="l">C02</td><td class="l dim">(12,2)</td><td class="l dim">(25,5)</td><td class="l dim">(10,10)</td><td class="dim">0.10</td><td class="dim">0.10</td><td class="dim">0.95</td><td>0.80</td><td>599</td><td class="hl">599</td><td>0.79998030</td><td class="hl">0.80136363</td><td class="dim">0.80273873</td><td class="dim">0.8015</td><td class="l"><span class="chip pass">Pass</span></td></tr>
+        <tr><td class="l">C03</td><td class="l dim">(6,2)</td><td class="l dim">(6,2)</td><td class="l dim">(2,18)</td><td class="dim">0.25</td><td class="dim">0.15</td><td class="dim">0.95</td><td>0.85</td><td>959</td><td class="hl">959</td><td>0.84993545</td><td class="hl">0.85017288</td><td class="dim">0.85040976</td><td class="dim">0.8501</td><td class="l"><span class="chip pass">Pass</span></td></tr>
+        <tr><td class="l">C04</td><td class="l dim">(20,5)</td><td class="l dim">(3,3)</td><td class="l dim">(15,5)</td><td class="dim">0.13</td><td class="dim">0.16</td><td class="dim">0.95</td><td>0.90</td><td>950</td><td class="hl">950</td><td>0.89966449</td><td class="hl">0.90000535</td><td class="dim">0.90034489</td><td class="dim">0.9001</td><td class="l"><span class="chip pass">Pass</span></td></tr>
+        <tr><td class="l">C05</td><td class="l dim">(4,1)</td><td class="l dim">(9,3)</td><td class="l dim">(7,13)</td><td class="dim">0.20</td><td class="dim">0.14</td><td class="dim">0.95</td><td>0.70</td><td>265</td><td class="hl">265</td><td>0.69659562</td><td class="hl">0.70142474</td><td class="dim">0.70620397</td><td class="dim">0.7013</td><td class="l"><span class="chip pass">Pass</span></td></tr>
+        <tr><td class="l">C06</td><td class="l dim">(50,10)</td><td class="l dim">(40,10)</td><td class="l dim">(4,6)</td><td class="dim">0.08</td><td class="dim">0.08</td><td class="dim">0.95</td><td>0.80</td><td>1117</td><td class="hl">1117</td><td>0.79972561</td><td class="hl">0.80026016</td><td class="dim">0.80079295</td><td class="dim">0.7995</td><td class="l"><span class="chip pass">Pass</span></td></tr>
+        <tr><td class="l">C07</td><td class="l dim">(17,3)</td><td class="l dim">(2,2)</td><td class="l dim">(4,16)</td><td class="dim">0.14</td><td class="dim">0.10</td><td class="dim">0.90</td><td>0.80</td><td>440</td><td class="hl">440</td><td>0.79949992</td><td class="hl">0.80064721</td><td class="dim">0.80178244</td><td class="dim">0.8012</td><td class="l"><span class="chip pass">Pass</span></td></tr>
+        <tr><td class="l">C08</td><td class="l dim">(3,7)</td><td class="l dim">(7,3)</td><td class="l dim">(5,15)</td><td class="dim">0.16</td><td class="dim">0.16</td><td class="dim">0.95</td><td>0.75</td><td>607</td><td class="hl">607</td><td>0.74971950</td><td class="hl">0.75073552</td><td class="dim">0.75174730</td><td class="dim">0.7498</td><td class="l"><span class="chip pass">Pass</span></td></tr>
+        <tr><td class="l">C09</td><td class="l dim">(3,1)</td><td class="l dim">(1,3)</td><td class="l dim">(4,6)</td><td class="dim">0.60</td><td class="dim">0.60</td><td class="dim">0.95</td><td>0.60</td><td>8</td><td class="hl">8</td><td>0.57181818</td><td class="hl">0.63912793</td><td class="dim">0.68619292</td><td class="dim">0.6392</td><td class="l"><span class="chip pass">Pass</span></td></tr>
+        <tr><td class="l">C10</td><td class="l dim">(8,2)</td><td class="l dim">(2,8)</td><td class="l dim">(3,7)</td><td class="dim">0.52</td><td class="dim">0.48</td><td class="dim">0.90</td><td>0.50</td><td>3</td><td class="hl">3</td><td>0.38181818</td><td class="hl">0.57272727</td><td class="dim">0.68531469</td><td class="dim">0.5707</td><td class="l"><span class="chip pass">Pass</span></td></tr>
+        <tr><td class="l">C11</td><td class="l dim">(1,1)</td><td class="l dim">(1,1)</td><td class="l dim">(8,2)</td><td class="dim">0.70</td><td class="dim">0.70</td><td class="dim">0.95</td><td>0.70</td><td>24</td><td class="hl">24</td><td>0.68703431</td><td class="hl">0.70126704</td><td class="dim">0.71459688</td><td class="dim">0.7002</td><td class="l"><span class="chip pass">Pass</span></td></tr>
+        <tr><td class="l">C12</td><td class="l dim">(2,2)</td><td class="l dim">(2,2)</td><td class="l dim">(1,19)</td><td class="dim">0.02</td><td class="dim">0.02</td><td class="dim">0.95</td><td>0.80</td><td class="dim">—</td><td class="dim">—</td><td class="dim">0</td><td class="dim">0</td><td class="dim">0</td><td class="dim">0</td><td class="l"><span class="chip neutral">Infeasible by design</span></td></tr>
+      </tbody>
+      <caption>Monte Carlo column: B = 160,000, seed 70117, MCSE ≈ 0.001; all eleven z‑scores fall within ±1.7. C12 was pre‑registered as unreachable within its search range; both implementations report zero assurance and the package warns (see §7).</caption>
+    </table>
+  </div>
+  <div class="note col">
+    <p class="hd">Version change during the run</p>
+    <p>The installed package was rebuilt from 0.6.2 to 0.6.3 by a parallel process while the grid was executing. The entire locked grid and both published scenarios were re‑run on 0.6.3: <strong>every N and every assurance value is bit‑identical across the rebuild.</strong></p>
+  </div>
+</section>
+
+<section>
+  <span class="sec-no">06</span>
+  <h2>Monte Carlo budget</h2>
+  <div class="col">
+    <p>Every simulation was sized by <code>MCSE = √(p(1−p)/B)</code>, not by brute force. Grid sweeps used B = 40,000 (MCSE ≈ 0.0020 near p = 0.80); the confirmation of individual candidate sizes used B = 160,000 (MCSE ≈ 0.0010). Precision was spent only where a decision is made. Total simulation across the whole study is under 10<sup>7</sup> replications — four orders of magnitude below a 10<sup>8</sup>‑per‑point sweep, and sufficient because the decisive comparisons are exact rather than simulated.</p>
+  </div>
+</section>
+
+<section>
+  <span class="sec-no">07</span>
+  <h2>Property tests</h2>
+  <div class="tw">
+    <table>
+      <thead><tr><th class="l">Property</th><th class="l">Tested on</th><th>Checks</th><th class="l">Result</th></tr></thead>
+      <tbody>
+        <tr><td class="l">A larger target assurance never reduces N</td><td class="l dim">reference: C01–C11 at targets 0.70/0.80/0.90</td><td>11</td><td class="l"><span class="chip pass">0 violations</span></td></tr>
+        <tr><td class="l">A larger target assurance never reduces N</td><td class="l dim">package: C05, C08, C09, C10, C11</td><td>5</td><td class="l"><span class="chip pass">Pass</span></td></tr>
+        <tr><td class="l">Stricter width margins never reduce N</td><td class="l dim">reference: C01–C11 at δ × 1.00 and × 0.85</td><td>11</td><td class="l"><span class="chip pass">0 violations</span></td></tr>
+        <tr><td class="l">Stricter width margins never reduce N</td><td class="l dim">package: C05, C08, C09, C10, C11</td><td>5</td><td class="l"><span class="chip pass">Pass</span></td></tr>
+        <tr><td class="l">An unreachable scenario returns no valid size</td><td class="l dim">package: C12 — warns and reports assurance 0.000000</td><td>1</td><td class="l"><span class="chip pass">Pass</span></td></tr>
+        <tr><td class="l">Same seed reproduces bit‑identically</td><td class="l dim">package: C09–C11, method = monte_carlo, B = 40,000</td><td>3</td><td class="l"><span class="chip pass">Pass</span></td></tr>
+        <tr><td class="l">RNG state of the caller is restored</td><td class="l dim">package: both methods — <code>.Random.seed</code> unchanged, next <code>runif(3)</code> unaffected</td><td>2</td><td class="l"><span class="chip pass">Pass</span></td></tr>
+        <tr><td class="l">Under method = "exact", seed and B are inert</td><td class="l dim">package: C09–C11 × 2 seeds × 2 values of B</td><td>3</td><td class="l"><span class="chip pass">Pass</span></td></tr>
+      </tbody>
+      <caption>41 checks, 0 failures. The reference‑side monotonicity tests (22 checks) confirm the property of the estimand; the package‑side tests (19 checks) confirm the implementation honours it.</caption>
+    </table>
+  </div>
+</section>
+
+<section>
+  <span class="sec-no">08</span>
+  <h2>Three findings worth recording</h2>
+
+  <div class="col">
+    <h3>The per‑arm probability is not monotone</h3>
+    <p><code>P_arm(m)</code> — the probability that an arm of size <code>m</code> meets its width target — <strong>decreases</strong> with <code>m</code> over long stretches. For the published Se prior it falls from 0.068288 at m = 26 to 0.063834 at m = 27, and there are 395 such reversals below m = 900. The reason is structural: at small <code>m</code> only extreme counts produce a narrow enough posterior, and the mass on those counts thins as <code>m</code> grows faster than new counts qualify.</p>
+    <p>The joint assurance <code>A(N)</code> is nevertheless non‑decreasing across all 13 scenarios examined over N = 2…900, with zero reversals. That monotonicity is <em>observed, not proved</em>. It matters because "the smallest N reaching the target" coincides with "the first N a bisection finds" only if the curve is monotone. The reference sidesteps the issue by scanning exhaustively; agreement with the package on all 14 scenarios is evidence that the package's search is safe here, not a proof that it is safe everywhere.</p>
+
+    <h3>The degeneracy convention is genuinely exercised — but only at small N</h3>
+    <p>At the published sizes the probability of a degenerate split is about 4 × 10⁻⁷, so the "degenerate replication = failure" rule is untestable there. At C10 (N = 3) it is 0.427: dropping the convention would move the assurance from 0.5727 to 1.0000. The package returns exactly 0.5727272727. The small‑N confirmatory scenarios are what make this convention verifiable at all.</p>
+
+    <h3>The anti‑noise rule costs one grid step</h3>
+    <p>At C11 the exact method returns N = 24 while <code>method = "monte_carlo"</code> at B = 40,000 returns N = 25 — the documented conservatism of accepting only at the 95% Monte Carlo lower bound. This is expected behaviour, and an argument for the exact method being the default.</p>
+  </div>
+</section>
+
+<section>
+  <span class="sec-no">09</span>
+  <h2>What this does not validate</h2>
+  <div class="col">
+    <p class="lede">Agreement between two implementations of the same specification cannot test the specification. The reference and the package share every modelling assumption, because the reference was built to the same declared model. The table below quantifies how far the answer moves under alternative readings — that is, the size of the errors this exercise could not have detected.</p>
+  </div>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th class="l">Alternative reading</th><th>N* for P1</th><th>shift</th><th>N* for P2</th><th>shift</th><th class="l">Detectable here?</th></tr></thead>
+      <tbody>
+        <tr><td class="l">Equal‑tailed interval, w ≤ δ <em>(assumed)</em></td><td class="hl">678</td><td class="dim">—</td><td class="hl">672</td><td class="dim">—</td><td class="l dim">baseline</td></tr>
+        <tr><td class="l">δ read as <em>half</em> width</td><td>&gt; 900</td><td class="dim">≫ +200</td><td>&gt; 900</td><td class="dim">≫ +200</td><td class="l"><span class="chip alert">No</span></td></tr>
+        <tr><td class="l">n<sub>d</sub> fixed at round(N·E[prev])</td><td>533</td><td class="dim">−145</td><td>533</td><td class="dim">−139</td><td class="l"><span class="chip alert">No</span></td></tr>
+        <tr><td class="l">HPD (shortest) instead of equal‑tailed interval</td><td>666</td><td class="dim">−12</td><td>658</td><td class="dim">−14</td><td class="l"><span class="chip alert">No</span></td></tr>
+        <tr><td class="l">Strict inequality w &lt; δ</td><td>678</td><td class="dim">0</td><td>672</td><td class="dim">0</td><td class="l"><span class="chip caution">Moot</span></td></tr>
+        <tr><td class="l">Degenerate arm allowed to succeed</td><td>678</td><td class="dim">0</td><td>672</td><td class="dim">0</td><td class="l"><span class="chip caution">Only at small N</span></td></tr>
+      </tbody>
+      <caption>Under the half‑width reading, the assurance at N = 678 collapses from 0.800 to 0.0032. Fixing n<sub>d</sub> at its expected value rather than modelling the random cohort split removes roughly 21% of the required sample — this is the single largest substantive consequence of the model, and it is asserted by both implementations together, not tested by their agreement.</caption>
+    </table>
+  </div>
+
+  <div class="col">
+    <h3>Shared assumptions, stated plainly</h3>
+  </div>
+  <ol class="limits col">
+    <li>
+      <h4>The parameterisation</h4>
+      <p>Both implementations treat <code>delta_*</code> as a full width and <code>alpha_ci</code> as an equal‑tailed level, because the reference took those conventions from the package's own documentation. If the documentation is wrong about what users intend, both are wrong together — and the half‑width row above shows that error would be enormous.</p>
+    </li>
+    <li>
+      <h4>The generative model itself</h4>
+      <p>Both assume Beta priors, independence of Se, Sp and prevalence a priori, a conjugate Beta posterior, and a binomial cohort split. Whether that is an adequate model of a real diagnostic accuracy study — whether, for example, Se and Sp should be correlated a priori, or the reference standard treated as imperfect — is a question this exercise does not touch.</p>
+    </li>
+    <li>
+      <h4>Fidelity to Wilson et al. (2022)</h4>
+      <p>The reference was built from the estimand as the package states it, not from the source paper. Confirming that the package computes what it says it computes is not the same as confirming that what it says it computes matches the cited method. That comparison remains open.</p>
+    </li>
+    <li>
+      <h4>Everything outside the headline</h4>
+      <p>Only <code>N_total</code>, <code>joint_assurance</code> and <code>assurance_mcse</code> under <code>method = "exact"</code> were validated. The legacy diagnostic fields — <code>n_diseased</code>, <code>n_non_diseased</code>, <code>N_total_median</code>, <code>N_total_P75</code>, <code>N_total_P90</code>, <code>buderer_n_se</code> — were not, and neither was any other function in the package. The <code>monte_carlo</code> path was only spot‑checked.</p>
+    </li>
+    <li>
+      <h4>The search ranges actually scanned</h4>
+      <p>Agreement holds on the grids searched (N up to 1600 for the confirmatory scenarios, 900 for the published ones). Behaviour at much larger N, at extreme priors, or with near‑degenerate Beta parameters such as a &lt; 1 was not systematically explored. Where a target proved unreachable within a locked range, the pre‑registered rule recorded N as infinite rather than probing further.</p>
+    </li>
+    <li>
+      <h4>Correlated implementation error is still possible</h4>
+      <p>Independence of environment reduces, but does not eliminate, the chance of a common mistake. Both rely on a library Beta quantile function; both were written by reading the same documentation. A subtle error shared by SciPy's <code>betaincinv</code> and R's <code>qbeta</code>, or a misreading of the specification made twice, would survive this check.</p>
+    </li>
+  </ol>
+</section>
+
+<section>
+  <span class="sec-no">10</span>
+  <h2>Reproduction</h2>
+  <div class="col">
+    <p>All scripts and outputs are self‑contained and re‑runnable. <code>ref_bam.py</code> depends only on NumPy and SciPy and calls nothing from <code>dtasamplesize</code>.</p>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr><th class="l">File</th><th class="l">Role</th></tr></thead>
+      <tbody>
+        <tr><td class="l">ref_bam.py</td><td class="l dim">independent reference: four evaluators (closed form, quadrature, enumeration, Monte Carlo). Frozen at lock time.</td></tr>
+        <tr><td class="l">LOCKED_confirmatory_grid.json</td><td class="l dim">pre‑registered scenarios, seeds, MC budget and property tests</td></tr>
+        <tr><td class="l">LOCK_HASHES.txt</td><td class="l dim">SHA‑256 of the two files above, plus the lock timestamp</td></tr>
+        <tr><td class="l">dev_01_agreement_smallN.py</td><td class="l dim">development grid: four‑way agreement at N = 2…30</td></tr>
+        <tr><td class="l">dev_02_published.py</td><td class="l dim">reference reproduction of the two published values</td></tr>
+        <tr><td class="l">conf_R_01_package.R</td><td class="l dim">package run over the locked grid, plus N−1/N/N+1 probes</td></tr>
+        <tr><td class="l">conf_PY_02_reference.py</td><td class="l dim">reference run, exhaustive cross‑checks, reference‑side property tests</td></tr>
+        <tr><td class="l">conf_R_03_properties.R</td><td class="l dim">package‑side property tests PT1–PT6</td></tr>
+        <tr><td class="l">conf_R_04b_mc_vs_exact_fast.R</td><td class="l dim">package closed form vs package Monte Carlo at the published points</td></tr>
+        <tr><td class="l">conf_PY_05_shared_assumptions.py</td><td class="l dim">negative controls quantifying the shared‑assumption limits</td></tr>
+        <tr><td class="l">conf_PY_06_monotone_in_N.py</td><td class="l dim">monotonicity of A(N) and of P_arm(m)</td></tr>
+        <tr><td class="l">conf_PY_08_degeneracy_bite.py</td><td class="l dim">whether the degeneracy convention is exercised</td></tr>
+        <tr><td class="l">conf_PY_09_published_mc.py</td><td class="l dim">MCSE‑budgeted Monte Carlo at the published decision points</td></tr>
+        <tr><td class="l">conf_R_07_reverify_version.R</td><td class="l dim">re‑verification of the whole grid after the 0.6.2 → 0.6.3 rebuild</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  Independent computational confirmation of <span style="color:var(--ink2)">dtasamplesize::bam_sample_size(method = "exact")</span><br>
+  Reference implementation: Python 3.14.2 · NumPy 2.4.0 · SciPy 1.16.3 &nbsp;·&nbsp; Package under test: R 4.5.2 · dtasamplesize 0.6.2 and 0.6.3<br>
+  Confirmatory grid locked 2026‑08‑27T18:17:19Z · grid da53f059… · reference 30a2157e…
+</footer>
+
+</div>

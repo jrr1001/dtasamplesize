@@ -1,3 +1,92 @@
+# dtasamplesize 0.6.4
+
+**Documentation and validation-tooling release.** No computed result
+changes: every quantity reported in the manuscript and reproduced by
+`validation/reproduce_manuscript.R` is identical to 0.6.3.
+
+## Documentation
+
+* `bam_sample_size()`'s `@details` (and the corresponding `?bam_sample_size`
+  help page) no longer describe the two worked examples' `prior_prev =
+  c(4, 16)` as "the defaults": that prior is the accompanying article's
+  worked-example prevalence prior, not `bam_sample_size()`'s actual default
+  of `prior_prev = c(6, 14)`. The formal `@param prior_prev` default
+  documentation was already correct; only the `@details` prose was
+  overstated.
+* `ss_imperfect_ref()`'s worked-example section heading now reads "Worked
+  example (package defaults, except `prev = 0.20` instead of the default
+  0.30)", rather than the previous "(package defaults with `prev = 0.20`)",
+  which could be misread as `prev = 0.20` also being a package default.
+* `validation/reproduce_manuscript.R` and `validation/make_manuscript_assets.R`
+  no longer label the article's worked-example priors (`prior_prev =
+  c(4, 16)`, etc.) as package "defaults" in comments; the object previously
+  named `bam_default` is now `bam_example`. Figures 1 and 2's y-axis labels
+  are now drawn horizontal (`las = 1`) rather than rotated.
+* `validation/table3_feature_matrix_source.csv` now marks the package's
+  less mature modules (joint Se+Sp+AUC search, imperfect-reference
+  correction, adaptive prevalence re-estimation, time-dependent ROC, net
+  benefit, and the unified framework) as "Experimental" rather than "Yes",
+  distinguishing them from the mature CI-width sizing capability.
+
+## Tests
+
+* New test pins the documented default `prior_prev = c(6, 14)` and the
+  `N_total = 583` it produces under `bam_sample_size(method = "exact")`
+  with otherwise-default arguments, guarding against a repeat of the
+  defaults/worked-example mismatch described above.
+
+## Validation scripts
+
+* `validation/integration_check.R` now asserts the "more uncertainty ->
+  larger N" ordering as executable code (an "Ordering check" section
+  computing `bam_sample_size(prior_se = p, method = "exact")` for the Se
+  priors Beta(34,6), Beta(17,3), Beta(8.5,1.5) and `stop()`ping if
+  `N_total` is not strictly increasing), rather than only asserting it in
+  prose as before; `validation/README.md` is updated to match.
+* `validation/cross_validation.R` now applies the 0.20 Hanley-McNeil
+  tolerance only to the balanced AUC configurations; the imbalanced
+  configuration is reported as an expected deviation (the Hanley-McNeil
+  formula assumes a negative-exponential score model, the Monte Carlo
+  reference here is binormal, and the gap between the two widens as the
+  groups become imbalanced). `validation/README.md` documents the same
+  criterion.
+* New `validation/rng_invariance.R` regenerates the article's published
+  numbers under five selected RNG kinds (Mersenne-Twister, L'Ecuyer-CMRG,
+  Wichmann-Hill, Marsaglia-Multicarry, and Knuth-TAOCP-2002), as evidence
+  for the manuscript's RNG-invariance claim; its output is logged under
+  `validation/logs/`.
+* New `validation/python/` directory: an independent Python reference
+  implementation, a locked confirmatory grid, and recorded hashes and logs
+  used to cross-check the R package's results against a second,
+  independently written implementation.
+
+## Infrastructure
+
+* New `.github/workflows/R-CMD-check.yaml` runs `R CMD check` on Windows,
+  macOS, and Ubuntu on push and pull request.
+
+# dtasamplesize 0.6.3
+
+Corrects four defects reported by an independent review of 0.6.2.
+Published sample sizes are unchanged.
+
+* The net-benefit feasibility ceiling was estimated by Monte Carlo with a
+  default of 200,000,000 draws, which exhausted memory on a machine with
+  ordinary RAM. It is now computed by deterministic integration: it agrees
+  with an independent quadrature to six decimal places, is identical across
+  seeds, and needs no large allocation. A memory budget now rejects an
+  oversized request instead of attempting it.
+* `ss_unified()` no longer reports a sample size when the search does not
+  converge. `N_effective` and `n_total` are `NA` in that case, and the
+  returned object carries an explicit `status` field (`converged`,
+  `unreachable`, `grid_exhausted`).
+* README, DESCRIPTION, the reproduction script and the accompanying article
+  agree on the version; `reproduce_manuscript.R` requires the exact version
+  whose numbers it checks.
+* Four tests asserted the absence of warnings at a `B` the package now warns
+  about, or matched the small-B warning where the ceiling message was
+  intended.
+
 # dtasamplesize 0.6.2
 
 **Validity release.** Continued adversarial verification of `ss_unified()`

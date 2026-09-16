@@ -1,0 +1,40 @@
+
+R version 4.5.2 (2025-10-31 ucrt) -- "[Not] Part in a Rumble"
+Copyright (C) 2025 The R Foundation for Statistical Computing
+Platform: x86_64-w64-mingw32/x64
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(testthat)
+> library(dtasamplesize)
+> 
+> test_check("dtasamplesize")
+
+ Bayesian Assurance Method (BAM) for DTA Sample Size 
+
+  n_diseased: 107 
+  n_non_diseased: 373 
+  N_total: 678 
+  joint_assurance: 0.800349 
+  B: 5000 
+[ FAIL 0 | WARN 0 | SKIP 1 | PASS 582 ]
+
+══ Skipped tests (1) ═══════════════════════════════════════════════════════════
+• shiny is installed; cannot test the missing-dependency path (1):
+  'test-launch_app.R:21:3'
+
+[ FAIL 0 | WARN 0 | SKIP 1 | PASS 582 ]
+> 
+> proc.time()
+   user  system elapsed 
+ 932.53   61.95 1216.04 

@@ -1,7 +1,7 @@
 Package: dtasamplesize
 Type: Package
 Title: Simulation-Based Sample Size Estimation for Diagnostic Accuracy Studies
-Version: 0.6.3
+Version: 0.6.4
 Authors@R: c(
     person("Jes\u00fas D.", "Rojas", role = c("aut", "cre"),
            email = "jrojasrivero@gmail.com",

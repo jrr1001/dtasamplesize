@@ -120,7 +120,8 @@ irs_apparent <- function(Se, Sp, prev, Se_ref, Sp_ref) {
 #' Monte Carlo error. \eqn{Se_{app} = p_{11}/(p_{11}+p_{01})} and
 #' \eqn{P(R+) = p_{11}+p_{01}} follow directly from the same model.
 #'
-#' \strong{Worked example (package defaults with \code{prev = 0.20}).}
+#' \strong{Worked example (package defaults, except \code{prev = 0.20}
+#' instead of the default 0.30).}
 #' At \code{Se = .85, Sp = .90, prev = .20, Se_ref = .90, Sp_ref = .95,
 #' d_se = .07, d_sp = .05}: the classical Buderer \eqn{N} (ignoring
 #' misclassification entirely) is 500; sizing for the apparent estimand

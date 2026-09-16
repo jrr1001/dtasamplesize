@@ -2,9 +2,9 @@ Capability,presize,pROC,MKpower,epiR,MKmisc,SampleSizeDiagnostics,dtasamplesize
 CI-width (precision) sizing for Se or Sp,Yes (prec_sens/prec_spec),No,Yes (ssize.sens.ci/ssize.spec.ci; one arm at a time),Yes (epi.ssdxsesp; Buderer-equivalent),Yes (power.diagnostic.test),"Yes (SampleSizeDiagnostics(); Buderer-based, single exported function)",Yes
 Frequentist power/assurance correction for the target CI width,No (point formula only),No,Yes (ssize.sens.ci/spec.ci with method=exact reports the exact probability of meeting the width target),No (point formula only),Yes (power.diagnostic.test),"No (point formula only; reproduces Buderer's max(n1, n2) exactly)",Yes
 Bayesian assurance (prior on Se/Sp/prevalence),No,No,No,No,No,No,Yes
-Joint Se + Sp + AUC precision in one simultaneous search,No (prec_sens/prec_spec/prec_auc are separate calls),AUC only (power.roc.test),No (ssize.sens.ci/spec.ci/auc.ci are separate calls),"No (Se and Sp combined only via max of two separate calls; no AUC)","No (own AUC estimation tools, not joint sizing)","No (single function returns max(n1, n2) of the two Buderer arms; no AUC)",Yes
-Imperfect reference standard correction,No,No,No,No,No,No,Yes
-Adaptive/blinded prevalence re-estimation,No,No,No,No,No,No,Yes
-Time-dependent ROC (AUC(t)),No,No,No,No,No,No,Yes
-Net benefit / decision curve analysis sizing,No,No,No,No,No,No,Yes
-Unified framework combining all of the above sources of uncertainty,No,No,No,No,No,No,Yes
+Joint Se + Sp + AUC precision in one simultaneous search,No (prec_sens/prec_spec/prec_auc are separate calls),AUC only (power.roc.test),No (ssize.sens.ci/spec.ci/auc.ci are separate calls),"No (Se and Sp combined only via max of two separate calls; no AUC)","No (own AUC estimation tools, not joint sizing)","No (single function returns max(n1, n2) of the two Buderer arms; no AUC)",Experimental
+Imperfect reference standard correction,No,No,No,No,No,No,Experimental
+Adaptive/blinded prevalence re-estimation,No,No,No,No,No,No,Experimental
+Time-dependent ROC (AUC(t)),No,No,No,No,No,No,Experimental
+Net benefit / decision curve analysis sizing,No,No,No,No,No,No,Experimental
+Unified framework combining all of the above sources of uncertainty,No,No,No,No,No,No,Experimental

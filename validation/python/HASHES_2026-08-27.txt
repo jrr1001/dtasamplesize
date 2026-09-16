@@ -1,0 +1,51 @@
+At 2026-08-27T18:17:19Z (LOCK_HASHES.txt):
+da53f05987f22511634ab085d585f5aef372c176461d9cc6cde8beeb185a4500 *LOCKED_confirmatory_grid.json
+30a2157ea858f51d2fde70ad675c2cacb523a914bcbe3ff1f5c1e85d4be0bc3d *ref_bam.py
+locked_at_utc=2026-08-27T18:17:19Z
+
+At 2026-08-27T18:56 (ALL_SCRIPT_HASHES.txt):
+f7467c40e0584c2bfd24e6cb5515340ababba259bbb4f721b3e9f05a42d5ccbc *conf_PY_02_reference.py
+da2f41361e5895f67ea629d66e2412bb260a1c56f5515e4fe06a3c1f2c7d53f0 *conf_PY_05_shared_assumptions.py
+57fa5ec9f1ed91a244b6d50fed5281e8968d5363f38a7f894b07eee747274e94 *conf_PY_06_monotone_in_N.py
+be36073bbc66342e97094b8d4e2915775d2568cb7a9b0fc91e78747410fa655d *dev_01_agreement_smallN.py
+1e1b7190286aad416ce90be5e8a939a4ba9512df5a514340edd79bb1e9849b4b *dev_02_published.py
+30a2157ea858f51d2fde70ad675c2cacb523a914bcbe3ff1f5c1e85d4be0bc3d *ref_bam.py
+94589f21bf639be4c3b4959c8b7f431fd0608d2d4dfab15210ca31eb249e23c1 *conf_R_01_package.R
+0806a3300e269d79d80c86d7e30f8c8a500088c6994c6f627b40b7bc1b58dad4 *conf_R_03_properties.R
+924638ec4ac39f7d90de05717166d9d1807420fb2055b0dc989b6721ff97a1d7 *conf_R_04_mc_vs_exact.R
+b21d94ea5dd3f586022ec96fdb18040e1ac6f16741bbdb3e334747ec02772afa *conf_R_07_reverify_version.R
+9a0abd63e88ca6161723a7de5bf42a69a47670bc32bdaf5aa0f357cd14e56b33 *dev_03_probe_pkg.R
+da53f05987f22511634ab085d585f5aef372c176461d9cc6cde8beeb185a4500 *LOCKED_confirmatory_grid.json
+
+Note on conf_PY_05_shared_assumptions.py:
+The session log shows this script was written at 18:21Z and then corrected in place at 18:32Z with a
+one-line shell edit (the HPD bisection moved in the wrong direction: `go_up = f > 0` became
+`go_up = f < 0`), before the 18:56Z hash record. A first reconstruction replayed only the file
+writes, missed that shell edit, hashed to 54597a9061a268f0c4da2ecc7b72f4f3ce45fb83afdb566d4c59f1c78bc4a95f
+and returned no HPD sample size (logs/conf_PY_05_shared_assumptions.py.SUPERSEDED_incomplete_reconstruction.log).
+With the 18:32Z edit re-applied, the file hashes to the recorded
+da2f41361e5895f67ea629d66e2412bb260a1c56f5515e4fe06a3c1f2c7d53f0 and returns N = 666 and 658, as on
+2026-08-27 (logs/conf_PY_05_shared_assumptions.py.log). This script is a negative-control analysis
+of alternative specifications; it is not part of the locked confirmatory grid, and its correction
+was made after the grid was locked.
+conf_PY_08_degeneracy_bite.py and conf_PY_09_published_mc.py were written after 18:56 and have no
+recorded hash to compare against; their as-reconstructed hashes are, respectively,
+c25fd8cdf166d02fb2fe63608ccd08437de2ce41c2c547ebbbbf3fca73d98773 and
+a8d77ccbc6246dfd9be8910ff37ec803a3d1469f701d41a204a48d70975e297f.
+
+Verification performed on 2026-09-16 when the files above were copied into this directory from a
+reconstruction of the deleted scratch directory: sha256sum of every file listed above matched the
+hash recorded in the session log at the time shown. report.html is the historical 2026-08-27 report
+as first written; three later cosmetic CSS edits (19:08Z) were not replayed, and its numbers are
+unaffected.
+
+Important caveat on what this shows: these hashes and their timestamps were recorded locally in
+the coding agent's own session log, not submitted to any external timestamping service, hash
+registry, or notary. They demonstrate internal consistency -- that the files copied here today are
+byte-for-byte identical to what the agent's tools wrote and hashed on 2026-08-27, and that the
+locked grid and reference implementation were fixed before the confirmatory scripts were run
+against them. They do not constitute independent proof that the files existed in this exact form
+at that exact time (a local log and its timestamps could in principle be altered by whoever
+controls the machine). In other words, this hash record supports "these files were not silently
+changed between being locked/hashed and being run," but it is not a pre-registration in the formal
+sense (no third-party or append-only registry attests to the timing).

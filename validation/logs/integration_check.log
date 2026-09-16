@@ -1,0 +1,24 @@
+
+---------- Integration: all estimators run ----------
+Warning message:
+B = 800 is small; Monte Carlo error in the assurance estimate may be substantial. B >= 1000 (ideally 5000) is recommended for final results. Set options(dtasamplesize.warn_small_B = FALSE) to silence this. 
+Warning message:
+B = 400 is small; Monte Carlo error in the assurance estimate may be substantial. B >= 1000 (ideally 5000) is recommended for final results. Set options(dtasamplesize.warn_small_B = FALSE) to silence this. 
+buderer Se-only : 100 
+BAM n_diseased  : 107  N_total_median: 473 
+Joint N         : 600 
+Imperfect N     : 518 
+Adaptive N_init : 372 
+NetBenefit Ncons: 240 
+Unified N       : 813 
+timeROC N       : 350 (B=30 demo)
+
+---------- Reproducibility: identical results on repeat (same seed) ----------
+net_benefit identical: TRUE 
+bam identical N_total: TRUE 
+
+---------- Ordering check: more uncertainty -> larger N (exact mode) ----------
+N_total for prior_se = Beta(34,6), Beta(17,3), Beta(8.5,1.5): 560, 583, 604 
+PASS: more uncertainty -> larger N (exact mode)
+
+=== integration_check done ===
