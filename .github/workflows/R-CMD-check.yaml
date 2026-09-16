@@ -60,8 +60,7 @@ jobs:
           f=$(find check -name 00check.log | head -n 1)
           [ -n "$f" ] || exit 0
           d=$(dirname "$f")
-          ctx=$(grep -n -A40 "ERROR" "$f" | head -c 3500 | sed -e ':a' -e 'N' -e '$!ba' -e 's/%/%25/g' -e 's//%0D/g' -e 's/
-/%0A/g')
+          ctx=$(grep -n -A40 "ERROR" "$f" | head -c 3500 | sed -e ':a' -e 'N' -e '$!ba' -e 's/%/%25/g' -e 's/\r/%0D/g' -e 's/\n/%0A/g')
           echo "::error title=00check.log ERROR context::$ctx"
           for x in "$f" "$d"/tests/testthat.Rout.fail "$d"/tests/testthat.Rout; do
             [ -f "$x" ] || continue
