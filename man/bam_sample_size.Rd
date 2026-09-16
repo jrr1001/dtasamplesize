@@ -181,9 +181,13 @@ The parameters \code{delta_se} and \code{delta_sp} are the
   \code{pmax(n_se / prev, n_sp / (1 - prev))} over draws of \code{prev}.
   That quantity never verified that both widths hold in the same study,
   and its joint assurance is systematically lower than
-  \code{target_assurance} -- e.g., for the defaults with
-  \code{prior_prev = c(4, 16)}, the old \code{n_total} achieved a true
-  joint assurance of about 0.72 against a target of 0.80.
+  \code{target_assurance} -- e.g., using the default \code{prior_se},
+  \code{prior_sp}, \code{delta_se}, \code{delta_sp} and
+  \code{target_assurance} together with \code{prior_prev = c(4, 16)}
+  (the worked example from the accompanying article; mean prevalence
+  0.20, \strong{not} the default \code{prior_prev}, which is
+  \code{c(6, 14)}), the old \code{n_total} achieved a true joint
+  assurance of about 0.72 against a target of 0.80.
 
   \strong{Two ways to evaluate the joint assurance: \code{method}.} The
   generative model above -- draw \code{prev}, \code{Se_true}, \code{Sp_true};
@@ -222,8 +226,12 @@ The parameters \code{delta_se} and \code{delta_sp} are the
   below) and \code{seed} does not affect the result either. This is the
   preferred mode: it is deterministic, reproducible bit-for-bit, and free
   of the dependence on \code{B} that affects \code{method = "monte_carlo"}
-  (e.g., for the defaults with \code{prior_prev = c(4, 16)}, the exact
-  first \code{N} with joint assurance \eqn{\ge} 0.80 is 678, with assurance
+  (e.g., using the default \code{prior_se}, \code{prior_sp},
+  \code{delta_se}, \code{delta_sp} and \code{target_assurance} together
+  with \code{prior_prev = c(4, 16)} (the worked example from the
+  accompanying article; mean prevalence 0.20, \strong{not} the default
+  \code{prior_prev}, which is \code{c(6, 14)}), the exact first
+  \code{N} with joint assurance \eqn{\ge} 0.80 is 678, with assurance
   0.800349, whereas \code{method = "monte_carlo"} with \code{B = 20000}
   returns 683 because of Monte Carlo noise near the crossing point -- see
   \strong{Anti-noise acceptance rule} below). \code{P_se} and \code{P_sp}

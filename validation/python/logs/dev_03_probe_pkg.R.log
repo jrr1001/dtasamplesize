@@ -1,0 +1,16 @@
+package version: 0.6.3 
+
+-- single-N probes around the published crossing (P1, N*=678) --
+   [warn] No N in N_range achieved the target JOINT assurance under the exact calculation. Consider expanding N_range. 
+N_range=676                  N_total=676  joint_assurance=0.7990173941  mcse=0
+   [warn] No N in N_range achieved the target JOINT assurance under the exact calculation. Consider expanding N_range. 
+N_range=677                  N_total=677  joint_assurance=0.7996848824  mcse=0
+N_range=678                  N_total=678  joint_assurance=0.8003489948  mcse=0
+N_range=679                  N_total=679  joint_assurance=0.8010097649  mcse=0
+
+-- full-range search --
+N_range=600:750              N_total=678  joint_assurance=0.8003489948  mcse=0
+
+-- names of the returned object --
+again                        N_total=678  joint_assurance=0.8003489948  mcse=0
+method, n_diseased, n_non_diseased, n_total, N_total, joint_assurance, assurance_mcse, assurance_method, assurance_se, assurance_sp, N_total_median, N_total_P75, N_total_P90, buderer_n_se, prior_se, prior_sp, prior_prev, delta_se, delta_sp, target_assurance, B, call 

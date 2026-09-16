@@ -1,0 +1,48 @@
+
+==========  V1. Wilson score CI  ==========
+x= 85 n=100 | mine[0.76716,0.90694] Hmisc[0.76716,0.90694] prop.test[0.76716,0.90694]  PASS / PASS
+x= 45 n= 50 | mine[0.78640,0.95652] Hmisc[0.78640,0.95652] prop.test[0.78640,0.95652]  PASS / PASS
+x=  2 n= 20 | mine[0.02787,0.30103] Hmisc[0.02787,0.30103] prop.test[0.02787,0.30103]  PASS / PASS
+x= 19 n= 20 | mine[0.76387,0.99112] Hmisc[0.76387,0.99744] prop.test[0.76387,0.99112]  **CHECK** / PASS
+x=  0 n= 30 | mine[0.00000,0.11351] Hmisc[0.00000,0.11351] prop.test[0.00000,0.11351]  PASS / PASS
+Note: at x=19/n=20 the package matches base prop.test (canonical Wilson);
+ Hmisc differs at that boundary.
+
+==========  V2. Wald CI (interior cases; wald_ci clamps to [0,1])  ==========
+x= 85 n=100 | mine[0.78002,0.91998] Hmisc[0.78002,0.91998]  PASS
+x= 45 n= 50 | mine[0.81685,0.98315] Hmisc[0.81685,0.98315]  PASS
+x= 60 n= 90 | mine[0.56928,0.76406] Hmisc[0.56928,0.76406]  PASS
+
+==========  V3. buderer_n  ==========
+Se=0.85,d=0.07 -> 100 PASS 
+Se=0.90,d=0.05 -> 139 PASS 
+
+==========  V4. Hanley-McNeil AUC variance vs Monte Carlo (binormal data)  ==========
+AUC=0.80 nC=100 nK=100 | formula=0.000984  MC=0.000943  ratio=1.043  PASS
+AUC=0.85 nC= 60 nK=140 | formula=0.001101  MC=0.000848  ratio=1.299  expected deviation (imbalanced groups; not held to the 0.20 tolerance)
+AUC=0.75 nC= 80 nK= 80 | formula=0.001484  MC=0.001437  ratio=1.033  PASS
+Note: Hanley-McNeil (1982) assumes a negative-exponential score model;
+ the small deviation from binormal MC (larger when groups are imbalanced)
+ is the expected, conservative behaviour of the approximation.
+
+==========  V5. Net benefit identity: prev-weighted form == (TP - w*FP)/N  ==========
+package=0.158333  Vickers=0.158333  PASS
+
+==========  V6. Net benefit analytic SE vs Monte Carlo SD of NB_hat (cohort design)  ==========
+Se=0.85 Sp=0.90 prev=0.20 pt=0.20 N=500 | analytic=0.01746 MC=0.01750 ratio=0.998 PASS
+Se=0.80 Sp=0.85 prev=0.30 pt=0.40 N=300 | analytic=0.02931 MC=0.02936 ratio=0.998 PASS
+Note: row 1 is the manuscript's headline configuration (Se=0.85, Sp=0.90, prev=0.20,
+ pt=0.20, N=500): cohort SD ~0.0174, agreeing with the analytic SE to within ~0.2%
+ at R=400000, where the SD estimator's own sampling noise (~0.11%) is fine enough
+ to resolve that claim (see comment above nb_se_cohort()).
+
+==========  V7. Beta-Binomial posterior CI (conjugate) vs numerical integration  ==========
+conjugate width=0.12367  numerical width=0.12367  PASS
+
+==========  V8. Imperfect reference: VIF and apparent-Se closed form  ==========
+VIF package=1.384083  Rogan-Gladen=1.384083  PASS
+apparent Se: MC=0.7638  closed-form=0.7639  PASS
+
+Table 2 written to D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/R-package/manuscript_assets/table2_crossvalidation.csv (4 rows, all pass = TRUE)
+
+=== cross_validation done ===

@@ -1,0 +1,83 @@
+============================================================================================
+A. INDEPENDENT SEARCH  vs  PACKAGE   (locked confirmatory grid)
+============================================================================================
+id     pkgN   refN  agree      pkg A(N)      ref A(N)     |diff|
+C01    1188   1188   True  0.8002190725  0.8002190725   9.48e-14
+C02     599    599   True  0.8013636252  0.8013636252   9.99e-15
+C03     959    959   True  0.8501728831  0.8501728831   1.97e-13
+C04     950    950   True  0.9000053490  0.9000053490   3.31e-13
+C05     265    265   True  0.7014247369  0.7014247369   6.17e-14
+C06    1117   1117   True  0.8002601582  0.8002601582   7.20e-13
+C07     440    440   True  0.8006472121  0.8006472121   2.68e-13
+C08     607    607   True  0.7507355152  0.7507355152   2.37e-13
+C09       8      8   True  0.6391279309  0.6391279309   1.55e-15
+C10       3      3   True  0.5727272727  0.5727272727   1.33e-15
+C11      24     24   True  0.7012670385  0.7012670385   8.33e-15
+C12     400   None  False  0.0000000000  0.0000000000   0.00e+00
+
+============================================================================================
+B. N-1 / N / N+1 CONFIRMATION OF THE SELECTED SIZE
+============================================================================================
+id    target      N |   ref A(N-1)     ref A(N)   ref A(N+1) |   MC A(N)    mcse | verdict
+C01     0.80   1188 |   0.79991096   0.80021907   0.80052659 |  0.799281 0.00100 | PASS
+C02     0.80    599 |   0.79998030   0.80136363   0.80273873 |  0.801462 0.00100 | PASS
+C03     0.85    959 |   0.84993545   0.85017288   0.85040976 |  0.850063 0.00089 | PASS
+C04     0.90    950 |   0.89966449   0.90000535   0.90034489 |  0.900056 0.00075 | PASS
+C05     0.70    265 |   0.69659562   0.70142474   0.70620397 |  0.701325 0.00114 | PASS
+C06     0.80   1117 |   0.79972561   0.80026016   0.80079295 |  0.799531 0.00100 | PASS
+C07     0.80    440 |   0.79949992   0.80064721   0.80178244 |  0.801175 0.00100 | PASS
+C08     0.75    607 |   0.74971950   0.75073552   0.75174730 |  0.749831 0.00108 | PASS
+C09     0.60      8 |   0.57181818   0.63912793   0.68619292 |  0.639244 0.00120 | PASS
+C10     0.50      3 |   0.38181818   0.57272727   0.68531469 |  0.570731 0.00124 | PASS
+C11     0.70     24 |   0.68703431   0.70126704   0.71459688 |  0.700187 0.00115 | PASS
+C12     0.80    400 |   0.00000000   0.00000000   0.00000000 |  0.000000 0.00000 | INFEASIBLE-by-design (see PT3)
+
+============================================================================================
+C. EXHAUSTIVE CROSS-CHECK ON THE ENUMERABLE CONFIRMATORY SCENARIOS
+   closed form vs 3-D Gauss-Jacobi quadrature vs (n_d,x,y) enumeration
+============================================================================================
+  C09: N=2..60  max|quad-closed|=3.841e-14  max|enum-closed|=3.331e-16  max|fast-frozen enum|=4.330e-15  successful (n_d,x,y) triples summed = 604,173
+  C10: N=2..60  max|quad-closed|=4.086e-14  max|enum-closed|=5.551e-16  max|fast-frozen enum|=3.997e-15  successful (n_d,x,y) triples summed = 631,595
+  C11: N=2..60  max|quad-closed|=3.075e-14  max|enum-closed|=2.220e-16  max|fast-frozen enum|=3.331e-15  successful (n_d,x,y) triples summed = 610,633
+  WORST DISAGREEMENT ACROSS ALL THREE ANALYTIC ROUTES = 4.086e-14
+
+============================================================================================
+D. REFERENCE-SIDE PROPERTY TESTS (PT1 target-monotone, PT2 delta-monotone)
+============================================================================================
+PT1  N* as a function of target_assurance (must be non-decreasing):
+  C01: t=0.70->937  0.80->1188  0.90->inf   OK
+  C02: t=0.70->538  0.80->599  0.90->695   OK
+  C03: t=0.70->583  0.80->789  0.90->1241   OK
+  C04: t=0.70->647  0.80->755  0.90->950   OK
+  C05: t=0.70->265  0.80->289  0.90->331   OK
+  C06: t=0.70->972  0.80->1117  0.90->1399   OK
+  C07: t=0.70->382  0.80->440  0.90->587   OK
+  C08: t=0.70->562  0.80->662  0.90->840   OK
+  C09: t=0.70->10  0.80->12  0.90->17   OK
+  C10: t=0.70->5  0.80->6  0.90->10   OK
+  C11: t=0.70->24  0.80->34  0.90->55   OK
+
+PT2  N* as a function of the width margin (must be non-decreasing as delta shrinks):
+  C01: delta x1.00->1188   x0.85->inf   OK
+  C02: delta x1.00->599   x0.85->852   OK
+  C03: delta x1.00->959   x0.85->1407   OK
+  C04: delta x1.00->950   x0.85->1332   OK
+  C05: delta x1.00->265   x0.85->376   OK
+  C06: delta x1.00->1117   x0.85->inf   OK
+  C07: delta x1.00->440   x0.85->660   OK
+  C08: delta x1.00->607   x0.85->861   OK
+  C09: delta x1.00->8   x0.85->18   OK
+  C10: delta x1.00->3   x0.85->3   OK
+  C11: delta x1.00->24   x0.85->49   OK
+
+PT1 violations = 0   PT2 violations = 0
+
+============================================================================================
+E. PT3 -- infeasible scenario C12
+============================================================================================
+  reference: any N in [10,400] reaching 0.8?  NO
+  reference assurance at N_hi=400: 0.00000000
+  package returned N_total = 400 with joint_assurance = 0.00000000
+  package warnings = ['No n in n_range achieved target assurance for Se. Consider expanding n_range.', 'No n in n_range achieved target assurance for Sp. Consider expanding n_range.', 'No N in N_range achieved the target JOINT assurance under the exact calculation. Consider expanding N_range.']
+
+wrote conf_reference.json

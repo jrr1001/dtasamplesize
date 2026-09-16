@@ -172,7 +172,7 @@ draw_fig1 <- function() {
   par(mar = c(4.3, 4.6, 1.2, 1))
   plot(ns, assur_fig1, type = "l", lwd = 2, col = "#1f4e79",
        xlab = "Number of diseased subjects (n)",
-       ylab = "P(CI width <= target)", ylim = c(0, 1))
+       ylab = "P(CI width <= target)", ylim = c(0, 1), las = 1)
   abline(h = 0.80, lty = 3, col = "grey40")
   abline(v = n_bud_fig1, lty = 2, col = "#c00000")
   points(n_bud_fig1, assur_fig1[ns == n_bud_fig1], pch = 19, col = "#c00000")
@@ -204,11 +204,12 @@ cat(sprintf("Figure 1: Buderer n=%d -> assurance %.4f; n for 0.80 assurance = %s
 ## described by the article any more (see the SCOPE note at the top of this
 ## file). This is the single figure the article's Results and Figure 2
 ## legend refer to: bam_sample_size(method = "exact")'s joint assurance for
-## Se and Sp, as a function of the total sample size N, under the package's
-## own DEFAULT priors -- Se ~ Beta(17, 3), Sp ~ Beta(2, 2) (vague; see
-## PRIOR_SP_VAGUE below, deliberately NOT the harmonized informative Sp
-## prior used in Table 4), prevalence ~ Beta(4, 16) -- and full-width
-## targets delta_se = 0.14, delta_sp = 0.10 (2x the half-widths used
+## Se and Sp, as a function of the total sample size N, under the article's
+## worked-example priors -- Se ~ Beta(17, 3) and Sp ~ Beta(2, 2) (vague; the
+## package defaults; see PRIOR_SP_VAGUE below, deliberately NOT the
+## harmonized informative Sp prior used in Table 4), with prevalence ~
+## Beta(4, 16) (NOT the package default prior_prev, which is c(6, 14)) --
+## and full-width targets delta_se = 0.14, delta_sp = 0.10 (2x the half-widths used
 ## elsewhere in this script for the classical/Monte Carlo comparators),
 ## crossing the 0.80 target at N = 678 (article Results: "the required
 ## total sample size is N = 678, at which the joint assurance is
@@ -279,7 +280,7 @@ draw_fig2 <- function() {
   par(mar = c(4.3, 4.6, 1.2, 1))
   plot(N_grid_fig2, assur_fig2, type = "l", lwd = 2, col = "#1f4e79",
        xlab = "Total sample size (N)",
-       ylab = "Joint assurance for Se and Sp", ylim = c(0, 1))
+       ylab = "Joint assurance for Se and Sp", ylim = c(0, 1), las = 1)
   abline(h = TARGET_ASSURANCE, lty = 3, col = "grey40")
   abline(v = n_cross_fig2, lty = 2, col = "#c00000")
   points(n_cross_fig2, assur_at_cross_fig2, pch = 19, col = "#c00000")

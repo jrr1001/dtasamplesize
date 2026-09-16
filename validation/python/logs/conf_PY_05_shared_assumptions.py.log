@@ -1,0 +1,15 @@
+case  variant                                           N*    shift  note
+P1    V0 equal-tailed, w <= delta  [ASSUMED]           678       +0
+P1    V1 equal-tailed, w <  delta                      678       +0
+P1    V2 HPD (shortest) interval                       666      -12
+P1    V4 degenerate arm may succeed                    678       +0
+P1    V5 n_d fixed at round(N*E[prev])                 533     -145
+P1    V3 delta treated as HALF width                  >900           assurance at N=678 is only 0.003178
+
+P2    V0 equal-tailed, w <= delta  [ASSUMED]           672       +0
+P2    V1 equal-tailed, w <  delta                      672       +0
+P2    V2 HPD (shortest) interval                       658      -14
+P2    V4 degenerate arm may succeed                    672       +0
+P2    V5 n_d fixed at round(N*E[prev])                 533     -139
+P2    V3 delta treated as HALF width                  >900           assurance at N=672 is only 0.038115
+

@@ -1,0 +1,302 @@
+{
+  "C01": {
+    "id": "C01",
+    "main": {
+      "N_total": 1188,
+      "joint_assurance": 0.80021907253630076,
+      "mcse": 0,
+      "assurance_method": "exact",
+      "warnings": "No n in n_range achieved target assurance for Sp. Consider expanding n_range."
+    },
+    "trio": {
+      "-1": {
+        "N": 1187,
+        "assurance": 0.79991096076352253
+      },
+      "0": {
+        "N": 1188,
+        "assurance": 0.80021907253630076
+      },
+      "1": {
+        "N": 1189,
+        "assurance": 0.80052658871515803
+      }
+    },
+    "secs": 67.811596155166626
+  },
+  "C02": {
+    "id": "C02",
+    "main": {
+      "N_total": 599,
+      "joint_assurance": 0.80136362518485338,
+      "mcse": 0,
+      "assurance_method": "exact",
+      "warnings": ["No n in n_range achieved target assurance for Se. Consider expanding n_range.", "No n in n_range achieved target assurance for Sp. Consider expanding n_range."]
+    },
+    "trio": {
+      "-1": {
+        "N": 598,
+        "assurance": 0.79998029961403827
+      },
+      "0": {
+        "N": 599,
+        "assurance": 0.80136362518485338
+      },
+      "1": {
+        "N": 600,
+        "assurance": 0.80273872800350066
+      }
+    },
+    "secs": 43.121044874191284
+  },
+  "C03": {
+    "id": "C03",
+    "main": {
+      "N_total": 959,
+      "joint_assurance": 0.85017288314710016,
+      "mcse": 0,
+      "assurance_method": "exact",
+      "warnings": []
+    },
+    "trio": {
+      "-1": {
+        "N": 958,
+        "assurance": 0.84993545180092034
+      },
+      "0": {
+        "N": 959,
+        "assurance": 0.85017288314710016
+      },
+      "1": {
+        "N": 960,
+        "assurance": 0.85040976310954364
+      }
+    },
+    "secs": 44.479866981506348
+  },
+  "C04": {
+    "id": "C04",
+    "main": {
+      "N_total": 950,
+      "joint_assurance": 0.90000534904759111,
+      "mcse": 0,
+      "assurance_method": "exact",
+      "warnings": []
+    },
+    "trio": {
+      "-1": {
+        "N": 949,
+        "assurance": 0.89966448506961483
+      },
+      "0": {
+        "N": 950,
+        "assurance": 0.90000534904759111
+      },
+      "1": {
+        "N": 951,
+        "assurance": 0.90034489266665996
+      }
+    },
+    "secs": 49.121239185333252
+  },
+  "C05": {
+    "id": "C05",
+    "main": {
+      "N_total": 265,
+      "joint_assurance": 0.70142473690082219,
+      "mcse": 0,
+      "assurance_method": "exact",
+      "warnings": []
+    },
+    "trio": {
+      "-1": {
+        "N": 264,
+        "assurance": 0.69659562335470271
+      },
+      "0": {
+        "N": 265,
+        "assurance": 0.70142473690082219
+      },
+      "1": {
+        "N": 266,
+        "assurance": 0.70620397131842494
+      }
+    },
+    "secs": 19.814455986022949
+  },
+  "C06": {
+    "id": "C06",
+    "main": {
+      "N_total": 1117,
+      "joint_assurance": 0.80026015815182228,
+      "mcse": 0,
+      "assurance_method": "exact",
+      "warnings": ["No n in n_range achieved target assurance for Se. Consider expanding n_range.", "No n in n_range achieved target assurance for Sp. Consider expanding n_range."]
+    },
+    "trio": {
+      "-1": {
+        "N": 1116,
+        "assurance": 0.79972561230637196
+      },
+      "0": {
+        "N": 1117,
+        "assurance": 0.80026015815182228
+      },
+      "1": {
+        "N": 1118,
+        "assurance": 0.80079294885879349
+      }
+    },
+    "secs": 74.40966796875
+  },
+  "C07": {
+    "id": "C07",
+    "main": {
+      "N_total": 440,
+      "joint_assurance": 0.80064721214261203,
+      "mcse": 0,
+      "assurance_method": "exact",
+      "warnings": "No n in n_range achieved target assurance for Sp. Consider expanding n_range."
+    },
+    "trio": {
+      "-1": {
+        "N": 439,
+        "assurance": 0.79949992032432637
+      },
+      "0": {
+        "N": 440,
+        "assurance": 0.80064721214261203
+      },
+      "1": {
+        "N": 441,
+        "assurance": 0.80178244399418441
+      }
+    },
+    "secs": 19.769170999526978
+  },
+  "C08": {
+    "id": "C08",
+    "main": {
+      "N_total": 607,
+      "joint_assurance": 0.75073551521571413,
+      "mcse": 0,
+      "assurance_method": "exact",
+      "warnings": []
+    },
+    "trio": {
+      "-1": {
+        "N": 606,
+        "assurance": 0.74971949988304443
+      },
+      "0": {
+        "N": 607,
+        "assurance": 0.75073551521571413
+      },
+      "1": {
+        "N": 608,
+        "assurance": 0.75174730374146292
+      }
+    },
+    "secs": 27.208990812301636
+  },
+  "C09": {
+    "id": "C09",
+    "main": {
+      "N_total": 8,
+      "joint_assurance": 0.63912793089263775,
+      "mcse": 0,
+      "assurance_method": "exact",
+      "warnings": []
+    },
+    "trio": {
+      "-1": {
+        "N": 7,
+        "assurance": 0.57181818181818134
+      },
+      "0": {
+        "N": 8,
+        "assurance": 0.63912793089263775
+      },
+      "1": {
+        "N": 9,
+        "assurance": 0.68619292472233817
+      }
+    },
+    "secs": 0.092561960220336914
+  },
+  "C10": {
+    "id": "C10",
+    "main": {
+      "N_total": 3,
+      "joint_assurance": 0.57272727272727308,
+      "mcse": 0,
+      "assurance_method": "exact",
+      "warnings": []
+    },
+    "trio": {
+      "-1": {
+        "N": 2,
+        "assurance": 0.38181818181818189
+      },
+      "0": {
+        "N": 3,
+        "assurance": 0.57272727272727308
+      },
+      "1": {
+        "N": 4,
+        "assurance": 0.68531468531468609
+      }
+    },
+    "secs": 0.09147191047668457
+  },
+  "C11": {
+    "id": "C11",
+    "main": {
+      "N_total": 24,
+      "joint_assurance": 0.70126703848617045,
+      "mcse": 0,
+      "assurance_method": "exact",
+      "warnings": []
+    },
+    "trio": {
+      "-1": {
+        "N": 23,
+        "assurance": 0.68703431162830464
+      },
+      "0": {
+        "N": 24,
+        "assurance": 0.70126703848617045
+      },
+      "1": {
+        "N": 25,
+        "assurance": 0.71459688210326255
+      }
+    },
+    "secs": 0.099000215530395508
+  },
+  "C12": {
+    "id": "C12",
+    "main": {
+      "N_total": 400,
+      "joint_assurance": 0,
+      "mcse": 0,
+      "assurance_method": "exact",
+      "warnings": ["No n in n_range achieved target assurance for Se. Consider expanding n_range.", "No n in n_range achieved target assurance for Sp. Consider expanding n_range.", "No N in N_range achieved the target JOINT assurance under the exact calculation. Consider expanding N_range."]
+    },
+    "trio": {
+      "-1": {
+        "N": 399,
+        "assurance": 0
+      },
+      "0": {
+        "N": 400,
+        "assurance": 0
+      },
+      "1": {
+        "N": 401,
+        "assurance": 0
+      }
+    },
+    "secs": 15.680198907852173
+  }
+}

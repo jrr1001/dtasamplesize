@@ -1,0 +1,22 @@
+
+=== P1 ===  (cache built + full scan in 6.3s)
+  reference N*      = 678      package claim = 678
+  reference A(N*)   = 0.8003489948  package claim = 0.800349
+     A(676) = 0.7990173941
+     A(677) = 0.7996848824   [package claim 0.799685]
+     A(678) = 0.8003489948   <-- claimed N
+     A(679) = 0.8010097649
+     A(680) = 0.8016672255
+  assurance strictly increasing on [648,708]? True
+  first N in that window with A>=target: 678
+
+=== P2 ===  (cache built + full scan in 6.6s)
+  reference N*      = 672      package claim = 672
+  reference A(N*)   = 0.8002692084  package claim = 0.800269
+     A(670) = 0.7990476439
+     A(671) = 0.7996594780
+     A(672) = 0.8002692084   <-- claimed N
+     A(673) = 0.8008768425
+     A(674) = 0.8014823876
+  assurance strictly increasing on [642,702]? True
+  first N in that window with A>=target: 672

@@ -1,8 +1,15 @@
 # Integration and reproducibility check for dtasamplesize
 # -------------------------------------------------------
-# Runs all exported estimators end-to-end, confirms the
-# "more uncertainty -> larger N" ordering, and verifies that
-# results are reproducible under a fixed seed.
+# Runs all exported estimators end-to-end, prints the sample size each one
+# returns so the values can be inspected, verifies that results are
+# reproducible under a fixed seed, and asserts the "more uncertainty ->
+# larger N" ordering for bam_sample_size(method = "exact") across the Se
+# prior triple Beta(34,6), Beta(17,3), Beta(8.5,1.5) (all other arguments
+# default). That ordering check is executable code, in the dedicated section
+# below headed "Ordering check", not just a claim in this header: the three
+# N_total values are computed and printed by the script, and the script
+# stop()s if they are not strictly increasing.
+#
 # Run after installing the package:  R -f validation/integration_check.R
 
 library(dtasamplesize)
@@ -38,5 +45,32 @@ cat("net_benefit identical:", identical(a$N_by_pt, b$N_by_pt), "\n")
 c1 <- suppressWarnings(bam_sample_size(B = 1000, seed = 2026, n_range = 30:200))
 c2 <- suppressWarnings(bam_sample_size(B = 1000, seed = 2026, n_range = 30:200))
 cat("bam identical N_total:", identical(c1$N_total_median, c2$N_total_median), "\n")
+
+# ============================================================================
+# Ordering check: more uncertainty -> larger N (exact mode)
+# ----------------------------------------------------------------------------
+# Computes bam_sample_size(prior_se = p, method = "exact") (all other args
+# default) for p in Beta(34,6), Beta(17,3), Beta(8.5,1.5) -- a fixed prior
+# mean (E[Se] = 0.85 in all three) with decreasing prior sample size, i.e.
+# increasing prior uncertainty about Se -- and asserts that the resulting
+# N_total values are strictly increasing. method = "exact" is deterministic
+# (see bam_sample_size()'s @details), so this check has no sampling error and
+# needs no seed. This is the only place in this script that verifies the
+# ordering with code rather than asserting it in prose.
+# ============================================================================
+sep("Ordering check: more uncertainty -> larger N (exact mode)")
+priors_se <- list(c(34, 6), c(17, 3), c(8.5, 1.5))
+n_ordering <- vapply(priors_se, function(p) {
+  bam_sample_size(prior_se = p, method = "exact")$N_total
+}, numeric(1))
+cat("N_total for prior_se = Beta(34,6), Beta(17,3), Beta(8.5,1.5):",
+    paste(n_ordering, collapse = ", "), "\n")
+if (!all(diff(n_ordering) > 0)) {
+  stop("Ordering check FAILED: N_total is not strictly increasing as the Se ",
+       "prior widens (Beta(34,6) -> Beta(17,3) -> Beta(8.5,1.5)). Got N_total = ",
+       paste(n_ordering, collapse = ", "), ".")
+}
+cat("PASS: more uncertainty -> larger N (exact mode)\n")
+# ============================================================================
 
 cat("\n=== integration_check done ===\n")

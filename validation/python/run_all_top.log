@@ -1,0 +1,29 @@
+Python: Python 3.14.2
+Rscript: Rscript (R) version 4.5.2 (2025-10-31)
+
+=== [2026-09-16T13:30:39Z] START dev_01_agreement_smallN.py (PY) ===
+=== [2026-09-16T13:30:51Z] OK    dev_01_agreement_smallN.py ===
+=== [2026-09-16T13:30:51Z] START dev_02_published.py (PY) ===
+=== [2026-09-16T13:31:06Z] OK    dev_02_published.py ===
+=== [2026-09-16T13:31:06Z] START dev_03_probe_pkg.R (R) ===
+=== [2026-09-16T13:31:50Z] OK    dev_03_probe_pkg.R ===
+=== [2026-09-16T13:31:51Z] START conf_R_01_package.R (R) ===
+=== [2026-09-16T13:37:53Z] OK    conf_R_01_package.R ===
+=== [2026-09-16T13:37:53Z] START conf_PY_02_reference.py (PY) ===
+=== [2026-09-16T13:44:12Z] OK    conf_PY_02_reference.py ===
+=== [2026-09-16T13:44:12Z] START conf_R_03_properties.R (R) ===
+=== [2026-09-16T13:47:11Z] OK    conf_R_03_properties.R ===
+=== [2026-09-16T13:47:11Z] START conf_R_04_mc_vs_exact.R (R) ===
+=== [2026-09-16T14:39:39Z] OK    conf_R_04_mc_vs_exact.R ===
+=== [2026-09-16T14:39:39Z] START conf_PY_05_shared_assumptions.py (PY) ===
+=== [2026-09-16T14:51:14Z] OK    conf_PY_05_shared_assumptions.py ===
+=== [2026-09-16T14:51:14Z] START conf_PY_06_monotone_in_N.py (PY) ===
+=== [2026-09-16T14:52:18Z] OK    conf_PY_06_monotone_in_N.py ===
+=== [2026-09-16T14:52:18Z] START conf_R_07_reverify_version.R (R) ===
+=== [2026-09-16T14:55:19Z] OK    conf_R_07_reverify_version.R ===
+=== [2026-09-16T14:55:19Z] START conf_PY_08_degeneracy_bite.py (PY) ===
+=== [2026-09-16T14:55:22Z] OK    conf_PY_08_degeneracy_bite.py ===
+=== [2026-09-16T14:55:22Z] START conf_PY_09_published_mc.py (PY) ===
+=== [2026-09-16T14:56:24Z] OK    conf_PY_09_published_mc.py ===
+
+=== ALL SCRIPTS COMPLETED SUCCESSFULLY ===

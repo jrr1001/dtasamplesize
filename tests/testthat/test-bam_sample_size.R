@@ -461,6 +461,20 @@ test_that("BAM small-B warning under method = \"monte_carlo\" keeps the package-
   )))
 })
 
+test_that("documented default prevalence prior is Beta(6, 14) and gives N = 583 in exact mode", {
+  # Guards against a repeat of the mismatch between the @param default doc
+  # (c(6, 14)) and the worked examples in @details, which use prior_prev =
+  # c(4, 16) (the accompanying article's worked example) and must not be
+  # mistaken for the actual default. This checks the real formal default and
+  # the N_total it produces under the fully-default call (method = "exact").
+  # Runtime of the fully-default exact call was ~19s when this test was
+  # written, well under 60s, so skip_on_cran() is not used here.
+  expect_equal(eval(formals(bam_sample_size)$prior_prev), c(6, 14))
+
+  result <- suppressWarnings(bam_sample_size(method = "exact"))
+  expect_identical(result$N_total, 583L)
+})
+
 test_that("BAM issues no small-B warning at all when B >= 1000, in either mode", {
   options(dtasamplesize.warn_small_B = TRUE)
   on.exit(options(dtasamplesize.warn_small_B = FALSE), add = TRUE)

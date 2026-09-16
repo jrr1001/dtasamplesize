@@ -1,0 +1,21 @@
+{
+  "PT1-C05": true,
+  "PT1-C08": true,
+  "PT1-C09": true,
+  "PT1-C10": true,
+  "PT1-C11": true,
+  "PT2-C05": true,
+  "PT2-C08": true,
+  "PT2-C09": true,
+  "PT2-C10": true,
+  "PT2-C11": true,
+  "PT3-C12": true,
+  "PT4-C09": true,
+  "PT4-C10": true,
+  "PT4-C11": true,
+  "PT5-exact": true,
+  "PT5-monte_carlo": true,
+  "PT6-C09": true,
+  "PT6-C10": true,
+  "PT6-C11": true
+}

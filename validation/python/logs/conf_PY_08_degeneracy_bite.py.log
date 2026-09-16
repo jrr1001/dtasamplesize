@@ -1,0 +1,10 @@
+id        N   P(n_d=0 or N)   A (degen=fail)   A (degen=ok)      shift
+C09       8       5.973e-02       0.63912793     0.63912793  +0.00e+00
+C10       3       4.273e-01       0.57272727     1.00000000  +4.27e-01
+C11      24       6.818e-02       0.70126704     0.70126704  +0.00e+00
+C05     265       1.836e-09       0.70142474     0.70142474  +0.00e+00
+C07     440       2.123e-06       0.80064721     0.80064721  +0.00e+00
+
+Published scenarios at their selected N:
+  P1  N=678  P(degenerate split) = 3.976e-07   -> convention is untestable at this N
+  P2  N=672  P(degenerate split) = 4.116e-07   -> convention is untestable at this N
