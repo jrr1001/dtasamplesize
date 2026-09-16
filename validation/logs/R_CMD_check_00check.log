@@ -1,4 +1,4 @@
-* using log directory 'D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/R-package/audit_outputs/T7_build/dtasamplesize.Rcheck'
+* using log directory 'D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/R-package/audit_outputs/T7b_build/dtasamplesize.Rcheck'
 * using R version 4.5.2 (2025-10-31 ucrt)
 * using platform: x86_64-w64-mingw32
 * R was compiled by
@@ -19,11 +19,10 @@
 * checking for executable files ... OK
 * checking for hidden files and directories ... OK
 * checking for portable file names ... OK
-* checking whether package 'dtasamplesize' can be installed ... [14s] OK
+* checking whether package 'dtasamplesize' can be installed ... OK
 * checking installed package size ... OK
 * checking package directory ... OK
-* checking for future file timestamps ... NOTE
-unable to verify current time
+* checking for future file timestamps ... OK
 * checking 'build' directory ... OK
 * checking DESCRIPTION meta-information ... OK
 * checking top-level files ... OK
@@ -43,7 +42,7 @@ unable to verify current time
 * checking S3 generic/method consistency ... OK
 * checking replacement functions ... OK
 * checking foreign function calls ... OK
-* checking R code for possible problems ... [19s] OK
+* checking R code for possible problems ... OK
 * checking Rd files ... OK
 * checking Rd metadata ... OK
 * checking Rd line widths ... OK
@@ -55,20 +54,15 @@ unable to verify current time
 * checking for unstated dependencies in examples ... OK
 * checking installed files from 'inst/doc' ... OK
 * checking files in 'vignettes' ... OK
-* checking examples ... [10s] NOTE
-Examples with CPU (user + system) or elapsed time > 5s
-                user system elapsed
-bam_sample_size 5.25   0.19    7.47
-* checking examples with --run-donttest ... [78s] OK
+* checking examples ... OK
+* checking examples with --run-donttest ... [27s] OK
 * checking for unstated dependencies in 'tests' ... OK
-* checking tests ... [20m] OK
-  Running 'testthat.R' [20m]
+* checking tests ... [13m] OK
+  Running 'testthat.R' [13m]
 * checking for unstated dependencies in vignettes ... OK
 * checking package vignettes ... OK
 * checking re-building of vignette outputs ... OK
-* checking for non-standard things in the check directory ... NOTE
-Found the following files/directories:
-  '00LOCK-dtasamplesize'
+* checking for non-standard things in the check directory ... OK
 * checking for detritus in the temp directory ... OK
 * DONE
-Status: 3 NOTEs
+Status: OK
