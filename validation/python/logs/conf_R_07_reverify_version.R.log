@@ -1,10 +1,10 @@
-dtasamplesize now installed: 0.6.3 
+dtasamplesize now installed: 0.6.5 
 
 -- published scenarios --
 P1: N_total=678 (claim 678)  A=0.8003489948 (claim 0.800349)  A(N-1)=0.7996848824
 P2: N_total=672 (claim 672)  A=0.8002692084 (claim 0.800269)  A(N-1)=0.7996594780
 
--- locked confirmatory grid, re-run on 0.6.3 --
+-- locked confirmatory grid, re-run on 0.6.5 --
 id    N(0.6.2)   N(now)     same        A(0.6.2)          A(now)
 C01       1188     1188     TRUE    0.8002190725    0.8002190725
 C02        599      599     TRUE    0.8013636252    0.8013636252
@@ -20,3 +20,4 @@ C11         24       24     TRUE    0.7012670385    0.7012670385
 C12        400      400     TRUE    0.0000000000    0.0000000000
 
 ALL CONFIRMATORY RESULTS UNCHANGED ACROSS THE REBUILD: TRUE 
+EXIT=0

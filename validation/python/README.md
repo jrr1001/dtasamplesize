@@ -48,6 +48,21 @@ counted floating-point roundoff near `P == 1` as reversals); joint assurance
 `LOCKED_confirmatory_grid.json` were not touched and keep their original
 hashes.
 
+## Reverification (2026-09-28, H-05)
+
+`conf_R_01_package.R` and `conf_R_07_reverify_version.R` were re-run against
+**dtasamplesize 0.6.5** (built and installed from this release's tarball into
+a private library, not the system library). All 12 confirmatory scenarios
+(C01-C12) and both published scenarios (P1: N=678, A=0.8003489948; P2:
+N=672, A=0.8002692084) reproduce exactly (`ALL CONFIRMATORY RESULTS UNCHANGED
+ACROSS THE REBUILD: TRUE`) -- expected, since H-06 (the only 0.6.5 code
+change) touches `joint_sample_size()`, not `bam_sample_size()`, which is all
+these scripts exercise. Logs archived to
+`logs/conf_R_01_package.R.log` and `logs/conf_R_07_reverify_version.R.log`.
+The rest of the confirmatory/development grid (the Python scripts) was not
+re-run under 0.6.5: their computational surface is unaffected by H-06, and
+the 2026-09-16 logs already reflect the H-03 correction above.
+
 **What the lock shows and does not show.** The hashes were recorded locally
 in the agent's own session log, not with any external timestamping service or
 registry. They show the grid and reference implementation were unchanged
@@ -72,7 +87,10 @@ pip install -r requirements.txt   # numpy, scipy (R/dtasamplesize installed sepa
 
 The rerun documented here (`run_all_top.log`, `logs/*.log`, 2026-09-16) used
 **dtasamplesize 0.6.3**, whose computational code is identical to 0.6.4
-(which changed only documentation/tests/validation tooling).
+(which changed only documentation/tests/validation tooling) and, for
+`bam_sample_size()`, to 0.6.5 (which changed only `joint_sample_size()`; see
+"Reverification (2026-09-28, H-05)" above for the 0.6.5 re-run of the two
+R-side confirmatory scripts).
 
 ## Results
 
