@@ -68,6 +68,22 @@ cat("Figures ->", figures_dir, "\n")
 cat("Tables   ->", assets_dir, "\n\n")
 
 ## ---------------------------------------------------------------------
+## Figure geometry (H-08): 170 mm output width, keeping the 7:5 (w:h)
+## aspect ratio previously hard-coded as 7 in x 5 in (177.8 mm x 127.0 mm).
+## 170 / 177.8 = 0.9561, so this is a ~4.4% linear shrink, not a re-layout;
+## base-graphics text is set in POINTS via cex (see draw_fig1()/draw_fig2(),
+## cex = 0.78-0.80 against the device default pointsize = 12), which is an
+## absolute unit independent of the device's physical width in inches, so
+## the smallest figure text stays ~9.4-9.6 pt at the new size, above the
+## 8 pt minimum, unchanged from before.
+## ---------------------------------------------------------------------
+FIG_WIDTH_MM  <- 170
+FIG_WIDTH_IN  <- FIG_WIDTH_MM / 25.4
+FIG_HEIGHT_IN <- FIG_WIDTH_IN * 5 / 7
+cat(sprintf("Figure size: %.4f in x %.4f in (%.1f mm x %.1f mm)\n\n",
+            FIG_WIDTH_IN, FIG_HEIGHT_IN, FIG_WIDTH_MM, FIG_HEIGHT_IN * 25.4))
+
+## ---------------------------------------------------------------------
 ## emit(): write one figure as a 600 dpi TIFF and a vector PDF, with no
 ## embedded title (the caption belongs in the manuscript, not the image).
 ## cairo_pdf keeps line art vector and embeds fonts; if cairo support is
@@ -189,7 +205,7 @@ draw_fig1 <- function() {
          col = c("#1f4e79", "grey40", "#c00000", "#2e7d32"),
          lty = c(1, 3, 2, 2), lwd = c(2, 1, 1, 1))
 }
-emit("Figure_1", draw_fig1, 7, 5)
+emit("Figure_1", draw_fig1, FIG_WIDTH_IN, FIG_HEIGHT_IN)
 cat(sprintf("Figure 1: Buderer n=%d -> assurance %.4f; n for 0.80 assurance = %s\n",
             n_bud_fig1, assur_fig1[ns == n_bud_fig1], n_80_fig1))
 
@@ -293,7 +309,7 @@ draw_fig2 <- function() {
          col = c("#1f4e79", "grey40", "#c00000"),
          lty = c(1, 3, 2), lwd = c(2, 1, 1))
 }
-emit("Figure_2", draw_fig2, 7, 5)
+emit("Figure_2", draw_fig2, FIG_WIDTH_IN, FIG_HEIGHT_IN)
 cat(sprintf(
   "Figure 2: crossing at N=%d, assurance=%.10f (N-1=%d, assurance=%.10f)\n",
   n_cross_fig2, assur_at_cross_fig2, n_cross_fig2 - 1L, assur_at_prev_fig2))
