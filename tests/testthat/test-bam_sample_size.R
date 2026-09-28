@@ -203,6 +203,47 @@ test_that("BAM treats a degenerate replication (n_d = 0 or n_nd = 0) as a failur
   expect_identical(result$N_total, 1L)
 })
 
+test_that("H-06: an arm of size 1 is NOT treated as degenerate (unlike n_d = 0)", {
+  # At N = 2, n_d ~ Binomial(2, prev) is 0, 1 or 2. Only n_d = 0 (n_nd = 2)
+  # and n_d = 2 (n_nd = 0) are degenerate; n_d = 1 (n_nd = 1) is a real,
+  # one-subject arm and must be scored on its actual posterior width, not
+  # auto-failed. Priors are made very tight and deltas very loose, so a
+  # ONE-subject posterior already satisfies the width target (this mirrors
+  # the N = 1 test above, which shows the SAME tight priors would satisfy
+  # the target from the prior alone at n = 0 -- and that is exactly the
+  # case the degenerate override must still force to fail). If n = 1 were
+  # wrongly treated as degenerate too, joint_assurance here would be ~0,
+  # identical to the N = 1 case; it must instead be close to
+  # P(n_d = 1) = dbinom(1, 2, prev).
+  prev <- 0.5
+  res <- suppressWarnings(bam_sample_size(
+    prior_se = c(1000, 100), prior_sp = c(1000, 100),
+    delta_se = 0.14, delta_sp = 0.14,
+    target_assurance = 0.80,
+    prior_prev = c(1, 1), # prevalence fixed at 0.5 in expectation, but the
+    # relevant randomness here is n_d | N = 2, not prev itself
+    n_range = 5:10,
+    N_range = 2,
+    B = 40000, seed = 2026, method = "monte_carlo"
+  ))
+  expect_gt(res$joint_assurance, 0.05) # clearly not ~0 (the n=1-is-degenerate outcome)
+  expect_lt(res$joint_assurance, 0.95) # clearly not ~1 either (n=0/2 still fail)
+
+  res_exact <- suppressWarnings(bam_sample_size(
+    prior_se = c(1000, 100), prior_sp = c(1000, 100),
+    delta_se = 0.14, delta_sp = 0.14,
+    target_assurance = 0.80,
+    prior_prev = c(1, 1),
+    n_range = 5:10,
+    N_range = 2,
+    method = "exact"
+  ))
+  # method = "exact" is deterministic: it must agree with the Monte Carlo
+  # estimate within a small number of Monte Carlo standard errors.
+  expect_lt(abs(res_exact$joint_assurance - res$joint_assurance),
+            4 * res$assurance_mcse)
+})
+
 ## ---------------------------------------------------------------------
 ## method = "exact": closed-form joint search (default since v0.5.0)
 ## ---------------------------------------------------------------------

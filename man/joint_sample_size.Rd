@@ -153,9 +153,17 @@ The parameters \code{delta_se}, \code{delta_sp}, and
   draws \eqn{n_d \sim Bin(N, prev)} diseased subjects and
   \eqn{n_{nd} = N - n_d} non-diseased, then \eqn{X_{Se} \sim Bin(n_d, Se)}
   and \eqn{X_{Sp} \sim Bin(n_{nd}, Sp)} conditional on that draw. A
-  replicate whose margins are degenerate (\eqn{n_d < 2} or
-  \eqn{n_{nd} < 2}) is counted as a \strong{failure}, not discarded, so
-  the reported joint probability is unconditional (denominator \code{B}).
+  replicate whose margins are degenerate (\eqn{n_d = 0} or
+  \eqn{n_{nd} = 0}, so that no interval can be formed for that arm) is
+  counted as a \strong{failure}, not discarded, so the reported joint
+  probability is unconditional (denominator \code{B}). This is the same
+  convention, and the same threshold, used by
+  \code{\link{bam_sample_size}}: an arm of size \strong{one} is not
+  degenerate. The Wilson interval used here (unlike the Wald interval)
+  is well-defined and non-degenerate at \eqn{n = 1}: its width does not
+  collapse to zero the way the Wald width does when \eqn{\hat p} is 0 or
+  1, so a one-subject arm is scored on its actual (wide) Wilson width
+  rather than being excluded by convention.
 
   \code{design = "fixed"} --- \emph{fixed disease-status margins} (the
   behaviour of package versions <= 0.4.0). \eqn{n_d = \lfloor N \cdot

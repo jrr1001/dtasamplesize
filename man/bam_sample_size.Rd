@@ -172,7 +172,11 @@ The parameters \code{delta_se} and \code{delta_sp} are the
   degenerate replication (\code{n_d = 0} or \code{n_nd = 0}, possible when
   \code{N} is small or the prevalence draw is extreme) is always counted
   as a \strong{failure}, never dropped from the denominator -- the same
-  convention already adopted by \code{\link{ss_unified}}.
+  convention, and the same threshold, already adopted by
+  \code{\link{ss_unified}} and \code{\link{joint_sample_size}}. An arm of
+  size \strong{one} is \emph{not} treated as degenerate: the posterior
+  Beta credible interval and (in \code{joint_sample_size()}) the Wilson
+  interval are both well-defined at \eqn{n = 1}.
 
   This corrects a defect present through version 0.4.0, where \code{n_se}
   and \code{n_sp} were found \strong{independently}, each against its own
