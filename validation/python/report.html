@@ -430,7 +430,7 @@ footer{
 
   <div class="col">
     <h3>The per‑arm probability is not monotone</h3>
-    <p><code>P_arm(m)</code> — the probability that an arm of size <code>m</code> meets its width target — <strong>decreases</strong> with <code>m</code> over long stretches. For the published Se prior it falls from 0.068288 at m = 26 to 0.063834 at m = 27, and there are 395 such reversals below m = 900. The reason is structural: at small <code>m</code> only extreme counts produce a narrow enough posterior, and the mass on those counts thins as <code>m</code> grows faster than new counts qualify.</p>
+    <p><code>P_arm(m)</code> — the probability that an arm of size <code>m</code> meets its width target — <strong>decreases</strong> with <code>m</code> over long stretches. For the published Se prior it falls from 0.068288 at m = 26 to 0.063834 at m = 27, and there are 73 such reversals for m &le; 800 (tolerance 1e-9; the same 73 hold for m &le; 900). The reason is structural: at small <code>m</code> only extreme counts produce a narrow enough posterior, and the mass on those counts thins as <code>m</code> grows faster than new counts qualify.</p>
     <p>The joint assurance <code>A(N)</code> is nevertheless non‑decreasing across all 13 scenarios examined over N = 2…900, with zero reversals. That monotonicity is <em>observed, not proved</em>. It matters because "the smallest N reaching the target" coincides with "the first N a bisection finds" only if the curve is monotone. The reference sidesteps the issue by scanning exhaustively; agreement with the package on all 14 scenarios is evidence that the package's search is safe here, not a proof that it is safe everywhere.</p>
 
     <h3>The degeneracy convention is genuinely exercised — but only at small N</h3>

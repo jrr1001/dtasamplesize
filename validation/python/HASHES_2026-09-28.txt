@@ -1,0 +1,49 @@
+Dated note added 2026-09-28 (correction H-03, audited 2026-09-27).
+
+Reason: the 2026-08-27 lock (see HASHES_2026-08-27.txt) recorded
+conf_PY_06_monotone_in_N.py with hash
+57fa5ec9f1ed91a244b6d50fed5281e8968d5363f38a7f894b07eee747274e94.
+That version counted a reversal with the bare condition `d < -1e-15` and
+without clipping per-arm P to [0, 1], so it counted floating-point roundoff
+near P == 1 (e.g. P[800] = 1.0000000000003275 for the published prior_se =
+[17, 3] case) as if it were a real non-monotone step. That produced 395
+reversals for the published P1/P2 Se prior over m in 2..800, a figure that
+also appears in manuscript.md:79, report.html and README.md of this
+directory.
+
+The blind audit (ROOT/AUDITORIA_CIEGA_2026-09-27/logs/Z_auditor_principal/
+tol.py, tol.log) showed the real count (|delta| > 1e-9) is 73, unchanged for
+any tolerance between 1e-9 and 1e-4 and unchanged whether m is capped at 800
+or at 900.
+
+Change made 2026-09-28: conf_PY_06_monotone_in_N.py now declares
+TOL = 1e-9 as a named constant, clips Pse/Psp (and the joint assurance curve
+A(N)) to [0, 1] before differencing, applies TOL uniformly to the reversal
+count, the P_se/P_sp monotonicity flags and the joint A(N) dip count, and
+prints the tolerance and the m-range actually used (NH = min(N_hi, 900); the
+published P1/P2 cases have N_hi = 800, so m <= 800 there) at the top of its
+output. No other logic changed; the underlying BAMExact reference
+implementation (ref_bam.py) and LOCKED_confirmatory_grid.json are untouched
+and still match their 2026-08-27 locked hashes.
+
+Re-run result (2026-09-28), see logs/conf_PY_06_monotone_in_N.py.log:
+  - P1 P_Se: 73 reversals for m in 2..800 (e.g. m=26->27: 0.068288->0.063834;
+    m=27->28: 0.063834->0.059759), matching the audit's tol.py figure exactly.
+  - P2 P_Se: 73 reversals for m in 2..800 (same p(26)/p(27) values, shared
+    prior_se).
+  - Joint assurance A(N) is non-decreasing (0 dips) under TOL = 1e-9 for all
+    13 scenarios (C01-C11, P1, P2), N = 2..900 (or 2..60/2..800 where the
+    scenario's own N_hi is smaller) -- the manuscript's monotonicity claim
+    for A(N) is unaffected by this correction.
+  - m <= 900: not computed directly by this script for P1/P2 (its PUB list
+    hardcodes N_hi = 800 for those two scenarios, per the published cases),
+    but ROOT/AUDITORIA_CIEGA_2026-09-27/logs/Z_auditor_principal/tol.log
+    independently shows the same 73 reversals at NH = 900.
+
+New hash of the corrected file (2026-09-28):
+5e6a69753d64aaad3502800d12c5cfeaeb7df13f96e4bb3cafcbac2d7fb2fa18 *conf_PY_06_monotone_in_N.py
+
+The original 2026-08-27 lines in HASHES_2026-08-27.txt are left intact; this
+file documents the deliberate, non-silent break of that hash chain for this
+one file only. LOCKED_confirmatory_grid.json and ref_bam.py are not affected
+and keep their original 2026-08-27 hashes.
