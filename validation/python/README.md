@@ -34,6 +34,20 @@ missed it is kept, labelled SUPERSEDED, in `logs/`.
 `conf_PY_08_degeneracy_bite.py`/`conf_PY_09_published_mc.py` were written
 later and have no recorded hash.
 
+## Correction (2026-09-28, H-03)
+
+`conf_PY_06_monotone_in_N.py` was edited on 2026-09-28 to declare a tolerance
+(`TOL = 1e-9`) for counting a step as a real reversal, clip per-arm P (and the
+joint assurance curve) to `[0, 1]` before differencing, and print the
+tolerance and m-range used. This intentionally breaks its 2026-08-27 locked
+hash (`57fa5ec9f...`); see `HASHES_2026-09-28.txt` for the reason and the new
+hash (`5e6a6975...`). The re-run shows **73** real reversals for the
+published P1/P2 Se prior over m in 2..800 (previously reported as 395, which
+counted floating-point roundoff near `P == 1` as reversals); joint assurance
+`A(N)` remains non-decreasing for all 13 scenarios. `ref_bam.py` and
+`LOCKED_confirmatory_grid.json` were not touched and keep their original
+hashes.
+
 **What the lock shows and does not show.** The hashes were recorded locally
 in the agent's own session log, not with any external timestamping service or
 registry. They show the grid and reference implementation were unchanged
@@ -77,7 +91,7 @@ rows carry reproduced values.
 | Half-width misreading -> assurance 0.0032 at N=678 | MATCH | 0.003178 | `logs/conf_PY_05_shared_assumptions.py.log:7` |
 | Fixed diseased count -> N=533 | MATCH | N=533 (P1 and P2) | `logs/conf_PY_05_shared_assumptions.py.log:6,13` |
 | HPD intervals -> 666 and 658 | MATCH | 666 (P1), 658 (P2) | `logs/conf_PY_05_shared_assumptions.py.log:4,11` |
-| 395 non-monotone per-arm reversals <900 subjects; joint assurance non-decreasing | MATCH | 395 (P1/P2 P_Se); A(N) non-decreasing, 0 dips, 13/13 rows | `logs/conf_PY_06_monotone_in_N.py.log:1-14,23,25` |
+| 73 real non-monotone per-arm reversals for m<=800 (TOL=1e-9, P clipped to [0,1]); joint assurance non-decreasing | MATCH | 73 (P1/P2 P_Se, m 2..800); A(N) non-decreasing, 0 dips, 13/13 rows | `logs/conf_PY_06_monotone_in_N.py.log:1-15,24,26` |
 | MC budgets 40,000 and 160,000; combined total under 1e7 | MATCH | both budgets used; no printed grand total, but B x calls sums to ~6-8M | `conf_PY_02_reference.py:50-51`; `conf_R_03_properties.R:68-70`; `conf_R_04_mc_vs_exact.R:10` |
 | RNG state unchanged after a call | MATCH | PT5 PASS, seed and `runif(3)` unaffected | `logs/conf_R_03_properties.R.log:20-22` |
 | Grid = 12 scenarios x 3 seeds x 6 property tests; dev = 5, disjoint | MATCH | ids/seeds/PT1-PT6 confirmed; D1-D5 distinct priors | `LOCKED_confirmatory_grid.json:16,22-33`; `dev_01_agreement_smallN.py:13-17` |
