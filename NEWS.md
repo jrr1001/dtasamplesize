@@ -1,3 +1,67 @@
+# dtasamplesize 0.6.5
+
+**Blind-audit correction release.** Responds to a blind audit of the
+BMC Medical Research Methodology software-article submission package
+(`AUDITORIA_CIEGA_2026-09-27/INFORME.md`, findings H-02, H-03, H-05, H-06,
+H-08, H-10). Only two published numbers change, and both are outputs of
+validation scripts, not of the package itself: the textual Wald-sweep range
+in the manuscript, and the reversal count reported for
+`conf_PY_06_monotone_in_N.py`. Every package-computed headline number is
+unchanged: N = 678 (0.8003489948), N = 672 (0.8002692084), N = 580 (0.8041),
+and the single-case Wald/Wilson coverage 0.5730 (Se = 0.85, d = 0.07).
+
+## Validation scripts
+
+* **H-02.** Added `validation/sweep_wald_wilson.R`, the previously missing
+  generator for the manuscript's "systematic sweep of 28 configurations"
+  claim (Se in {0.60, 0.70, 0.75, 0.80, 0.85, 0.90, 0.98} x d in
+  {0.03, 0.05, 0.07, 0.10}, B = 200000, seed 2026), with the single
+  previously published case (Se = 0.85, d = 0.07, P(width <= target) =
+  0.5730) reproduced inside the grid as an internal control. Output
+  archived to `validation/logs/sweep_wald_wilson.log`. The reproduced
+  ranges (Wald 0.469-0.872, concentrated 0.51-0.56; Wilson 0.000 at
+  Se = 0.98 for d = 0.05/0.07/0.10, up to 1.000 at Se = 0.60, d = 0.10)
+  differ from the previously published, undeclared-grid ranges (Wald
+  0.376-0.851, concentrated 0.47-0.61); the manuscript text is corrected to
+  the reproduced grid and cites the new script. The qualitative conclusion
+  is unchanged: the ~50% coverage is characteristic of the Wald interval,
+  and the Wilson interval spans the full [0, 1] range depending on
+  configuration.
+* **H-03.** `validation/python/conf_PY_06_monotone_in_N.py` now uses a
+  declared tolerance of 1e-9 (was an undeclared `d < -1e-15`, which counted
+  floating-point rounding noise near P approx 1 as reversals) and clips P to
+  [0, 1] before comparison. For m <= 800, this finds **73** true reversals
+  (`|Delta| > 1e-9`), not the previously published 395 - the same 73 recur
+  for any tolerance between 1e-9 and 1e-4, and for m <= 900. The worked
+  example `p(26) = 0.068288 -> p(27) = 0.063834` is unchanged and still
+  correct. `validation/python/HASHES_2026-09-28.txt` documents the change to
+  the hash-locked script with a dated note; `validation/python/README.md`
+  and `report.html` are updated to the new count.
+* **H-08.** `validation/make_manuscript_assets.R` now exports Figure 1 and
+  Figure 2 at a width of 170 mm (was a narrower default), keeping aspect
+  ratio, TIFF resolution (>= 600 dpi), and font legibility unchanged.
+* **H-05.** Re-verified `validation/python/conf_R_07_reverify_version.R`
+  (and its accompanying reverification scripts) against the tarball built
+  from this release and installed to a private library; `requirements.txt`
+  updated from `dtasamplesize 0.6.3` to `dtasamplesize 0.6.5`. See
+  `validation/python/logs/` for the archived log.
+* **H-10.** `R CMD build` + `R CMD check --as-cran --no-manual` re-run from
+  a neutral directory outside this repository (no `audit`/`_trabajo`/internal
+  path names). See `validation/logs/R_CMD_check_00check.log` and the
+  testthat log for the exact `Status:` line and expectation/skip counts.
+
+## Bug fixes
+
+* Unified the degenerate-replicate rule between `joint_sample_size()` and
+  `bam_sample_size()`: both now treat an arm as degenerate (forced failure)
+  only when it received zero subjects (n = 0), not n < 2.
+  `joint_sample_size()`'s Wilson interval is well defined at n = 1 (width
+  approx 0.79). `bam_sample_size()` already used n = 0 and is unchanged. No
+  published number changes (Table 4: N = 580, 0.8041; N = 672; N = 678).
+  Rd pages for both functions updated to document the shared rule; new
+  tests in `tests/testthat/test-joint_sample_size.R` and
+  `tests/testthat/test-bam_sample_size.R` pin n = 0, 1 and 2 in each arm.
+
 # dtasamplesize 0.6.4
 
 **Documentation and validation-tooling release.** No computed result

@@ -24,7 +24,7 @@ R -f validation/integration_check.R       # end-to-end run + reproducibility
   AUC gate inside it, `ss_net_benefit()`, `ss_imperfect_ref()`,
   `ss_adaptive_prevalence()` and `ss_time_dependent_roc()` remain in the
   package but are no longer described in the article, so this script no
-  longer checks their numbers. It requires version 0.6.4 exactly and stops
+  longer checks their numbers. It requires version 0.6.5 exactly and stops
   with an explanatory message on any other installed version, whose results
   are not guaranteed to reproduce the article's bit-for-bit.
 - **`make_manuscript_assets.R`** — the public generator behind every figure
