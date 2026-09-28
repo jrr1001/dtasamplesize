@@ -18,3 +18,4 @@ Joint Se/Sp (joint_sample_size), N = 580   (article: 580)   PASS
   joint assurance at N=580  = 0.8041   (article: 0.8041)   PASS
 
 === reproduce_manuscript done ===
+EXIT=0

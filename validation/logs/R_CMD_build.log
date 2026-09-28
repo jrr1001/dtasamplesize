@@ -1,4 +1,4 @@
-* checking for file 'D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/R-package/dtasamplesize/DESCRIPTION' ... OK
+* checking for file 'dtasamplesize/DESCRIPTION' ... OK
 * preparing 'dtasamplesize':
 * checking DESCRIPTION meta-information ... OK
 * installing the package to build vignettes
@@ -7,5 +7,6 @@
 * checking for empty or unneeded directories
 Removed empty directory 'dtasamplesize/inst/shiny/www'
 Removed empty directory 'dtasamplesize/tests/testthat/_snaps'
-* building 'dtasamplesize_0.6.4.tar.gz'
+* building 'dtasamplesize_0.6.5.tar.gz'
 
+EXIT=0
