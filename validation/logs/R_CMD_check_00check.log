@@ -1,4 +1,4 @@
-* using log directory 'D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/R-package/audit_outputs/T7b_build/dtasamplesize.Rcheck'
+* using log directory 'C:/tmp/dtacheck/dtasamplesize.Rcheck'
 * using R version 4.5.2 (2025-10-31 ucrt)
 * using platform: x86_64-w64-mingw32
 * R was compiled by
@@ -9,9 +9,8 @@
 * using options '--no-manual --as-cran'
 * checking for file 'dtasamplesize/DESCRIPTION' ... OK
 * checking extension type ... Package
-* this is package 'dtasamplesize' version '0.6.4'
+* this is package 'dtasamplesize' version '0.6.5'
 * package encoding: UTF-8
-* checking CRAN incoming feasibility ... OK
 * checking package namespace information ... OK
 * checking package dependencies ... OK
 * checking if this is a source package ... OK
@@ -22,7 +21,8 @@
 * checking whether package 'dtasamplesize' can be installed ... OK
 * checking installed package size ... OK
 * checking package directory ... OK
-* checking for future file timestamps ... OK
+* checking for future file timestamps ... NOTE
+unable to verify current time
 * checking 'build' directory ... OK
 * checking DESCRIPTION meta-information ... OK
 * checking top-level files ... OK
@@ -37,12 +37,11 @@
 * checking whether the namespace can be loaded with stated dependencies ... OK
 * checking whether the namespace can be unloaded cleanly ... OK
 * checking loading without being on the library search path ... OK
-* checking use of S3 registration ... OK
 * checking dependencies in R code ... OK
 * checking S3 generic/method consistency ... OK
 * checking replacement functions ... OK
 * checking foreign function calls ... OK
-* checking R code for possible problems ... OK
+* checking R code for possible problems ... [10s] OK
 * checking Rd files ... OK
 * checking Rd metadata ... OK
 * checking Rd line widths ... OK
@@ -55,14 +54,17 @@
 * checking installed files from 'inst/doc' ... OK
 * checking files in 'vignettes' ... OK
 * checking examples ... OK
-* checking examples with --run-donttest ... [27s] OK
+Examples with CPU (user + system) or elapsed time > 5s
+                user system elapsed
+bam_sample_size 5.06   0.05    5.31
+* checking examples with --run-donttest ... [44s] OK
 * checking for unstated dependencies in 'tests' ... OK
-* checking tests ... [13m] OK
-  Running 'testthat.R' [13m]
+* checking tests ... [16m] OK
+  Running 'testthat.R' [16m]
 * checking for unstated dependencies in vignettes ... OK
 * checking package vignettes ... OK
 * checking re-building of vignette outputs ... OK
 * checking for non-standard things in the check directory ... OK
 * checking for detritus in the temp directory ... OK
 * DONE
-Status: OK
+Status: 1 NOTE
