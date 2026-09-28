@@ -1,0 +1,112 @@
+================================================================
+sweep_wald_wilson.R -- H-02 generator for the 28-configuration sweep
+================================================================
+
+Grid (declared above the run, BEFORE inspecting published numbers):
+  Se = 0.6, 0.7, 0.75, 0.8, 0.85, 0.9, 0.98 
+  d  = 0.03, 0.05, 0.07, 0.1 
+  cells = 28 
+  B = 200000 , seed = 2026 , alpha = 0.05 
+
+---- Full 28-cell table ----
+     Se    d    n   P_wald   MCse_wald P_wilson MCse_wilson
+1  0.60 0.03 1025 0.513560 0.001117623 0.637000 0.001075246
+2  0.60 0.05  369 0.496885 0.001118012 0.698960 0.001025707
+3  0.60 0.07  189 0.555950 0.001111012 0.847795 0.000803239
+4  0.60 0.10   93 0.611445 0.001089908 1.000000 0.000000000
+5  0.70 0.03  897 0.514045 0.001117593 0.571540 0.001106531
+6  0.70 0.05  323 0.532205 0.001115712 0.580530 0.001103438
+7  0.70 0.07  165 0.504675 0.001117985 0.637930 0.001074652
+8  0.70 0.10   81 0.524360 0.001116706 0.704815 0.001019928
+9  0.75 0.03  801 0.510565 0.001117784 0.543120 0.001113869
+10 0.75 0.05  289 0.518485 0.001117270 0.572705 0.001106151
+11 0.75 0.07  147 0.487915 0.001117707 0.563600 0.001108952
+12 0.75 0.10   73 0.534745 0.001115331 0.637770 0.001074754
+13 0.80 0.03  683 0.500400 0.001118034 0.537825 0.001114830
+14 0.80 0.05  246 0.525520 0.001116577 0.525520 0.001116577
+15 0.80 0.07  126 0.534370 0.001115389 0.534370 0.001115389
+16 0.80 0.10   62 0.523995 0.001116746 0.644740 0.001070164
+17 0.85 0.03  545 0.493620 0.001117943 0.493620 0.001117943
+18 0.85 0.05  196 0.515825 0.001117474 0.515825 0.001117474
+19 0.85 0.07  100 0.566660 0.001108053 0.566660 0.001108053
+20 0.85 0.10   49 0.541410 0.001114193 0.541410 0.001114193
+21 0.90 0.03  385 0.507650 0.001117903 0.507650 0.001117903
+22 0.90 0.05  139 0.468820 0.001115858 0.468820 0.001115858
+23 0.90 0.07   71 0.581860 0.001102948 0.425750 0.001105638
+24 0.90 0.10   35 0.529945 0.001116027 0.529945 0.001116027
+25 0.98 0.03   84 0.761620 0.000952772 0.182235 0.000863207
+26 0.98 0.05   31 0.872140 0.000746699 0.000000 0.000000000
+27 0.98 0.07   16 0.721830 0.001001977 0.000000 0.000000000
+28 0.98 0.10    8 0.849405 0.000799738 0.000000 0.000000000
+
+---- Observed ranges (recorded BEFORE looking at the published text) ----
+Wald:   min = 0.4688  max = 0.8721  (across 28 cells)
+Wilson: min = 0.0000  max = 1.0000  (across 28 cells)
+Wald IQR: [0.5098, 0.5586], median 0.5249
+Max per-cell MC SE (Wald):    0.00112 
+Max per-cell MC SE (Wilson):  0.00112 
+
+---- Extreme cells ----
+Wald min at:     Se    d   n  P_wald
+22 0.9 0.05 139 0.46882
+Wald max at:      Se    d  n  P_wald
+26 0.98 0.05 31 0.87214
+Wilson min at:      Se    d  n P_wilson
+26 0.98 0.05 31        0
+Wilson max at:    Se   d  n P_wilson
+4 0.6 0.1 93        1
+
+---- Se = 0.98 row (Wilson), all d ----
+     Se    d  n P_wilson
+25 0.98 0.03 84 0.182235
+26 0.98 0.05 31 0.000000
+27 0.98 0.07 16 0.000000
+28 0.98 0.10  8 0.000000
+
+---- Control cell: Se = 0.85, d = 0.07 (published: 0.5730) ----
+     Se    d   n  P_wald   MCse_wald P_wilson MCse_wilson
+19 0.85 0.07 100 0.56666 0.001108053  0.56666 0.001108053
+MC SE at B=4000 (published run):  0.00782
+MC SE at B=200000 (this run):      0.00111
+Combined MC SE:                    0.00790  (tol = 3x = 0.02370)
+Control check: |P_wald - 0.5730| = 0.00634 vs tol = 0.02370 -> PASS
+
+---- Comparison with the numbers currently in manuscript.md:75 ----
+Published Wald range:   0.376 - 0.851 (concentrated 0.47-0.61)
+Published Wilson range: 0.000 (Se=0.98, several d) to 1.000 (Se=0.60, d=0.10)
+This run   Wald range:   0.4688 - 0.8721
+This run   Wilson range: 0.0000 - 1.0000
+
+---- sessionInfo() ----
+R version 4.5.2 (2025-10-31 ucrt)
+Platform: x86_64-w64-mingw32/x64
+Running under: Windows 11 x64 (build 26200)
+
+Matrix products: default
+  LAPACK version 3.12.1
+
+locale:
+[1] LC_COLLATE=English_United States.utf8 
+[2] LC_CTYPE=English_United States.utf8   
+[3] LC_MONETARY=English_United States.utf8
+[4] LC_NUMERIC=C                          
+[5] LC_TIME=English_United States.utf8    
+
+time zone: America/Lima
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] dtasamplesize_0.6.4 testthat_3.3.2     
+
+loaded via a namespace (and not attached):
+ [1] compiler_4.5.2  magrittr_2.0.4  R6_2.6.1        rprojroot_2.1.1
+ [5] cli_3.6.5       tools_4.5.2     parallel_4.5.2  otel_0.2.0     
+ [9] desc_1.4.3      pkgload_1.5.0   brio_1.1.5      pkgbuild_1.4.8 
+[13] lifecycle_1.0.5 rlang_1.1.7    
+
+Done.
+EXIT=0
+runtime_sec=9
