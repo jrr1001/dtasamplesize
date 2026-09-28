@@ -9,5 +9,5 @@ scipy==1.16.3
 # R (checked with: "/c/Program Files/R/R-4.5.2/bin/Rscript.exe" -e
 # 'cat(R.version.string, packageVersion("dtasamplesize"), packageVersion("jsonlite"))'):
 # R version 4.5.2 (2025-10-31 ucrt)
-# dtasamplesize 0.6.3   (installed package under test; not a pip/CRAN pin)
+# dtasamplesize 0.6.5   (installed package under test; not a pip/CRAN pin)
 # jsonlite 2.0.0        (required by the conf_R_*.R scripts)

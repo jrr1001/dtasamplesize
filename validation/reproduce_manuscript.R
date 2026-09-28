@@ -42,7 +42,7 @@
 library(dtasamplesize)
 options(width = 110, digits = 6)
 
-# The article reports the numbers produced by version 0.6.4. Earlier releases
+# The article reports the numbers produced by version 0.6.5. Earlier releases
 # contain the validity errors that 0.3.0, 0.5.0 and 0.6.0 correct in turn
 # (see NEWS.md) -- notably a net-benefit sample size of 110 instead of 240,
 # a BAM search that reported the marginal per-arm assurance instead of the
@@ -58,13 +58,13 @@ options(width = 110, digits = 6)
 # older or newer installation is not guaranteed to reproduce today's
 # published numbers bit-for-bit. Stop early rather than let a stale
 # installation look like a discrepancy in the article.
-if (utils::packageVersion("dtasamplesize") != "0.6.4") {
+if (utils::packageVersion("dtasamplesize") != "0.6.5") {
   stop("dtasamplesize ", utils::packageVersion("dtasamplesize"), " is installed, ",
-       "but this script reproduces the numbers of version 0.6.4 ",
+       "but this script reproduces the numbers of version 0.6.5 ",
        "exactly: the published figures were computed under that version, ",
        "and neither an older nor a newer installation is guaranteed to ",
        "reproduce them bit-for-bit.\n",
-       "  Install version 0.6.4 from a local copy of the repository:\n",
+       "  Install version 0.6.5 from a local copy of the repository:\n",
        "    install.packages('.', repos = NULL, type = 'source')",
        call. = FALSE)
 }
