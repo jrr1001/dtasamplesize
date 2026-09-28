@@ -62,9 +62,17 @@
 #'   draws \eqn{n_d \sim Bin(N, prev)} diseased subjects and
 #'   \eqn{n_{nd} = N - n_d} non-diseased, then \eqn{X_{Se} \sim Bin(n_d, Se)}
 #'   and \eqn{X_{Sp} \sim Bin(n_{nd}, Sp)} conditional on that draw. A
-#'   replicate whose margins are degenerate (\eqn{n_d < 2} or
-#'   \eqn{n_{nd} < 2}) is counted as a \strong{failure}, not discarded, so
-#'   the reported joint probability is unconditional (denominator \code{B}).
+#'   replicate whose margins are degenerate (\eqn{n_d = 0} or
+#'   \eqn{n_{nd} = 0}, so that no interval can be formed for that arm) is
+#'   counted as a \strong{failure}, not discarded, so the reported joint
+#'   probability is unconditional (denominator \code{B}). This is the same
+#'   convention, and the same threshold, used by
+#'   \code{\link{bam_sample_size}}: an arm of size \strong{one} is not
+#'   degenerate. The Wilson interval used here (unlike the Wald interval)
+#'   is well-defined and non-degenerate at \eqn{n = 1}: its width does not
+#'   collapse to zero the way the Wald width does when \eqn{\hat p} is 0 or
+#'   1, so a one-subject arm is scored on its actual (wide) Wilson width
+#'   rather than being excluded by convention.
 #'
 #'   \code{design = "fixed"} --- \emph{fixed disease-status margins} (the
 #'   behaviour of package versions <= 0.4.0). \eqn{n_d = \lfloor N \cdot
@@ -243,7 +251,11 @@ joint_sample_size <- function(Se = 0.85,
     # Monte Carlo under design = "fixed" (see below).
     n_d_exp <- floor(N * prev)
     n_nd_exp <- N - n_d_exp
-    if (n_d_exp < 2 || n_nd_exp < 2) next
+    # Same degeneracy threshold as the per-replicate check below and as
+    # bam_sample_size(): skip only a candidate N whose EXPECTED margin is
+    # zero (undefined for both hanley_mcneil_var() and wilson_width()). An
+    # expected margin of 1 is not skipped; see @details.
+    if (n_d_exp == 0 || n_nd_exp == 0) next
 
     # --- AUC: DETERMINISTIC gate via Hanley-McNeil (median-style) ---
     # Evaluated at the expected margins regardless of design: this
@@ -267,7 +279,13 @@ joint_sample_size <- function(Se = 0.85,
       # the assurance; see @details and @note.
       n_d_b <- stats::rbinom(B, N, prev)
       n_nd_b <- N - n_d_b
-      degenerate <- (n_d_b < 2) | (n_nd_b < 2)
+      # Degenerate iff an arm received NO subjects at all (n = 0), the
+      # point at which the Wilson width is literally undefined (division
+      # by n). An arm of size 1 is NOT degenerate: the Wilson interval is
+      # well-defined there and its width does not collapse to zero (unlike
+      # the Wald width), so it is scored on its own (wide) width. This is
+      # the same threshold used by bam_sample_size() (see its @details).
+      degenerate <- (n_d_b == 0L) | (n_nd_b == 0L)
 
       # Degenerate replicates count as FAILURES, not exclusions (the
       # denominator stays B); clamp their margins to 1 only so that the
