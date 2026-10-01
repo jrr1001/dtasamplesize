@@ -1,3 +1,98 @@
+# dtasamplesize 0.6.6
+
+**M-01 correction: `bam_sample_size()`'s exact-mode joint search.**
+Responds to the integral audit of the BMC MRM submission package
+(`AUDITORIA_INTEGRAL_2026-09-29`), finding M-01. Two defects in the
+"headline" joint search (`N_total` / `joint_assurance`) under
+`method = "exact"`, the package's documented deterministic, B/seed-free
+calculation:
+
+* **Spurious B/seed dependence when `N_range = NULL`.** Versions `<= 0.6.5`
+  built the automatic search grid (`N_range`) from `n_se`, `n_sp` and
+  `N_total_P90` -- all three Monte Carlo quantities depending on `B` and
+  `seed` -- so the exact calculation could silently return a DIFFERENT
+  `N_total` for the SAME deterministic priors and targets, purely because
+  `B` or `seed` changed the grid it happened to search. Confirmed by
+  `CORRECCION_INTEGRAL_2026-09-30/tools/L01_reproducir_defecto_065.R`
+  against 0.6.5: with the article's worked-example priors
+  (`prior_se = c(17, 3)`, `prior_sp = c(2, 2)`, `prior_prev = c(4, 16)`,
+  `delta_se = 0.14`, `delta_sp = 0.10`, `target_assurance = 0.80`),
+  `B = 5, seed = 1` returned `N_total = 631` (joint assurance 0.764813,
+  below target) while `B = 5000, seed = 2026` (and most other `B`/`seed`
+  combinations) returned the correct `N_total = 678`. `N_range = NULL`
+  under `method = "exact"` now scans every integer `N` starting at 2,
+  ascending, in doubling blocks capped at a new `N_max` argument (default
+  3000), independent of `n_se`, `n_sp`, `N_total_P90`, `B` and `seed`; see
+  `?bam_sample_size`. The exact per-arm cache is extended block by block
+  (`.bam_exact_extend_cache()`), not rebuilt from scratch, so growing the
+  search stays cheap.
+* **Non-crossing searches returned `max(N_range)` as a solution.** Under
+  both `method = "exact"` and `method = "monte_carlo"`, if no candidate `N`
+  reached `target_assurance`, versions `<= 0.6.5` set `N_total` to
+  `max(N_range)` and returned a real (if below-target) `joint_assurance`,
+  with no field distinguishing that outcome from a genuine solution short
+  of inspecting the warning text. Confirmed by the same script: an
+  insufficient `N_range = 100:200` returned `N_total = 200` with
+  `joint_assurance = 0.0112`, as if `N = 200` were a validated design.
+  `bam_sample_size()` now sets `N_total = NA_integer_`, `n_total =
+  NA_integer_`, `joint_assurance = NA_real_` and the new field
+  `target_reached = FALSE` whenever no candidate reaches the target, under
+  either method, together with the new diagnostic fields
+  `max_assurance_evaluated` and `N_at_max_assurance` (the highest
+  assurance actually seen, and at which `N`) and a warning naming the
+  ceiling reached and how to search further. `print.dtasamplesize()` now
+  reports this case explicitly ("Target assurance NOT reached -- no sample
+  size returned") instead of printing `N_total: NA` under the normal,
+  converged-looking label.
+* **New fields, always present:** `target_reached` (logical),
+  `N_range_used` (the candidate `N` actually evaluated, in order),
+  `search_type` (`"integer_scan_auto"`, `"user_N_range"`, or
+  `"monte_carlo_auto"`), and `N_max` (the ceiling in effect for the
+  automatic integer scan; `NA_integer_` otherwise). New argument: `N_max`
+  (default `3000L`), the ceiling for the automatic exact-mode integer
+  scan.
+* **Explicit `N_range` under `method = "exact"`** is now always searched
+  as `sort(unique(as.integer(N_range)))`, ascending, regardless of the
+  order or duplication the caller supplied (this was already the effective
+  behavior for a strictly ascending, duplicate-free `N_range`, so no
+  published result changes; see below).
+* **No published headline number changes.** All three published exact-mode
+  results were re-verified under the corrected code, including against the
+  full `B` in `{5, 10, 50, 5000}` x `seed` in `{1, 2, 3, 4, 2026}` battery
+  that exposed the defect under 0.6.5:
+  `CORRECCION_INTEGRAL_2026-09-30/tools/L01_verificar_cifras_066.R`
+  confirms, byte-identically across every `B`/`seed` combination,
+  N = 678 (joint assurance 0.8003489948, prior_prev = c(4, 16)), N = 672
+  (joint assurance 0.8002692084, harmonized priors), and the package
+  default N = 583 (`prior_prev = c(6, 14)`, the formal default). Minimality
+  was independently re-verified via the internal exact Beta-Binomial
+  helpers: A(677) = 0.7996848824 < 0.80 <= A(678) = 0.8003489948, and no
+  integer in 2..677 reaches 0.80 either.
+* **`joint_sample_size()` (Monte Carlo, unrelated search code) and the
+  decision on whether it needs an analogous fix (P-DISEÑO)** are
+  analyzed, not changed, in this release; see
+  `CORRECCION_INTEGRAL_2026-09-30/analisis_joint/EVIDENCIA_P-DISENO.md`.
+  The published N = 580 (joint probability 0.8041) is unaffected by
+  anything in this release.
+* **Tests.** `tests/testthat/test-bam_exact_contract.R` (new) locks in
+  B/seed invariance (reduced battery inline, full battery under
+  `skip_on_cran()`), the explicit-`N_range` sort/unique/ascending
+  contract, the shared no-crossing contract for both methods, RNG
+  preservation under the integer scan (including on non-crossing),
+  minimality of the returned N* via the internal exact helpers, the N = 1
+  (always degenerate) vs. N = 2 (arm of size 1, not degenerate) boundary,
+  `.bam_exact_extend_cache()` block-extension correctness, and
+  `print.dtasamplesize()` on a non-crossing result.
+  `tests/testthat/test-bam_sample_size.R`'s tests that exercised a
+  single-value or otherwise non-crossing `N_range` and read the resulting
+  `joint_assurance` directly (`res_591`, `res_677`, the N = 1 degenerate
+  test, the H-06 arm-of-size-1 test, and the N in {10, 20, 30} degenerate
+  exact-mode test) are updated to read `max_assurance_evaluated` /
+  `N_at_max_assurance` / `target_reached` instead: those tests codified the
+  defective "return max(N_range) as a solution" behavior this release
+  corrects, and their actual diagnostic purpose (verifying the assurance
+  value computed AT a given N) is preserved under the new field names.
+
 # dtasamplesize 0.6.5
 
 **Blind-audit correction release.** Responds to a blind audit of the

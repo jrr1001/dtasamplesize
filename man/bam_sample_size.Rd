@@ -16,6 +16,7 @@ bam_sample_size(
   alpha_ci = 0.95,
   seed = 2026,
   N_range = NULL,
+  N_max = 3000L,
   method = c("exact", "monte_carlo")
 )
 }
@@ -69,8 +70,18 @@ heuristics regardless of \code{method}, but has \strong{no effect on
 
 \item{N_range}{Integer vector of candidate \strong{total} N values
 searched for the headline joint-assurance result \code{N_total}.
-Default \code{NULL}, which builds the grid automatically from
-\code{n_se}, \code{n_sp}, and \code{N_total_P90} -- see \code{Details}.}
+Default \code{NULL}: under \code{method = "exact"} this triggers the
+deterministic integer scan described in \code{Details} (independent of
+\code{n_se}, \code{n_sp}, \code{B} and \code{seed}); under \code{method
+= "monte_carlo"} it builds the legacy heuristic grid from \code{n_se},
+\code{n_sp}, and \code{N_total_P90} -- see \code{Details}. When supplied
+explicitly, searched as \code{sort(unique(as.integer(N_range)))}.}
+
+\item{N_max}{Integer. Upper ceiling for the automatic integer scan used
+by \code{method = "exact"} when \code{N_range = NULL}. Default
+\code{3000L}, the same practical limit the exact cache already warned
+about. Ignored when \code{N_range} is supplied explicitly, or under
+\code{method = "monte_carlo"}. See \code{Details}.}
 
 \item{method}{Either \code{"exact"} (the default) or \code{"monte_carlo"}.
 Selects how the headline joint search (\code{N_total},
@@ -95,16 +106,52 @@ Object of class \code{"dtasamplesize"} with additional elements:
       \code{n_total} held \code{N_total_median}: see \code{Details}.}
     \item{N_total}{The minimum total N whose \strong{joint} assurance
       (Se and Sp both within target width, in the same replication, under
-      cohort design) reaches \code{target_assurance}. Under \code{method =
-      "exact"} this is the exact probability itself; under \code{method =
-      "monte_carlo"} it is accepted at the 95\% Monte Carlo confidence
-      lower bound (the anti-noise rule). This is the headline result of
-      this function; see \code{Details}.}
+      cohort design) reaches \code{target_assurance}, among the candidate
+      N actually searched (see \code{N_range_used}). Under \code{method =
+      "monte_carlo"} acceptance is at the 95\% Monte Carlo confidence
+      lower bound (the anti-noise rule). \code{NA_integer_} when no
+      candidate reached the target (\code{target_reached = FALSE}); see
+      \code{Details}, "No crossing found". This is the headline result of
+      this function when a solution exists; see \code{Details}.}
+    \item{target_reached}{Logical. \code{TRUE} if some candidate \code{N}
+      reached \code{target_assurance}; \code{FALSE} otherwise, in which
+      case \code{N_total}, \code{n_total} and \code{joint_assurance} are
+      all \code{NA} and \code{max_assurance_evaluated} /
+      \code{N_at_max_assurance} carry the diagnostics instead. See
+      \code{Details}, "No crossing found".}
+    \item{N_range_used}{Integer vector, the candidate \code{N} values
+      actually evaluated, in the order evaluated. Under the automatic
+      integer scan (\code{method = "exact"}, \code{N_range = NULL}) this
+      is \code{2:N_total} when a crossing was found, or the full scanned
+      range up to the final block ceiling (at most \code{N_max}) when it
+      was not.}
+    \item{search_type}{One of \code{"integer_scan_auto"} (exact method,
+      \code{N_range = NULL}), \code{"user_N_range"} (an explicit
+      \code{N_range} was supplied, either method), or
+      \code{"monte_carlo_auto"} (Monte Carlo method, \code{N_range =
+      NULL}). See \code{Details}.}
+    \item{N_max}{The \code{N_max} argument actually in effect for the
+      automatic integer scan (\code{search_type == "integer_scan_auto"});
+      \code{NA_integer_} otherwise (an explicit \code{N_range} or
+      \code{method = "monte_carlo"} does not use \code{N_max}).}
     \item{joint_assurance}{The joint assurance achieved at \code{N_total}
       (point estimate, not the lower confidence bound used to accept it
       under \code{method = "monte_carlo"}; under \code{method = "exact"}
       this already \emph{is} the exact probability, with no further bound
-      to distinguish it from).}
+      to distinguish it from). \code{NA_real_} when
+      \code{target_reached = FALSE} -- see \code{max_assurance_evaluated}
+      for the diagnostic value in that case.}
+    \item{max_assurance_evaluated}{The highest assurance (exact
+      probability, or Monte Carlo point estimate, according to
+      \code{method}) observed anywhere among \code{N_range_used}. Always
+      populated, including when \code{target_reached = TRUE} (where it
+      equals \code{joint_assurance}, since assurance is evaluated in
+      ascending \code{N} and the search stops at the first crossing).
+      This is the field to read for "how close did the search get" when
+      \code{target_reached = FALSE}.}
+    \item{N_at_max_assurance}{The \code{N} (one element of
+      \code{N_range_used}) at which \code{max_assurance_evaluated} was
+      observed. Equals \code{N_total} when \code{target_reached = TRUE}.}
     \item{assurance_mcse}{Monte Carlo standard error of
       \code{joint_assurance}, i.e.
       \code{sqrt(joint_assurance * (1 - joint_assurance) / B)}, under
@@ -222,35 +269,109 @@ The parameters \code{delta_se} and \code{delta_sp} are the
   narrow the prior-only credible interval happens to be, matching
   \code{method = "monte_carlo"} exactly. The two arms are conditionally
   independent given \code{(n_d, n_nd)}, which licenses the product
-  \code{P_se(k) * P_sp(N - k)} inside the sum. \code{N} is accepted as
-  soon as this exact
-  probability reaches \code{target_assurance}; there is no sampling error
-  to guard against, so \code{B} plays no role in this calculation (it is
-  still used for the legacy per-arm searches and heuristics described
-  below) and \code{seed} does not affect the result either. This is the
-  preferred mode: it is deterministic, reproducible bit-for-bit, and free
-  of the dependence on \code{B} that affects \code{method = "monte_carlo"}
-  (e.g., using the default \code{prior_se}, \code{prior_sp},
-  \code{delta_se}, \code{delta_sp} and \code{target_assurance} together
-  with \code{prior_prev = c(4, 16)} (the worked example from the
-  accompanying article; mean prevalence 0.20, \strong{not} the default
-  \code{prior_prev}, which is \code{c(6, 14)}), the exact first
-  \code{N} with joint assurance \eqn{\ge} 0.80 is 678, with assurance
-  0.800349, whereas \code{method = "monte_carlo"} with \code{B = 20000}
-  returns 683 because of Monte Carlo noise near the crossing point -- see
-  \strong{Anti-noise acceptance rule} below). \code{P_se} and \code{P_sp}
-  depend only on arm size, not on \code{N}, so they are cached once, up to
-  \code{max(N_range)}, and reused across every candidate \code{N}; the
-  cache itself costs \eqn{O(N_{\max}^2)} \code{qbeta} evaluations (about
-  500,000 for \code{N_max} around 700, a few seconds). If
-  \code{max(N_range)} is large enough that this becomes impractical, a
-  warning suggests \code{method = "monte_carlo"} instead.
+  \code{P_se(k) * P_sp(N - k)} inside the sum. There is no sampling error
+  to guard against in this exact calculation, so \code{B} plays no role
+  in it at all (it is still used for the legacy per-arm searches and
+  heuristics described below) and \code{seed} does not affect the result
+  either -- this is a genuine property of the arithmetic (a finite sum
+  with no random inputs), not an approximation. \code{method = "exact"}
+  is deterministic, reproducible bit-for-bit, and free of the dependence
+  on \code{B} that affects \code{method = "monte_carlo"} (e.g., using the
+  default \code{prior_se}, \code{prior_sp}, \code{delta_se}, \code{delta_sp}
+  and \code{target_assurance} together with \code{prior_prev = c(4, 16)}
+  (the worked example from the accompanying article; mean prevalence
+  0.20, \strong{not} the default \code{prior_prev}, which is
+  \code{c(6, 14)}), the exact first \code{N} with joint assurance
+  \eqn{\ge} 0.80 is 678, with assurance 0.800349, whereas
+  \code{method = "monte_carlo"} with \code{B = 20000} returns 683 because
+  of Monte Carlo noise near the crossing point -- see \strong{Anti-noise
+  acceptance rule} below).
+
+  \strong{Evaluation is exact with respect to the discrete model above,
+  up to floating-point and \code{qbeta} quantile error.} "Exact" here
+  means the Beta-Binomial sum is evaluated by enumeration rather than by
+  simulation -- it is not a claim that \code{qbeta()} itself is free of
+  floating-point rounding; see \strong{N = 2 vs. N = 1} below for how
+  this is handled at the smallest arm sizes, where it matters most.
+
+  \strong{Which \code{N} are searched: the integer scan (\code{N_range =
+  NULL}) vs. a user-supplied \code{N_range}.} Versions \verb{<= 0.6.5} (a
+  defect corrected here) built the automatic search grid from \code{n_se},
+  \code{n_sp} and \code{N_total_P90} -- all three themselves Monte Carlo
+  quantities depending on \code{B} and \code{seed} -- so the SAME exact,
+  deterministic calculation could silently return different \code{N_total}
+  values depending on arguments (\code{B}, \code{seed}) that \code{method
+  = "exact"} otherwise has, and documents, NO dependence on. When
+  \code{N_range = NULL} (the default), the search instead scans every
+  integer \code{N} starting at \code{N = 2} (see \strong{N = 2 vs. N = 1}
+  below), strictly ascending, built in doubling blocks capped at
+  \code{N_max}: the first block covers \code{2:min(500, N_max)}; if no
+  crossing is found there, the next block extends the scan to
+  \code{min(1000, N_max)}, then \code{min(2000, N_max)}, doubling the
+  block ceiling each time until either a crossing is found or the ceiling
+  reaches \code{N_max}. This never depends on \code{n_se}, \code{n_sp},
+  \code{N_total_P90}, \code{B} or \code{seed}, and is exhaustive over
+  integers up to \code{N_max}: the \code{N} it returns is the smallest
+  integer whose exact joint assurance reaches \code{target_assurance},
+  full stop, not merely the smallest one a heuristic grid happened to
+  include. Supplying \code{N_range} explicitly instead searches exactly
+  \code{sort(unique(as.integer(N_range)))}, in ascending order; the result
+  is then "the first candidate in \code{N_range} that reaches
+  \code{target_assurance}" -- the smallest value actually searched, not
+  necessarily the smallest INTEGER overall, since an explicit
+  \code{N_range} may skip values. \code{search_type} in the return value
+  records which of the two was used (\code{"integer_scan_auto"} or
+  \code{"user_N_range"}), and \code{N_range_used} records every value
+  actually evaluated, in the order evaluated.
+
+  \strong{No crossing found (both \code{method}s).} If the scan (or the
+  supplied \code{N_range}) is exhausted with no \code{N} reaching
+  \code{target_assurance}, versions \verb{<= 0.6.5} (a defect corrected
+  here) silently returned \code{max(N_range)} as if it were a validated
+  solution. This function now instead sets \code{N_total = NA_integer_},
+  \code{n_total = NA_integer_}, \code{joint_assurance = NA_real_},
+  \code{target_reached = FALSE}, and reports the diagnostics
+  \code{max_assurance_evaluated} (the highest exact/Monte-Carlo-estimated
+  assurance seen anywhere in the scan) and \code{N_at_max_assurance} (the
+  \code{N} at which it was seen), together with a warning naming the
+  ceiling reached and how to search further (\code{N_max} for the
+  automatic integer scan, a wider \code{N_range} otherwise).
+
+  \strong{N = 2 vs. N = 1.} The integer scan starts at \code{N = 2}, not
+  \code{N = 1}: a total of \code{N = 1} puts every subject on one arm and
+  none on the other (\code{n_d = 1, n_nd = 0} or vice versa), so its exact
+  joint assurance is \strong{always} exactly \code{0} regardless of the
+  priors -- the same degenerate-arm override already described above
+  forces the zero-size arm's contribution to \code{0} at both \code{k = 0}
+  and \code{k = N = 1}. \code{N = 1} is therefore never a useful search
+  target and is skipped by construction; it is still evaluated correctly
+  (as \code{0}) if a caller explicitly includes it in \code{N_range}. An
+  arm of size exactly \strong{one} (which first becomes possible at
+  \code{N = 2}, when the OTHER arm gets the other one) is, by contrast,
+  \strong{not} degenerate: its one-subject posterior is well-defined and
+  is scored on its actual width, matching \code{method = "monte_carlo"}
+  (see the \code{H-06} regression test).
+
+  \code{P_se} and \code{P_sp} depend only on arm size, not on \code{N},
+  so they are cached once per block (see above) and reused across every
+  candidate \code{N} in that block; growing a block only computes the
+  NEW arm sizes (see \code{.bam_exact_extend_cache()}), not the whole
+  cache from scratch. The cache itself costs \eqn{O(N_{\max}^2)}
+  \code{qbeta} evaluations in the worst case (about 500,000 for an
+  \code{N_max} around 700, a few seconds). If the final block ceiling
+  is large enough that this becomes impractical, a warning suggests
+  \code{method = "monte_carlo"} instead.
 
   \code{method = "monte_carlo"} instead estimates the same probability by
   simulation, as described above, and is kept for continuity with
   versions \verb{<= 0.4.x} of this joint search (introduced mid-cycle in
   0.5.0) and as a fallback for \code{N} ranges too large for the exact
-  cache.
+  cache. Under \code{N_range = NULL} it still uses the legacy heuristic
+  grid (\code{max(20, n_se, n_sp):ceiling(N_total_P90)}) described below,
+  since a Monte Carlo search already has its own sampling error to manage
+  and gains nothing from the deterministic integer scan used by
+  \code{method = "exact"}; \code{search_type} for this case is
+  \code{"monte_carlo_auto"}.
 
   \strong{Anti-noise acceptance rule (\code{method = "monte_carlo"} only).}
   Because \code{joint_assurance} at each \code{N} is itself a Monte Carlo
@@ -277,13 +398,16 @@ The parameters \code{delta_se} and \code{delta_sp} are the
   no longer determines the headline result. \code{N_range} is a new
   argument that controls the grid of \strong{total} sample sizes searched
   for \code{N_total}, the joint-assurance result described above. When
-  \code{N_range = NULL} (the default), it is built automatically as
+  \code{N_range = NULL} (the default): under \code{method = "exact"} it
+  is the deterministic integer scan described above (never a function of
+  \code{n_se}, \code{n_sp}, \code{B} or \code{seed}); under \code{method =
+  "monte_carlo"} it remains the legacy heuristic grid
   \code{max(20, n_se, n_sp):ceiling(N_total_P90)}, i.e. from the smallest
   total that could possibly supply both per-arm requirements up to the
   90th percentile of the legacy prevalence-uncertainty heuristic (see
   \code{N_total_P90} below), which in practice comfortably brackets the
-  true joint requirement. No existing argument name was removed or had
-  its default behavior changed; \code{N_range} is purely additive.
+  true joint requirement for that search mode. No existing argument name
+  was removed; \code{N_range} is purely additive.
 }
 \examples{
 # B and N_range kept small here for a fast example; see @param B.
