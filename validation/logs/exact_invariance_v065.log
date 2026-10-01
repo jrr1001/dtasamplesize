@@ -1,0 +1,44 @@
+FECHA_ISO=2026-10-01T06:02:37-05:00
+DIRECTORIO=<ROOT>/CORRECCION_INTEGRAL_2026-09-30
+COMANDO=bash -c 
+    echo 'FECHA_ISO='"$(date -Iseconds)"
+    echo 'VERSION_OBJETIVO=0.6.5 (fallo esperado)'
+    echo 'COMANDO=Rscript validation/exact_invariance.R --version-check=off (R_LIBS=D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/CORRECCION_INTEGRAL_2026-09-30/lib065)'
+    cd 'D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/R-package/dtasamplesize' &&
+    R_LIBS='D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/CORRECCION_INTEGRAL_2026-09-30/lib065' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' validation/exact_invariance.R --version-check=off
+
+---- SALIDA ----
+FECHA_ISO=2026-10-01T06:02:37-05:00
+VERSION_OBJETIVO=0.6.5 (fallo esperado)
+COMANDO=Rscript validation/exact_invariance.R --version-check=off (R_LIBS=D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/CORRECCION_INTEGRAL_2026-09-30/lib065)
+dtasamplesize installed version: 0.6.5 
+--version-check=off: TRUE 
+
+
+========== Case 678: B x seed x N_range sweep ==========
+  combinations tested: 40 (B in {5,10,50,5000} x seed in {1,2,3,4,2026} x N_range in {NULL, explicit})
+  N_total identical across all combinations: FALSE (value: VARIES, published: 678)   FAIL
+  N_total matches published value: FAIL
+  joint_assurance identical across all combinations: FALSE (value: VARIES, published: 0.8003489948)   FAIL
+  joint_assurance matches published value: FAIL
+  caller RNG state (.Random.seed + RNGkind) preserved in all 40 calls: PASS
+
+========== Case 672: B x seed x N_range sweep ==========
+  combinations tested: 40 (B in {5,10,50,5000} x seed in {1,2,3,4,2026} x N_range in {NULL, explicit})
+  N_total identical across all combinations: FALSE (value: VARIES, published: 672)   FAIL
+  N_total matches published value: FAIL
+  joint_assurance identical across all combinations: FALSE (value: VARIES, published: 0.8002692084)   FAIL
+  joint_assurance matches published value: FAIL
+  caller RNG state (.Random.seed + RNGkind) preserved in all 40 calls: PASS
+
+========== No-crossing contract: N_range below the crossing must return NA, not max(N_range) ==========
+  N_total is NA: FALSE (value: 20)   FAIL
+  N_total is NOT max(N_range) (20): FAIL
+
+========== Verdict ==========
+Failures:
+  - Case 678: N_identical=FALSE A_identical=FALSE N_matches_published=FALSE A_matches_published=FALSE rng_preserved=TRUE
+  - Case 672: N_identical=FALSE A_identical=FALSE N_matches_published=FALSE A_matches_published=FALSE rng_preserved=TRUE
+  - No-crossing contract failed (see above).
+RESULTADO G04: FAIL
+EXIT=1

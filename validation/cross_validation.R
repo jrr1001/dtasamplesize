@@ -13,8 +13,12 @@
 #
 # SCOPE (article now reduced to a single joint estimand; see the SCOPE
 # note in reproduce_manuscript.R). Table 2 in the article has four rows:
-# Wilson CI, Wald CI, buderer_n, and the Beta-Binomial posterior (checks
-# V1, V2, V3, V7 below). ss_net_benefit(), ss_imperfect_ref() and the
+# Wilson CI, Wald CI, buderer_n, and the Beta posterior interval width
+# (checks V1, V2, V3, V7 below; V7 checks the WIDTH of the Beta posterior
+# credible interval for a binomial proportion -- the conjugate update of a
+# Beta prior by Binomial data -- not the Beta-Binomial predictive/compound
+# distribution; see the note at V7 and the separate V7b check added for
+# that distribution's predictive mass). ss_net_benefit(), ss_imperfect_ref() and the
 # Hanley-McNeil AUC variance used by the AUC gate inside ss_unified() are
 # no longer described in the article, so checks V4 (Hanley-McNeil vs
 # Monte Carlo), V5-V6 (net benefit point estimate and variance) and V8
@@ -291,8 +295,14 @@ v6_head <- v6_results[[1]]
 v6_dev  <- abs(v6_head["ratio"] - 1)
 v6_pass <- all(sapply(v6_results, function(r) abs(r["ratio"] - 1) < 0.02))
 
-## ---- V7. BAM Beta-Binomial conjugacy vs numerical Bayes posterior ----
-sep("V7. Beta-Binomial posterior CI (conjugate) vs numerical integration")
+## ---- V7. BAM Beta posterior conjugacy vs numerical Bayes posterior ----
+## NOTE ON TERMINOLOGY: this checks the WIDTH of the Beta POSTERIOR credible
+## interval for the binomial proportion theta (conjugate update: Beta prior
+## x Binomial likelihood -> Beta posterior for theta), not the Beta-Binomial
+## distribution (the compound/predictive distribution for a future count x
+## marginalized over theta). The two are different objects; see V7b below
+## for a dedicated check of the Beta-Binomial predictive mass.
+sep("V7. Beta posterior interval width (conjugate) vs numerical integration")
 a<-17; b<-3; n<-100; x<-86
 cw <- qbeta(0.975, a+x, b+n-x) - qbeta(0.025, a+x, b+n-x)   # conjugate (BAM)
 g <- seq(1e-5, 1-1e-5, length.out = 200001)                # numerical grid
@@ -308,11 +318,51 @@ v7_code_tol <- 2e-3                 # the tolerance actually used by ok() above
 v7_claimed_tol <- 1e-3              # the tolerance named in the manuscript's Result cell
 v7_pass <- v7_diff < v7_code_tol
 add_row(
-  quantity = "Beta-Binomial posterior", reference = "numerical integration",
+  quantity = "Beta posterior interval width", reference = "numerical integration",
   result = if (v7_diff < v7_claimed_tol) sprintf("match to 1e-3 (abs diff %.1e)", v7_diff) else
     sprintf("match to %.0e only (abs diff %.1e exceeds 1e-3)", v7_code_tol, v7_diff),
   observed = sprintf("%.5f vs %.5f", cw, hi - lo), reference_value = "0 (identical width)",
   tolerance = v7_code_tol, pass = v7_pass, n_cases = 1
+)
+
+## ---- V7b. Beta-Binomial predictive mass: finite sum vs simulation vs lbeta ----
+## This is the actual Beta-Binomial (compound) distribution: the predictive
+## probability mass function of a future count X ~ BetaBinomial(m, a, b),
+## i.e. theta ~ Beta(a,b) marginalized out of Binomial(m, theta). It is a
+## SEPARATE check from V7 above (which is about the Beta posterior for
+## theta, not this predictive distribution), added here only because the
+## manuscript/validation material at one point described a "Beta-Binomial
+## posterior" and that phrase is now reserved for this object. dtasamplesize
+## does not export a dbetabinom()-type function; this check verifies the
+## textbook identity directly with base R, independent of package code.
+sep("V7b. Beta-Binomial predictive mass: finite sum vs simulation vs lbeta formula")
+bb_a <- 17; bb_b <- 3; bb_m <- 20
+bb_k <- 0:bb_m
+## finite-sum definition: P(X=k) = choose(m,k) * B(k+a, m-k+b) / B(a,b)
+bb_finite_sum <- choose(bb_m, bb_k) * beta(bb_k + bb_a, bb_m - bb_k + bb_b) / beta(bb_a, bb_b)
+## closed form via lbeta (numerically stable, avoids overflow in choose()/beta())
+bb_lbeta <- exp(lchoose(bb_m, bb_k) + lbeta(bb_k + bb_a, bb_m - bb_k + bb_b) - lbeta(bb_a, bb_b))
+cat(sprintf("finite-sum sums to %.10f, lbeta formula sums to %.10f  %s\n",
+    sum(bb_finite_sum), sum(bb_lbeta), ok(abs(sum(bb_finite_sum) - 1) < 1e-8)))
+cat(sprintf("max |finite-sum - lbeta| = %.2e  %s\n",
+    max(abs(bb_finite_sum - bb_lbeta)), ok(max(abs(bb_finite_sum - bb_lbeta)) < 1e-10)))
+## Monte Carlo predictive check: draw theta ~ Beta(a,b), then X | theta ~
+## Binomial(m, theta); the empirical mass function should approach bb_lbeta.
+set.seed(2026)
+bb_B <- 200000
+bb_theta_draws <- rbeta(bb_B, bb_a, bb_b)
+bb_x_draws <- rbinom(bb_B, bb_m, bb_theta_draws)
+bb_emp <- tabulate(bb_x_draws + 1L, nbins = bb_m + 1L) / bb_B
+bb_mc_diff <- max(abs(bb_emp - bb_lbeta))
+cat(sprintf("max |simulation - closed form| = %.4f (B=%d)  %s\n",
+    bb_mc_diff, bb_B, ok(bb_mc_diff < 0.01)))
+v7b_pass <- (max(abs(bb_finite_sum - bb_lbeta)) < 1e-10) && (bb_mc_diff < 0.01)
+add_row(
+  quantity = "Beta-Binomial predictive mass", reference = "simulation + lbeta closed form",
+  result = sprintf("max diff finite-sum vs lbeta %.2e; max diff vs simulation %.4f",
+                    max(abs(bb_finite_sum - bb_lbeta)), bb_mc_diff),
+  observed = sprintf("sum(pmf)=%.6f", sum(bb_lbeta)), reference_value = "1 (valid pmf) / simulation",
+  tolerance = 0.01, pass = v7b_pass, n_cases = bb_m + 1L
 )
 
 ## ---- V8. Imperfect-ref: VIF (Rogan-Gladen) and apparent Se closed form ----

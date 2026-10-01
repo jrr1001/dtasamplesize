@@ -1,12 +1,6 @@
-* checking for file 'dtasamplesize/DESCRIPTION' ... OK
-* preparing 'dtasamplesize':
-* checking DESCRIPTION meta-information ... OK
-* installing the package to build vignettes
-* creating vignettes ... OK
-* checking for LF line-endings in source and make files and shell scripts
-* checking for empty or unneeded directories
-Removed empty directory 'dtasamplesize/inst/shiny/www'
-Removed empty directory 'dtasamplesize/tests/testthat/_snaps'
-* building 'dtasamplesize_0.6.5.tar.gz'
-
+FECHA_ISO=2026-10-01T05:28:13-05:00
+DIRECTORIO=<ROOT>/CORRECCION_INTEGRAL_2026-09-30
+COMANDO=cat <ROOT>/CORRECCION_INTEGRAL_2026-09-30/build/dtasamplesize_0.6.6.tar.gz.sha256
+---- SALIDA ----
+94eafb891442b2bdeb7a7698eb999279103c003b758994835ba6838244a79548 */c/tmp/dtabuild066/dtasamplesize_0.6.6.tar.gz
 EXIT=0

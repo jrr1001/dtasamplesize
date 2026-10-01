@@ -1,13 +1,16 @@
 """
 CONFIRMATORY run, independent-reference side.
 
-Reads LOCKED_confirmatory_grid.json (pre-registered, hash recorded in
-LOCK_HASHES.txt) and conf_package.json (package output), and:
+Reads LOCKED_confirmatory_grid.json (defined before the confirmatory
+execution according to the local hash record; see HASHES_2026-08-27.txt /
+HASHES_2026-09-28.txt -- there is no file named LOCK_HASHES.txt) and
+conf_package.json (package output), and:
   (a) re-derives N* independently for every scenario;
   (b) evaluates the N-1 / N / N+1 trio around the package's N_total;
   (c) exhaustively cross-checks the enumerable scenarios with 3-D
       Gauss-Jacobi quadrature and (n_d, x, y) triple enumeration;
-  (d) Monte Carlo confirmation at the pre-registered budget;
+  (d) Monte Carlo confirmation at the fixed budget defined in the local
+      hash record;
   (e) reference-side property tests PT1 and PT2.
 Nothing here was tuned after seeing results; the grid file is unmodified.
 """
@@ -18,7 +21,8 @@ import ref_bam as R
 
 def enum_triples_fast(N, s, ok_se, ok_sp):
     """Exhaustive (n_d, x, y) triple enumeration -- identical sum to
-    ref_bam.enum_triples (which is left byte-frozen; see LOCK_HASHES.txt),
+    ref_bam.enum_triples (which is left byte-frozen; see
+    HASHES_2026-08-27.txt / HASHES_2026-09-28.txt),
     only with the credible-interval widths precomputed once and the innermost
     loop written as an explicit outer product of triple masses rather than a
     Python loop.  No factorisation of the sum is introduced: every triple's

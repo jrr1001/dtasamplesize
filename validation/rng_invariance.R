@@ -68,9 +68,9 @@
 library(dtasamplesize)
 options(width = 110, digits = 10)
 
-if (utils::packageVersion("dtasamplesize") != "0.6.5") {
+if (utils::packageVersion("dtasamplesize") != "0.6.6") {
   stop("dtasamplesize ", utils::packageVersion("dtasamplesize"), " is installed, ",
-       "but this script checks version 0.6.5's published numbers exactly.",
+       "but this script checks version 0.6.6's published numbers exactly.",
        call. = FALSE)
 }
 

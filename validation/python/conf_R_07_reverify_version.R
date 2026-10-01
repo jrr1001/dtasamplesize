@@ -1,7 +1,11 @@
-# The installed package was rebuilt (0.6.2 -> 0.6.3) by a parallel agent while
-# the confirmatory grid was running.  Re-verify the headline numbers against
-# whatever is installed NOW, so the report states a single reproducible
-# provenance.  Compares against the values recorded in conf_package.json.
+# HISTORY (kept as a labelled historical note, not current validation
+# evidence): the installed package was originally rebuilt (0.6.2 -> 0.6.3)
+# by a parallel agent while the confirmatory grid was running, which is why
+# conf_package.json's baseline predates later releases.  Re-verify the
+# headline numbers against whatever is installed NOW (as of Lote 02, a
+# privately installed dtasamplesize 0.6.6), so the report states a single
+# reproducible provenance.  Compares against the baseline values recorded in
+# conf_package.json.
 suppressPackageStartupMessages({library(dtasamplesize); library(jsonlite)})
 options(dtasamplesize.warn_small_B = FALSE)
 v <- as.character(packageVersion("dtasamplesize"))
@@ -35,7 +39,7 @@ for (p in pub) {
 
 cat("\n-- locked confirmatory grid, re-run on", v, "--\n")
 cat(sprintf("%-5s %8s %8s %8s %15s %15s\n",
-            "id", "N(0.6.2)", "N(now)", "same", "A(0.6.2)", "A(now)"))
+            "id", "N(baseline)", "N(now)", "same", "A(baseline)", "A(now)"))
 allsame <- TRUE
 for (s in grid$scenarios) {
   r <- run1(s)

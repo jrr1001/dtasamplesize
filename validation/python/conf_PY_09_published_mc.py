@@ -1,6 +1,7 @@
 """
 MCSE-budgeted Monte Carlo confirmation of the two PUBLISHED decision points.
-B = 160000 -> MCSE ~ 0.0010 at p = 0.80 (pre-registered budget; no 1e8 runs).
+B = 160000 -> MCSE ~ 0.0010 at p = 0.80 (budget fixed before the confirmatory
+execution according to the local hash record; no 1e8 runs).
 Three independent seeds from the locked grid.
 The simulation draws the generative model directly (prev, Se, Sp, n_d, x, y)
 and uses NO closed form, so it is an independent check of the analytic route.

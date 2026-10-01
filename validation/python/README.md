@@ -64,11 +64,29 @@ re-run under 0.6.5: their computational surface is unaffected by H-06, and
 the 2026-09-16 logs already reflect the H-03 correction above.
 
 **What the lock shows and does not show.** The hashes were recorded locally
-in the agent's own session log, not with any external timestamping service or
+in the agent's own session log (`HASHES_2026-08-27.txt`, `HASHES_2026-09-28.txt`
+-- the actual hash-record files kept in this directory; there is no file
+named `LOCK_HASHES.txt`), not with any external timestamping service or
 registry. They show the grid and reference implementation were unchanged
-between locking and running (internal consistency), not that they were
-registered with a third party in advance. This is correctly described as
-**pre-specified and hash-locked**, not **pre-registered**.
+between recording the hash and running the confirmatory scripts (internal
+consistency), not that they were registered with a third party in advance.
+The confirmatory grid is correctly described as **defined before the
+confirmatory execution according to the local hash record**, never as
+"pre-registered" and never cited as proof of preespecification by itself.
+
+## Pending regeneration under 0.6.6 (Lote 02)
+
+This file and `report.html` still describe the run against
+**dtasamplesize 0.6.5 / 0.6.3** (see "Reverification" and "How to run"
+below); those sections are kept, explicitly labelled by version, as the
+historical record of that run. They are not presented as current
+validation evidence for 0.6.6. `conf_R_07_reverify_version.R` and the
+confirmatory Python scripts are re-run against a privately installed
+0.6.6 by `tools/L02_run_all.sh` (see `$WORK/tools/`); `tools/generar_report_html.R`
+regenerates this directory's `report.html` and the results table below
+from those new logs once that run completes. Until that run has produced
+logs under `validation/logs/`, do not read the "Results" table below as a
+0.6.6 confirmation.
 
 ## Design
 

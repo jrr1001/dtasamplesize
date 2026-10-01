@@ -1,3 +1,9 @@
+FECHA_ISO=2026-10-01T06:43:52-05:00
+DIRECTORIO=/d/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/CORRECCION_INTEGRAL_2026-09-30
+COMANDO=bash -c 
+    cd 'D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/R-package/dtasamplesize' && R_LIBS='C:/tmp/dtalib066' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' -e 'library(dtasamplesize, lib.loc="C:/tmp/dtalib066"); sessionInfo(); packageVersion("dtasamplesize")'
+
+---- SALIDA ----
 R version 4.5.2 (2025-10-31 ucrt)
 Platform: x86_64-w64-mingw32/x64
 Running under: Windows 11 x64 (build 26200)
@@ -19,7 +25,9 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] dtasamplesize_0.6.5
+[1] dtasamplesize_0.6.6
 
 loaded via a namespace (and not attached):
 [1] compiler_4.5.2
+[1] '0.6.6'
+EXIT=0

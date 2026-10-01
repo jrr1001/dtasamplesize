@@ -27,14 +27,16 @@ Type 'q()' to quit R.
   N_total: 678 
   joint_assurance: 0.800349 
   B: 5000 
-[ FAIL 0 | WARN 0 | SKIP 1 | PASS 595 ]
+[ FAIL 0 | WARN 0 | SKIP 3 | PASS 720 ]
 
-══ Skipped tests (1) ═══════════════════════════════════════════════════════════
+══ Skipped tests (3) ═══════════════════════════════════════════════════════════
+• On CRAN (2): 'test-bam_exact_contract.R:37:3',
+  'test-bam_exact_contract.R:56:3'
 • shiny is installed; cannot test the missing-dependency path (1):
   'test-launch_app.R:21:3'
 
-[ FAIL 0 | WARN 0 | SKIP 1 | PASS 595 ]
+[ FAIL 0 | WARN 0 | SKIP 3 | PASS 720 ]
 > 
 > proc.time()
    user  system elapsed 
- 872.23   51.04  948.53 
+ 849.48   76.84  944.93 

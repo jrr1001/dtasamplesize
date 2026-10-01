@@ -1,3 +1,24 @@
+FECHA_ISO=2026-10-01T05:45:36-05:00
+DIRECTORIO=<ROOT>/CORRECCION_INTEGRAL_2026-09-30
+COMANDO=bash -c 
+        echo 'FECHA_ISO='"$(date -Iseconds)"
+        echo 'COMMIT=8c36391a4503fba982439eb01d39ae417aa73170'
+        echo 'VERSION=0.6.6'
+        echo 'COMANDO=Rscript validation/reproduce_manuscript.R (R_LIBS=C:/tmp/dtalib066)'
+        echo 'ENTORNO: R_LIBS=C:/tmp/dtalib066'
+        cd 'D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/R-package/dtasamplesize' &&
+        R_LIBS='C:/tmp/dtalib066' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' 'validation/reproduce_manuscript.R'
+        ec=$?
+        echo '---- sessionInfo ----'
+        R_LIBS='C:/tmp/dtalib066' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' -e 'sessionInfo()'
+        exit $ec
+    
+---- SALIDA ----
+FECHA_ISO=2026-10-01T05:45:36-05:00
+COMMIT=8c36391a4503fba982439eb01d39ae417aa73170
+VERSION=0.6.6
+COMANDO=Rscript validation/reproduce_manuscript.R (R_LIBS=C:/tmp/dtalib066)
+ENTORNO: R_LIBS=C:/tmp/dtalib066
 
 ========== 1. Assurance gap of the classical Buderer sample size ==========
 buderer_n(Se=0.85, d=0.07) = 100   (article: 100)   PASS
@@ -8,14 +29,40 @@ Wald coverage         = 0.9380   (article: 0.9380)   PASS
 ========== 2. Joint assurance for Se and Sp: exact crossing at N = 678 (Figure 2) ==========
 N_total = 678   (article: 678)   PASS
 joint assurance at N=678 = 0.8003489948   (article: 0.8003489948)   PASS
-joint assurance at N=677 = 0.7996848824   (article: 0.7996848824)   PASS
+joint assurance at N=677 = NA   (article: 0.7996848824)   **CHECK**
 
 ========== 3. Table 4: Buderer, BAM (exact, harmonized priors), joint Se/Sp ==========
 Buderer (classical), combined N = 500   (article: 500)   PASS
 BAM (exact, harmonized priors), N = 672   (article: 672)   PASS
   joint assurance at N=672  = 0.8002692084   (article: 0.8002692084)   PASS
-Joint Se/Sp (joint_sample_size), N = 580   (article: 580)   PASS
+Joint Se/Sp (joint_sample_size), N = 580   (article: 580, first candidate of the 10-step grid)   PASS
   joint assurance at N=580  = 0.8041   (article: 0.8041)   PASS
+  joint_prob_mcse at N=580  = 0.002806   (article/log: ~0.002806)   PASS
+  B = 20000, seed = 2026, search_type = grid_first_candidate, N_range_used identical to seq(100,800,10): **CHECK**
+  AUC gate: first_N_auc_pass = 350
 
 === reproduce_manuscript done ===
+---- sessionInfo ----
+R version 4.5.2 (2025-10-31 ucrt)
+Platform: x86_64-w64-mingw32/x64
+Running under: Windows 11 x64 (build 26200)
+
+Matrix products: default
+  LAPACK version 3.12.1
+
+locale:
+[1] LC_COLLATE=English_United States.utf8 
+[2] LC_CTYPE=English_United States.utf8   
+[3] LC_MONETARY=English_United States.utf8
+[4] LC_NUMERIC=C                          
+[5] LC_TIME=English_United States.utf8    
+
+time zone: America/Lima
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+[1] compiler_4.5.2
 EXIT=0
