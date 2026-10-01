@@ -1,7 +1,7 @@
 FECHA_ISO=2026-10-01T06:43:52-05:00
-DIRECTORIO=/d/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/CORRECCION_INTEGRAL_2026-09-30
+DIRECTORIO=<REPO>
 COMANDO=bash -c 
-    cd 'D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/R-package/dtasamplesize' && R_LIBS='C:/tmp/dtalib066' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' -e 'library(dtasamplesize, lib.loc="C:/tmp/dtalib066"); sessionInfo(); packageVersion("dtasamplesize")'
+    cd '<REPO>/R-package/dtasamplesize' && R_LIBS='<LIB>' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' -e 'library(dtasamplesize, lib.loc="<LIB>"); sessionInfo(); packageVersion("dtasamplesize")'
 
 ---- SALIDA ----
 R version 4.5.2 (2025-10-31 ucrt)

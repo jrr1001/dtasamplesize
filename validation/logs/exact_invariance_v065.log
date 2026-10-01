@@ -1,16 +1,16 @@
 FECHA_ISO=2026-10-01T06:02:37-05:00
-DIRECTORIO=<ROOT>/CORRECCION_INTEGRAL_2026-09-30
+DIRECTORIO=<REPO>
 COMANDO=bash -c 
     echo 'FECHA_ISO='"$(date -Iseconds)"
     echo 'VERSION_OBJETIVO=0.6.5 (fallo esperado)'
-    echo 'COMANDO=Rscript validation/exact_invariance.R --version-check=off (R_LIBS=D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/CORRECCION_INTEGRAL_2026-09-30/lib065)'
-    cd 'D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/R-package/dtasamplesize' &&
-    R_LIBS='D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/CORRECCION_INTEGRAL_2026-09-30/lib065' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' validation/exact_invariance.R --version-check=off
+    echo 'COMANDO=Rscript validation/exact_invariance.R --version-check=off (R_LIBS=<REPO>/lib065)'
+    cd '<REPO>/R-package/dtasamplesize' &&
+    R_LIBS='<REPO>/lib065' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' validation/exact_invariance.R --version-check=off
 
 ---- SALIDA ----
 FECHA_ISO=2026-10-01T06:02:37-05:00
 VERSION_OBJETIVO=0.6.5 (fallo esperado)
-COMANDO=Rscript validation/exact_invariance.R --version-check=off (R_LIBS=D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/CORRECCION_INTEGRAL_2026-09-30/lib065)
+COMANDO=Rscript validation/exact_invariance.R --version-check=off (R_LIBS=<REPO>/lib065)
 dtasamplesize installed version: 0.6.5 
 --version-check=off: TRUE 
 

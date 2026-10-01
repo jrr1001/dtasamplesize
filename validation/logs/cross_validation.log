@@ -1,24 +1,24 @@
 FECHA_ISO=2026-10-01T05:46:43-05:00
-DIRECTORIO=<ROOT>/CORRECCION_INTEGRAL_2026-09-30
+DIRECTORIO=<REPO>
 COMANDO=bash -c 
         echo 'FECHA_ISO='"$(date -Iseconds)"
         echo 'COMMIT=8c36391a4503fba982439eb01d39ae417aa73170'
         echo 'VERSION=0.6.6'
-        echo 'COMANDO=Rscript validation/cross_validation.R (R_LIBS=C:/tmp/dtalib066)'
-        echo 'ENTORNO: R_LIBS=C:/tmp/dtalib066'
-        cd 'D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/R-package/dtasamplesize' &&
-        R_LIBS='C:/tmp/dtalib066' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' 'validation/cross_validation.R'
+        echo 'COMANDO=Rscript validation/cross_validation.R (R_LIBS=<LIB>)'
+        echo 'ENTORNO: R_LIBS=<LIB>'
+        cd '<REPO>/R-package/dtasamplesize' &&
+        R_LIBS='<LIB>' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' 'validation/cross_validation.R'
         ec=$?
         echo '---- sessionInfo ----'
-        R_LIBS='C:/tmp/dtalib066' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' -e 'sessionInfo()'
+        R_LIBS='<LIB>' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' -e 'sessionInfo()'
         exit $ec
     
 ---- SALIDA ----
 FECHA_ISO=2026-10-01T05:46:43-05:00
 COMMIT=8c36391a4503fba982439eb01d39ae417aa73170
 VERSION=0.6.6
-COMANDO=Rscript validation/cross_validation.R (R_LIBS=C:/tmp/dtalib066)
-ENTORNO: R_LIBS=C:/tmp/dtalib066
+COMANDO=Rscript validation/cross_validation.R (R_LIBS=<LIB>)
+ENTORNO: R_LIBS=<LIB>
 
 ==========  V1. Wilson score CI  ==========
 x= 85 n=100 | mine[0.76716,0.90694] Hmisc[0.76716,0.90694] prop.test[0.76716,0.90694]  PASS / PASS
@@ -69,7 +69,7 @@ max |simulation - closed form| = 0.0020 (B=200000)  PASS
 VIF package=1.384083  Rogan-Gladen=1.384083  PASS
 apparent Se: MC=0.7638  closed-form=0.7639  PASS
 
-Table 2 written to D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/R-package/manuscript_assets/table2_crossvalidation.csv (5 rows, all pass = TRUE)
+Table 2 written to <REPO>/R-package/manuscript_assets/table2_crossvalidation.csv (5 rows, all pass = TRUE)
 
 === cross_validation done ===
 ---- sessionInfo ----
