@@ -130,8 +130,18 @@ test_that("design = \"cohort\" gives a LOWER joint probability than \"fixed\"", 
   # prospective cohort, and so overstates the assurance. At this
   # adversarial operating point the gap is large (~0.09) and B = 8000 is
   # far more than enough to resolve it (MCSE ~= 0.004-0.005 per arm).
+  # target_prob = 0 (lote 01b): this test uses N_range = c(650) as a
+  # single-point Monte Carlo probability calculator, not as a search --
+  # it wants back the ACTUAL joint_prob_se_sp computed at N = 650 under
+  # each design, not the search's accept/reject decision against the
+  # (irrelevant here) default target_prob = 0.80. Under the M-03 contract
+  # (lote 01b), joint_prob_se_sp is NA whenever target_reached is FALSE
+  # (see R/joint_sample_size.R), so target_prob = 0 guarantees the single
+  # candidate is accepted and its real probability is reported, exactly as
+  # before this lote.
   common <- list(Se = 0.70, Sp = 0.80, prev = 0.20, delta_se = 0.08,
-                 delta_sp = 0.06, N_range = c(650), B = 8000, seed = 2026)
+                 delta_sp = 0.06, N_range = c(650), B = 8000, seed = 2026,
+                 target_prob = 0.001)
   fixed <- suppressWarnings(
     do.call(joint_sample_size, c(common, list(design = "fixed")))
   )
@@ -159,10 +169,15 @@ test_that("degenerate cohort replicates count as failures (denominator B)", {
   # probability could sit arbitrarily close to 1 regardless of this bound.
   Se <- 0.85; Sp <- 0.90; prev <- 0.10; N <- 30
   B <- 5000
+  # target_prob = 0.001 (lote 01b): single-point MC probability calculator
+  # (see note in the "cohort gives a LOWER joint probability" test above),
+  # not a search -- guarantees the single candidate is accepted so that
+  # joint_prob_se_sp reports the actual computed value rather than NA.
   res <- suppressWarnings(
     joint_sample_size(Se = Se, Sp = Sp, prev = prev,
                       delta_se = 0.30, delta_sp = 0.30, delta_auc = 0.30,
-                      N_range = c(N), B = B, seed = 1, design = "cohort")
+                      N_range = c(N), B = B, seed = 1, design = "cohort",
+                      target_prob = 0.001)
   )
   # Degenerate iff n_d = 0 or n_nd = 0 (n_d = N); an arm of size 1 is NOT
   # degenerate (see ?joint_sample_size, @details).
@@ -205,23 +220,45 @@ test_that("design = \"fixed\": an arm of size 1 is scored on its Wilson width, n
   # deterministic AUC gate at these small expected margins (n_d_exp = 1,
   # n_nd_exp = 3): hanley_mcneil_var(0.90, 1, 3) gives an AUC width of
   # 0.9475, verified separately.
+  # target_prob = 0.001 (lote 01b, res_pass only): single-point MC
+  # probability calculator (see note above test-joint_sample_size.R's
+  # "cohort gives a LOWER joint probability" test), not a search -- the
+  # default target_prob = 0.80 is irrelevant to what is being tested here
+  # (the n = 1 degeneracy rule). A probability of exactly 1 always crosses
+  # any target_prob < 1, so joint_prob_se_sp still reports the real value.
   target_width_n1 <- 2 * 0.4 # 0.80 > 0.7934507 -> the n = 1 arm always PASSES
   res_pass <- suppressWarnings(joint_sample_size(
     Se = 0.85, Sp = 0.90, prev = 0.25,
     delta_se = 0.40, delta_sp = 0.45, delta_auc = 0.5,
-    N_range = c(4), B = 1000, seed = 11, design = "fixed"
+    N_range = c(4), B = 1000, seed = 11, design = "fixed",
+    target_prob = 0.001
   ))
   expect_equal(res_pass$n_diseased, 1)
   expect_equal(res_pass$joint_prob_se_sp, 1)
 
+  # res_fail: the n = 1 arm ALWAYS fails here, so the true joint
+  # probability is exactly 0, which can never cross ANY positive
+  # target_prob -- there is no target_prob override that avoids the
+  # non-crossing branch for a genuine probability of 0. Under the M-03
+  # contract (lote 01b), n_total/joint_prob_se_sp are therefore NA
+  # (target_reached = FALSE); the actual computed probability (0) is read
+  # from max_joint_prob_evaluated instead, which is exactly what used to
+  # be reported as joint_prob_se_sp before this lote.
   target_width_fail <- 2 * 0.39 # 0.78 < 0.7934507 -> the n = 1 arm always FAILS
-  res_fail <- suppressWarnings(joint_sample_size(
-    Se = 0.85, Sp = 0.90, prev = 0.25,
-    delta_se = 0.39, delta_sp = 0.45, delta_auc = 0.5,
-    N_range = c(4), B = 1000, seed = 11, design = "fixed"
-  ))
-  expect_equal(res_fail$n_diseased, 1)
-  expect_equal(res_fail$joint_prob_se_sp, 0)
+  expect_warning(
+    res_fail <- joint_sample_size(
+      Se = 0.85, Sp = 0.90, prev = 0.25,
+      delta_se = 0.39, delta_sp = 0.45, delta_auc = 0.5,
+      N_range = c(4), B = 1000, seed = 11, design = "fixed"
+    ),
+    "No N in N_range achieved"
+  )
+  expect_false(res_fail$target_reached)
+  expect_true(is.na(res_fail$n_total))
+  expect_true(is.na(res_fail$n_diseased)) # NA, never max(N_range) = 4
+  expect_true(is.na(res_fail$joint_prob_se_sp))
+  expect_equal(res_fail$max_joint_prob_evaluated, 0)
+  expect_equal(res_fail$N_at_max_joint_prob, 4L)
 })
 
 test_that("design = \"cohort\": only n_d = 0 or n_nd = 0 replicates are forced failures", {
@@ -250,12 +287,31 @@ test_that("an expected margin of exactly 0 is skipped as a candidate N (n = 0, n
   # not the (unrelated) "No N in N_range achieved" warning. N = 4 with the
   # same prev gives n_d_exp = 1, which must NOT be skipped now that the
   # threshold is n = 0 (checked below).
+  #
+  # NOTE (lote 01b, M-03 / option A): versions <= "lote 01" silently
+  # returned n_total <- max(N_range) in this situation and this test used
+  # to probe that fallback via res_skipped$n_diseased == 0 (the margin at
+  # N = 2). That fallback is the exact defect this lote removes: n_total
+  # is now NA_integer_ (never max(N_range)) whenever target_reached is
+  # FALSE, so n_diseased/n_non_diseased are NA too (there is no "final N"
+  # to report margins for). The assertions below now probe the new
+  # contract fields (target_reached, auc_gate) instead of the removed
+  # fallback value.
   expect_warning(
     res_skipped <- joint_sample_size(prev = 0.30, delta_se = 0.001, delta_sp = 0.001,
                        N_range = c(2), B = 100, seed = 1),
     "AUC precision target"
   )
-  expect_equal(res_skipped$n_diseased, 0) # confirms N = 2 was never evaluated
+  expect_false(res_skipped$target_reached)
+  expect_true(is.na(res_skipped$n_total))
+  expect_true(is.na(res_skipped$n_diseased))
+  expect_true(is.na(res_skipped$n_non_diseased))
+  expect_false(res_skipped$auc_gate_passed)
+  # The N = 2 candidate was never even AUC-gated (its expected margin was
+  # already 0): auc_pass is NA for it, not FALSE.
+  expect_true(is.na(res_skipped$auc_gate$table$auc_pass[
+    res_skipped$auc_gate$table$N == 2
+  ]))
   expect_no_warning(
     res <- joint_sample_size(Se = 0.85, Sp = 0.90, prev = 0.30,
                               delta_se = 0.45, delta_sp = 0.45, delta_auc = 0.5,
