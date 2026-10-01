@@ -1,3 +1,24 @@
+FECHA_ISO=2026-10-01T05:46:43-05:00
+DIRECTORIO=<ROOT>/CORRECCION_INTEGRAL_2026-09-30
+COMANDO=bash -c 
+        echo 'FECHA_ISO='"$(date -Iseconds)"
+        echo 'COMMIT=8c36391a4503fba982439eb01d39ae417aa73170'
+        echo 'VERSION=0.6.6'
+        echo 'COMANDO=Rscript validation/cross_validation.R (R_LIBS=C:/tmp/dtalib066)'
+        echo 'ENTORNO: R_LIBS=C:/tmp/dtalib066'
+        cd 'D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/R-package/dtasamplesize' &&
+        R_LIBS='C:/tmp/dtalib066' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' 'validation/cross_validation.R'
+        ec=$?
+        echo '---- sessionInfo ----'
+        R_LIBS='C:/tmp/dtalib066' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' -e 'sessionInfo()'
+        exit $ec
+    
+---- SALIDA ----
+FECHA_ISO=2026-10-01T05:46:43-05:00
+COMMIT=8c36391a4503fba982439eb01d39ae417aa73170
+VERSION=0.6.6
+COMANDO=Rscript validation/cross_validation.R (R_LIBS=C:/tmp/dtalib066)
+ENTORNO: R_LIBS=C:/tmp/dtalib066
 
 ==========  V1. Wilson score CI  ==========
 x= 85 n=100 | mine[0.76716,0.90694] Hmisc[0.76716,0.90694] prop.test[0.76716,0.90694]  PASS / PASS
@@ -36,13 +57,42 @@ Note: row 1 is the manuscript's headline configuration (Se=0.85, Sp=0.90, prev=0
  at R=400000, where the SD estimator's own sampling noise (~0.11%) is fine enough
  to resolve that claim (see comment above nb_se_cohort()).
 
-==========  V7. Beta-Binomial posterior CI (conjugate) vs numerical integration  ==========
+==========  V7. Beta posterior interval width (conjugate) vs numerical integration  ==========
 conjugate width=0.12367  numerical width=0.12367  PASS
+
+==========  V7b. Beta-Binomial predictive mass: finite sum vs simulation vs lbeta formula  ==========
+finite-sum sums to 1.0000000000, lbeta formula sums to 1.0000000000  PASS
+max |finite-sum - lbeta| = 4.72e-16  PASS
+max |simulation - closed form| = 0.0020 (B=200000)  PASS
 
 ==========  V8. Imperfect reference: VIF and apparent-Se closed form  ==========
 VIF package=1.384083  Rogan-Gladen=1.384083  PASS
 apparent Se: MC=0.7638  closed-form=0.7639  PASS
 
-Table 2 written to D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/R-package/manuscript_assets/table2_crossvalidation.csv (4 rows, all pass = TRUE)
+Table 2 written to D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/R-package/manuscript_assets/table2_crossvalidation.csv (5 rows, all pass = TRUE)
 
 === cross_validation done ===
+---- sessionInfo ----
+R version 4.5.2 (2025-10-31 ucrt)
+Platform: x86_64-w64-mingw32/x64
+Running under: Windows 11 x64 (build 26200)
+
+Matrix products: default
+  LAPACK version 3.12.1
+
+locale:
+[1] LC_COLLATE=English_United States.utf8 
+[2] LC_CTYPE=English_United States.utf8   
+[3] LC_MONETARY=English_United States.utf8
+[4] LC_NUMERIC=C                          
+[5] LC_TIME=English_United States.utf8    
+
+time zone: America/Lima
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+[1] compiler_4.5.2
+EXIT=0

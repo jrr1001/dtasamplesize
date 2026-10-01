@@ -11,6 +11,8 @@ R -f validation/reproduce_manuscript.R    # every number reported in the article
 R -f validation/make_manuscript_assets.R  # every figure and data-derived table
 R -f validation/cross_validation.R        # core formulas vs independent references
 R -f validation/integration_check.R       # end-to-end run + reproducibility
+R -f validation/rng_invariance.R          # RNG state invariance of the exact mode
+R -f validation/exact_invariance.R        # G04: exact-mode N/A invariance across B/seed/N_range
 ```
 
 - **`reproduce_manuscript.R`** — regenerates every headline number quoted in
@@ -24,7 +26,7 @@ R -f validation/integration_check.R       # end-to-end run + reproducibility
   AUC gate inside it, `ss_net_benefit()`, `ss_imperfect_ref()`,
   `ss_adaptive_prevalence()` and `ss_time_dependent_roc()` remain in the
   package but are no longer described in the article, so this script no
-  longer checks their numbers. It requires version 0.6.5 exactly and stops
+  longer checks their numbers. It requires version 0.6.6 exactly and stops
   with an explanatory message on any other installed version, whose results
   are not guaranteed to reproduce the article's bit-for-bit.
 - **`make_manuscript_assets.R`** — the public generator behind every figure
@@ -45,8 +47,11 @@ R -f validation/integration_check.R       # end-to-end run + reproducibility
   script) so the curation itself is visible and diffable on its own.
 - **`cross_validation.R`** — checks the Wilson/Wald intervals against base R
   `prop.test` and `Hmisc::binconf`, `buderer_n` against published values,
-  and the Beta–Binomial posterior against numerical integration. These four
-  checks are the ones Table 2 ("Cross-validation of core formulas against
+  and the Beta posterior interval width against numerical integration (a
+  separate check verifies the Beta-Binomial predictive mass itself, by
+  finite sum, simulation and the `lbeta`-based closed form; it is not one
+  of the four published rows). These four checks are the ones Table 2
+  ("Cross-validation of core formulas against
   independent references") in the article publishes; alongside the printed
   report, they are written to
   `R-package/manuscript_assets/table2_crossvalidation.csv`, one row per
@@ -88,6 +93,23 @@ R -f validation/integration_check.R       # end-to-end run + reproducibility
   increasing. (Earlier versions of this file and of the script's own header
   asserted the ordering only in prose, with no code behind the claim; that
   gap is what this section closes.)
+
+- **`rng_invariance.R`** — confirms that `bam_sample_size(method = "exact")`
+  and `joint_sample_size()` save and restore `.Random.seed`/`RNGkind()`
+  exactly, and that the exact-mode closed-form path (no `B`/`seed`
+  dependence) returns identical results across RNG kinds.
+- **`exact_invariance.R`** (G04) — a dedicated check that the exact mode of
+  `bam_sample_size()` is invariant to `B`, `seed` and `N_range` (since the
+  exact Beta-Binomial calculation does not use Monte Carlo draws at all):
+  for the published N = 678 case and the Table 4 harmonized N = 672 case,
+  it sweeps `B` in `{5, 10, 50, 5000}` crossed with `seed` in
+  `{1, 2, 3, 4, 2026}` and `N_range` in `{NULL, an explicit range
+  containing the crossing}`, and requires identical `N_total` and
+  `joint_assurance` and identical `.Random.seed`/`RNGkind()` before and
+  after every call. It can also be pointed at the 0.6.5 library (see the
+  script's own `--version-check=off` flag) to confirm that the same check
+  FAILS there, demonstrating that it actually detects the defect this
+  correction fixes rather than passing vacuously.
 
 ## A note on what these scripts prove
 

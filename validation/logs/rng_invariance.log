@@ -1,3 +1,24 @@
+FECHA_ISO=2026-10-01T05:49:20-05:00
+DIRECTORIO=<ROOT>/CORRECCION_INTEGRAL_2026-09-30
+COMANDO=bash -c 
+        echo 'FECHA_ISO='"$(date -Iseconds)"
+        echo 'COMMIT=8c36391a4503fba982439eb01d39ae417aa73170'
+        echo 'VERSION=0.6.6'
+        echo 'COMANDO=Rscript validation/rng_invariance.R (R_LIBS=C:/tmp/dtalib066)'
+        echo 'ENTORNO: R_LIBS=C:/tmp/dtalib066'
+        cd 'D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/R-package/dtasamplesize' &&
+        R_LIBS='C:/tmp/dtalib066' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' 'validation/rng_invariance.R'
+        ec=$?
+        echo '---- sessionInfo ----'
+        R_LIBS='C:/tmp/dtalib066' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' -e 'sessionInfo()'
+        exit $ec
+    
+---- SALIDA ----
+FECHA_ISO=2026-10-01T05:49:20-05:00
+COMMIT=8c36391a4503fba982439eb01d39ae417aa73170
+VERSION=0.6.6
+COMANDO=Rscript validation/rng_invariance.R (R_LIBS=C:/tmp/dtalib066)
+ENTORNO: R_LIBS=C:/tmp/dtalib066
 R.version.string: R version 4.5.2 (2025-10-31 ucrt) 
 RNGkind() documented kinds (per ?RNGkind, 'all five ... available in R' in
 the manuscript is a selection of these eight, not literally all of them):
@@ -91,3 +112,27 @@ All computed values match the published manuscript values under every kind teste
 
 ========== Verdict ==========
 PASS: all published numbers identical under 5 RNG kinds
+---- sessionInfo ----
+R version 4.5.2 (2025-10-31 ucrt)
+Platform: x86_64-w64-mingw32/x64
+Running under: Windows 11 x64 (build 26200)
+
+Matrix products: default
+  LAPACK version 3.12.1
+
+locale:
+[1] LC_COLLATE=English_United States.utf8 
+[2] LC_CTYPE=English_United States.utf8   
+[3] LC_MONETARY=English_United States.utf8
+[4] LC_NUMERIC=C                          
+[5] LC_TIME=English_United States.utf8    
+
+time zone: America/Lima
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+[1] compiler_4.5.2
+EXIT=0

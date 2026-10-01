@@ -42,7 +42,8 @@
 library(dtasamplesize)
 options(width = 110, digits = 6)
 
-# The article reports the numbers produced by version 0.6.5. Earlier releases
+# The article reports the numbers produced by version 0.6.6. Earlier releases
+# (historical only; not presented here as current validation evidence)
 # contain the validity errors that 0.3.0, 0.5.0 and 0.6.0 correct in turn
 # (see NEWS.md) -- notably a net-benefit sample size of 110 instead of 240,
 # a BAM search that reported the marginal per-arm assurance instead of the
@@ -58,13 +59,13 @@ options(width = 110, digits = 6)
 # older or newer installation is not guaranteed to reproduce today's
 # published numbers bit-for-bit. Stop early rather than let a stale
 # installation look like a discrepancy in the article.
-if (utils::packageVersion("dtasamplesize") != "0.6.5") {
+if (utils::packageVersion("dtasamplesize") != "0.6.6") {
   stop("dtasamplesize ", utils::packageVersion("dtasamplesize"), " is installed, ",
-       "but this script reproduces the numbers of version 0.6.5 ",
+       "but this script reproduces the numbers of version 0.6.6 ",
        "exactly: the published figures were computed under that version, ",
        "and neither an older nor a newer installation is guaranteed to ",
        "reproduce them bit-for-bit.\n",
-       "  Install version 0.6.5 from a local copy of the repository:\n",
+       "  Install version 0.6.6 from a local copy of the repository:\n",
        "    install.packages('.', repos = NULL, type = 'source')",
        call. = FALSE)
 }
@@ -156,14 +157,32 @@ cat(sprintf("  joint assurance at N=672  = %.10f   (article: 0.8002692084)   %s\
             bam_harmonized$joint_assurance,
             ok(near(bam_harmonized$joint_assurance, 0.8002692084, 1e-8))))
 
+# joint_sample_size() performs a grid search over N_range = seq(100, 800, by
+# = 10) (the function's own default grid, unchanged by the 0.6.6 correction)
+# and reports the FIRST CANDIDATE OF THAT 10-STEP GRID that reaches
+# target_prob under B Monte Carlo replicates at the given seed -- it is not,
+# and is not described here as, the smallest integer N that would reach the
+# target; a finer grid or a different seed could return a different
+# candidate with a different joint_prob_se_sp. This is the Opcion A decision
+# recorded in DECISION_JOINT_SAMPLE_SIZE.md section 8: N_range, B and seed
+# are unchanged, and N = 580 is reported as "first candidate of the 10-step
+# grid", never as "the minimum N" or "the smallest N".
 joint_res <- suppressWarnings(joint_sample_size(
   Se = E_SE, Sp = E_SP, delta_se = DELTA_SE, delta_sp = DELTA_SP, prev = E_PREV,
   design = "cohort", target_prob = 0.80, B = B_MAIN, seed = SEED))
-cat(sprintf("Joint Se/Sp (joint_sample_size), N = %d   (article: 580)   %s\n",
+cat(sprintf("Joint Se/Sp (joint_sample_size), N = %d   (article: 580, first candidate of the 10-step grid)   %s\n",
             joint_res$n_total, ok(joint_res$n_total == 580)))
 cat(sprintf("  joint assurance at N=580  = %.4f   (article: 0.8041)   %s\n",
             joint_res$joint_prob_se_sp,
             ok(near(joint_res$joint_prob_se_sp, 0.8041, 5e-4))))
+cat(sprintf("  joint_prob_mcse at N=580  = %.6f   (article/log: ~0.002806)   %s\n",
+            joint_res$joint_prob_mcse,
+            ok(near(joint_res$joint_prob_mcse, 0.002806, 5e-4))))
+cat(sprintf("  B = %d, seed = %d, search_type = %s, N_range_used identical to seq(100,800,10): %s\n",
+            B_MAIN, SEED, joint_res$search_type,
+            ok(identical(joint_res$N_range_used, seq(100, 800, by = 10)))))
+cat(sprintf("  AUC gate: first_N_auc_pass = %s\n",
+            format(joint_res$auc_gate$first_N_auc_pass)))
 
 ## ---- Simulated data (optional export) ----
 # The article analyses no empirical data. Section 1 above is computed from

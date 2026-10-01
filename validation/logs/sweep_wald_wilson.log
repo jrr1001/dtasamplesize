@@ -1,3 +1,24 @@
+FECHA_ISO=2026-10-01T05:46:51-05:00
+DIRECTORIO=<ROOT>/CORRECCION_INTEGRAL_2026-09-30
+COMANDO=bash -c 
+        echo 'FECHA_ISO='"$(date -Iseconds)"
+        echo 'COMMIT=8c36391a4503fba982439eb01d39ae417aa73170'
+        echo 'VERSION=0.6.6'
+        echo 'COMANDO=Rscript validation/sweep_wald_wilson.R (R_LIBS=C:/tmp/dtalib066)'
+        echo 'ENTORNO: R_LIBS=C:/tmp/dtalib066'
+        cd 'D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/R-package/dtasamplesize' &&
+        R_LIBS='C:/tmp/dtalib066' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' 'validation/sweep_wald_wilson.R'
+        ec=$?
+        echo '---- sessionInfo ----'
+        R_LIBS='C:/tmp/dtalib066' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' -e 'sessionInfo()'
+        exit $ec
+    
+---- SALIDA ----
+FECHA_ISO=2026-10-01T05:46:51-05:00
+COMMIT=8c36391a4503fba982439eb01d39ae417aa73170
+VERSION=0.6.6
+COMANDO=Rscript validation/sweep_wald_wilson.R (R_LIBS=C:/tmp/dtalib066)
+ENTORNO: R_LIBS=C:/tmp/dtalib066
 ================================================================
 sweep_wald_wilson.R -- H-02 generator for the 28-configuration sweep
 ================================================================
@@ -99,7 +120,7 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] dtasamplesize_0.6.4 testthat_3.3.2     
+[1] dtasamplesize_0.6.6 testthat_3.3.2     
 
 loaded via a namespace (and not attached):
  [1] compiler_4.5.2  magrittr_2.0.4  R6_2.6.1        rprojroot_2.1.1
@@ -108,5 +129,27 @@ loaded via a namespace (and not attached):
 [13] lifecycle_1.0.5 rlang_1.1.7    
 
 Done.
+---- sessionInfo ----
+R version 4.5.2 (2025-10-31 ucrt)
+Platform: x86_64-w64-mingw32/x64
+Running under: Windows 11 x64 (build 26200)
+
+Matrix products: default
+  LAPACK version 3.12.1
+
+locale:
+[1] LC_COLLATE=English_United States.utf8 
+[2] LC_CTYPE=English_United States.utf8   
+[3] LC_MONETARY=English_United States.utf8
+[4] LC_NUMERIC=C                          
+[5] LC_TIME=English_United States.utf8    
+
+time zone: America/Lima
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+[1] compiler_4.5.2
 EXIT=0
-runtime_sec=9
