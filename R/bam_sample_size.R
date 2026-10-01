@@ -3,31 +3,59 @@
 # that function's @details for the closed-form derivation these implement.
 
 # For a single arm governed by a Beta(a, b) prior and a full-width credible
-# interval target of delta, return a vector P of length n_max + 1 where
-# P[n + 1] = P(width <= delta | arm size = n), marginalizing over the arm's
-# own success count x ~ BetaBinomial(n, a, b). The posterior credible
-# interval width after x successes in n trials is a deterministic function
-# of (x, n) alone (Beta(a + x, b + n - x)), so this sum is a finite,
-# non-random enumeration -- no simulation involved.
+# interval target of delta, return a vector P of length (n_hi - n_lo + 1)
+# where P[n - n_lo + 1] = P(width <= delta | arm size = n), for n running
+# from n_lo to n_hi, marginalizing over the arm's own success count
+# x ~ BetaBinomial(n, a, b). The posterior credible interval width after x
+# successes in n trials is a deterministic function of (x, n) alone
+# (Beta(a + x, b + n - x)), so this sum is a finite, non-random enumeration
+# -- no simulation involved.
 #
-# This depends only on (n_max, a, b, delta), never on N or on which
-# candidate N is being evaluated, so bam_sample_size() calls it exactly
-# once per arm (up to max(N_range)) and reuses the result across every
-# candidate N in the search -- the caching the exact mode relies on to stay
-# fast despite its O(N^2) cost.
-.bam_exact_width_prob <- function(n_max, a, b, delta, ci_lower_q, ci_upper_q) {
-  P <- numeric(n_max + 1L)
+# Each entry depends only on (n, a, b, delta), never on N, on any OTHER
+# arm size, or on which candidate N is being evaluated -- entries for
+# different n are mutually independent. This is what lets
+# bam_sample_size() extend its exact-mode cache block by block (see
+# .bam_exact_extend_cache() below): a call with (n_lo, n_hi) = (501, 1000)
+# returns exactly the same values for n = 501..1000 as a call with
+# (n_lo, n_hi) = (0, 1000) would, so re-querying only the NEW arm sizes
+# when a block grows is safe and produces byte-identical numbers to
+# recomputing the whole range from scratch.
+.bam_exact_width_prob <- function(n_hi, a, b, delta, ci_lower_q, ci_upper_q,
+                                   n_lo = 0L) {
+  n_lo <- as.integer(n_lo)
+  n_hi <- as.integer(n_hi)
+  P <- numeric(n_hi - n_lo + 1L)
   lbeta_ab <- lbeta(a, b)
-  for (n in 0:n_max) {
+  for (n in n_lo:n_hi) {
     x <- 0:n
     post_a <- a + x
     post_b <- b + n - x
     width <- stats::qbeta(ci_upper_q, post_a, post_b) -
       stats::qbeta(ci_lower_q, post_a, post_b)
     log_pmf <- lchoose(n, x) + lbeta(post_a, post_b) - lbeta_ab
-    P[n + 1L] <- sum(exp(log_pmf)[width <= delta])
+    P[n - n_lo + 1L] <- sum(exp(log_pmf)[width <= delta])
   }
   P
+}
+
+# Extend an exact-mode per-arm cache (as built by .bam_exact_width_prob())
+# from covering arm sizes 0:old_hi to covering 0:new_hi, computing ONLY the
+# new entries (old_hi+1):new_hi and concatenating them onto what is already
+# cached. `old_cache` may be NULL (nothing cached yet) or length 0, in which
+# case this simply builds 0:new_hi from scratch. Returns the extended cache
+# (length new_hi + 1).
+.bam_exact_extend_cache <- function(old_cache, old_hi, new_hi, a, b, delta,
+                                     ci_lower_q, ci_upper_q) {
+  if (is.null(old_cache) || old_hi < 0L) {
+    return(.bam_exact_width_prob(new_hi, a, b, delta, ci_lower_q, ci_upper_q,
+                                  n_lo = 0L))
+  }
+  if (new_hi <= old_hi) {
+    return(old_cache[seq_len(new_hi + 1L)])
+  }
+  new_part <- .bam_exact_width_prob(new_hi, a, b, delta, ci_lower_q,
+                                     ci_upper_q, n_lo = old_hi + 1L)
+  c(old_cache, new_part)
 }
 
 # Exact joint assurance at a single total N: the number of diseased subjects
@@ -125,35 +153,109 @@
 #'   narrow the prior-only credible interval happens to be, matching
 #'   \code{method = "monte_carlo"} exactly. The two arms are conditionally
 #'   independent given \code{(n_d, n_nd)}, which licenses the product
-#'   \code{P_se(k) * P_sp(N - k)} inside the sum. \code{N} is accepted as
-#'   soon as this exact
-#'   probability reaches \code{target_assurance}; there is no sampling error
-#'   to guard against, so \code{B} plays no role in this calculation (it is
-#'   still used for the legacy per-arm searches and heuristics described
-#'   below) and \code{seed} does not affect the result either. This is the
-#'   preferred mode: it is deterministic, reproducible bit-for-bit, and free
-#'   of the dependence on \code{B} that affects \code{method = "monte_carlo"}
-#'   (e.g., using the default \code{prior_se}, \code{prior_sp},
-#'   \code{delta_se}, \code{delta_sp} and \code{target_assurance} together
-#'   with \code{prior_prev = c(4, 16)} (the worked example from the
-#'   accompanying article; mean prevalence 0.20, \strong{not} the default
-#'   \code{prior_prev}, which is \code{c(6, 14)}), the exact first
-#'   \code{N} with joint assurance \eqn{\ge} 0.80 is 678, with assurance
-#'   0.800349, whereas \code{method = "monte_carlo"} with \code{B = 20000}
-#'   returns 683 because of Monte Carlo noise near the crossing point -- see
-#'   \strong{Anti-noise acceptance rule} below). \code{P_se} and \code{P_sp}
-#'   depend only on arm size, not on \code{N}, so they are cached once, up to
-#'   \code{max(N_range)}, and reused across every candidate \code{N}; the
-#'   cache itself costs \eqn{O(N_{\max}^2)} \code{qbeta} evaluations (about
-#'   500,000 for \code{N_max} around 700, a few seconds). If
-#'   \code{max(N_range)} is large enough that this becomes impractical, a
-#'   warning suggests \code{method = "monte_carlo"} instead.
+#'   \code{P_se(k) * P_sp(N - k)} inside the sum. There is no sampling error
+#'   to guard against in this exact calculation, so \code{B} plays no role
+#'   in it at all (it is still used for the legacy per-arm searches and
+#'   heuristics described below) and \code{seed} does not affect the result
+#'   either -- this is a genuine property of the arithmetic (a finite sum
+#'   with no random inputs), not an approximation. \code{method = "exact"}
+#'   is deterministic, reproducible bit-for-bit, and free of the dependence
+#'   on \code{B} that affects \code{method = "monte_carlo"} (e.g., using the
+#'   default \code{prior_se}, \code{prior_sp}, \code{delta_se}, \code{delta_sp}
+#'   and \code{target_assurance} together with \code{prior_prev = c(4, 16)}
+#'   (the worked example from the accompanying article; mean prevalence
+#'   0.20, \strong{not} the default \code{prior_prev}, which is
+#'   \code{c(6, 14)}), the exact first \code{N} with joint assurance
+#'   \eqn{\ge} 0.80 is 678, with assurance 0.800349, whereas
+#'   \code{method = "monte_carlo"} with \code{B = 20000} returns 683 because
+#'   of Monte Carlo noise near the crossing point -- see \strong{Anti-noise
+#'   acceptance rule} below).
+#'
+#'   \strong{Evaluation is exact with respect to the discrete model above,
+#'   up to floating-point and \code{qbeta} quantile error.} "Exact" here
+#'   means the Beta-Binomial sum is evaluated by enumeration rather than by
+#'   simulation -- it is not a claim that \code{qbeta()} itself is free of
+#'   floating-point rounding; see \strong{N = 2 vs. N = 1} below for how
+#'   this is handled at the smallest arm sizes, where it matters most.
+#'
+#'   \strong{Which \code{N} are searched: the integer scan (\code{N_range =
+#'   NULL}) vs. a user-supplied \code{N_range}.} Versions \verb{<= 0.6.5} (a
+#'   defect corrected here) built the automatic search grid from \code{n_se},
+#'   \code{n_sp} and \code{N_total_P90} -- all three themselves Monte Carlo
+#'   quantities depending on \code{B} and \code{seed} -- so the SAME exact,
+#'   deterministic calculation could silently return different \code{N_total}
+#'   values depending on arguments (\code{B}, \code{seed}) that \code{method
+#'   = "exact"} otherwise has, and documents, NO dependence on. When
+#'   \code{N_range = NULL} (the default), the search instead scans every
+#'   integer \code{N} starting at \code{N = 2} (see \strong{N = 2 vs. N = 1}
+#'   below), strictly ascending, built in doubling blocks capped at
+#'   \code{N_max}: the first block covers \code{2:min(500, N_max)}; if no
+#'   crossing is found there, the next block extends the scan to
+#'   \code{min(1000, N_max)}, then \code{min(2000, N_max)}, doubling the
+#'   block ceiling each time until either a crossing is found or the ceiling
+#'   reaches \code{N_max}. This never depends on \code{n_se}, \code{n_sp},
+#'   \code{N_total_P90}, \code{B} or \code{seed}, and is exhaustive over
+#'   integers up to \code{N_max}: the \code{N} it returns is the smallest
+#'   integer whose exact joint assurance reaches \code{target_assurance},
+#'   full stop, not merely the smallest one a heuristic grid happened to
+#'   include. Supplying \code{N_range} explicitly instead searches exactly
+#'   \code{sort(unique(as.integer(N_range)))}, in ascending order; the result
+#'   is then "the first candidate in \code{N_range} that reaches
+#'   \code{target_assurance}" -- the smallest value actually searched, not
+#'   necessarily the smallest INTEGER overall, since an explicit
+#'   \code{N_range} may skip values. \code{search_type} in the return value
+#'   records which of the two was used (\code{"integer_scan_auto"} or
+#'   \code{"user_N_range"}), and \code{N_range_used} records every value
+#'   actually evaluated, in the order evaluated.
+#'
+#'   \strong{No crossing found (both \code{method}s).} If the scan (or the
+#'   supplied \code{N_range}) is exhausted with no \code{N} reaching
+#'   \code{target_assurance}, versions \verb{<= 0.6.5} (a defect corrected
+#'   here) silently returned \code{max(N_range)} as if it were a validated
+#'   solution. This function now instead sets \code{N_total = NA_integer_},
+#'   \code{n_total = NA_integer_}, \code{joint_assurance = NA_real_},
+#'   \code{target_reached = FALSE}, and reports the diagnostics
+#'   \code{max_assurance_evaluated} (the highest exact/Monte-Carlo-estimated
+#'   assurance seen anywhere in the scan) and \code{N_at_max_assurance} (the
+#'   \code{N} at which it was seen), together with a warning naming the
+#'   ceiling reached and how to search further (\code{N_max} for the
+#'   automatic integer scan, a wider \code{N_range} otherwise).
+#'
+#'   \strong{N = 2 vs. N = 1.} The integer scan starts at \code{N = 2}, not
+#'   \code{N = 1}: a total of \code{N = 1} puts every subject on one arm and
+#'   none on the other (\code{n_d = 1, n_nd = 0} or vice versa), so its exact
+#'   joint assurance is \strong{always} exactly \code{0} regardless of the
+#'   priors -- the same degenerate-arm override already described above
+#'   forces the zero-size arm's contribution to \code{0} at both \code{k = 0}
+#'   and \code{k = N = 1}. \code{N = 1} is therefore never a useful search
+#'   target and is skipped by construction; it is still evaluated correctly
+#'   (as \code{0}) if a caller explicitly includes it in \code{N_range}. An
+#'   arm of size exactly \strong{one} (which first becomes possible at
+#'   \code{N = 2}, when the OTHER arm gets the other one) is, by contrast,
+#'   \strong{not} degenerate: its one-subject posterior is well-defined and
+#'   is scored on its actual width, matching \code{method = "monte_carlo"}
+#'   (see the \code{H-06} regression test).
+#'
+#'   \code{P_se} and \code{P_sp} depend only on arm size, not on \code{N},
+#'   so they are cached once per block (see above) and reused across every
+#'   candidate \code{N} in that block; growing a block only computes the
+#'   NEW arm sizes (see \code{.bam_exact_extend_cache()}), not the whole
+#'   cache from scratch. The cache itself costs \eqn{O(N_{\max}^2)}
+#'   \code{qbeta} evaluations in the worst case (about 500,000 for an
+#'   \code{N_max} around 700, a few seconds). If the final block ceiling
+#'   is large enough that this becomes impractical, a warning suggests
+#'   \code{method = "monte_carlo"} instead.
 #'
 #'   \code{method = "monte_carlo"} instead estimates the same probability by
 #'   simulation, as described above, and is kept for continuity with
 #'   versions \verb{<= 0.4.x} of this joint search (introduced mid-cycle in
 #'   0.5.0) and as a fallback for \code{N} ranges too large for the exact
-#'   cache.
+#'   cache. Under \code{N_range = NULL} it still uses the legacy heuristic
+#'   grid (\code{max(20, n_se, n_sp):ceiling(N_total_P90)}) described below,
+#'   since a Monte Carlo search already has its own sampling error to manage
+#'   and gains nothing from the deterministic integer scan used by
+#'   \code{method = "exact"}; \code{search_type} for this case is
+#'   \code{"monte_carlo_auto"}.
 #'
 #'   \strong{Anti-noise acceptance rule (\code{method = "monte_carlo"} only).}
 #'   Because \code{joint_assurance} at each \code{N} is itself a Monte Carlo
@@ -180,13 +282,16 @@
 #'   no longer determines the headline result. \code{N_range} is a new
 #'   argument that controls the grid of \strong{total} sample sizes searched
 #'   for \code{N_total}, the joint-assurance result described above. When
-#'   \code{N_range = NULL} (the default), it is built automatically as
+#'   \code{N_range = NULL} (the default): under \code{method = "exact"} it
+#'   is the deterministic integer scan described above (never a function of
+#'   \code{n_se}, \code{n_sp}, \code{B} or \code{seed}); under \code{method =
+#'   "monte_carlo"} it remains the legacy heuristic grid
 #'   \code{max(20, n_se, n_sp):ceiling(N_total_P90)}, i.e. from the smallest
 #'   total that could possibly supply both per-arm requirements up to the
 #'   90th percentile of the legacy prevalence-uncertainty heuristic (see
 #'   \code{N_total_P90} below), which in practice comfortably brackets the
-#'   true joint requirement. No existing argument name was removed or had
-#'   its default behavior changed; \code{N_range} is purely additive.
+#'   true joint requirement for that search mode. No existing argument name
+#'   was removed; \code{N_range} is purely additive.
 #'
 #' @param prior_se Numeric vector \code{c(alpha, beta)} for Beta prior on
 #'   sensitivity. Default \code{c(17, 3)} (E[Se]=0.85, ~20 pseudo-observations).
@@ -204,8 +309,17 @@
 #'   this differs from \code{N_range}.
 #' @param N_range Integer vector of candidate \strong{total} N values
 #'   searched for the headline joint-assurance result \code{N_total}.
-#'   Default \code{NULL}, which builds the grid automatically from
-#'   \code{n_se}, \code{n_sp}, and \code{N_total_P90} -- see \code{Details}.
+#'   Default \code{NULL}: under \code{method = "exact"} this triggers the
+#'   deterministic integer scan described in \code{Details} (independent of
+#'   \code{n_se}, \code{n_sp}, \code{B} and \code{seed}); under \code{method
+#'   = "monte_carlo"} it builds the legacy heuristic grid from \code{n_se},
+#'   \code{n_sp}, and \code{N_total_P90} -- see \code{Details}. When supplied
+#'   explicitly, searched as \code{sort(unique(as.integer(N_range)))}.
+#' @param N_max Integer. Upper ceiling for the automatic integer scan used
+#'   by \code{method = "exact"} when \code{N_range = NULL}. Default
+#'   \code{3000L}, the same practical limit the exact cache already warned
+#'   about. Ignored when \code{N_range} is supplied explicitly, or under
+#'   \code{method = "monte_carlo"}. See \code{Details}.
 #' @param B Number of MC replications. Default 5000. Used for the legacy
 #'   per-arm searches and heuristics (\code{n_diseased}, \code{n_non_diseased},
 #'   \code{assurance_se}, \code{assurance_sp}, \code{N_total_median},
@@ -250,16 +364,52 @@
 #'       \code{n_total} held \code{N_total_median}: see \code{Details}.}
 #'     \item{N_total}{The minimum total N whose \strong{joint} assurance
 #'       (Se and Sp both within target width, in the same replication, under
-#'       cohort design) reaches \code{target_assurance}. Under \code{method =
-#'       "exact"} this is the exact probability itself; under \code{method =
-#'       "monte_carlo"} it is accepted at the 95\% Monte Carlo confidence
-#'       lower bound (the anti-noise rule). This is the headline result of
-#'       this function; see \code{Details}.}
+#'       cohort design) reaches \code{target_assurance}, among the candidate
+#'       N actually searched (see \code{N_range_used}). Under \code{method =
+#'       "monte_carlo"} acceptance is at the 95\% Monte Carlo confidence
+#'       lower bound (the anti-noise rule). \code{NA_integer_} when no
+#'       candidate reached the target (\code{target_reached = FALSE}); see
+#'       \code{Details}, "No crossing found". This is the headline result of
+#'       this function when a solution exists; see \code{Details}.}
+#'     \item{target_reached}{Logical. \code{TRUE} if some candidate \code{N}
+#'       reached \code{target_assurance}; \code{FALSE} otherwise, in which
+#'       case \code{N_total}, \code{n_total} and \code{joint_assurance} are
+#'       all \code{NA} and \code{max_assurance_evaluated} /
+#'       \code{N_at_max_assurance} carry the diagnostics instead. See
+#'       \code{Details}, "No crossing found".}
+#'     \item{N_range_used}{Integer vector, the candidate \code{N} values
+#'       actually evaluated, in the order evaluated. Under the automatic
+#'       integer scan (\code{method = "exact"}, \code{N_range = NULL}) this
+#'       is \code{2:N_total} when a crossing was found, or the full scanned
+#'       range up to the final block ceiling (at most \code{N_max}) when it
+#'       was not.}
+#'     \item{search_type}{One of \code{"integer_scan_auto"} (exact method,
+#'       \code{N_range = NULL}), \code{"user_N_range"} (an explicit
+#'       \code{N_range} was supplied, either method), or
+#'       \code{"monte_carlo_auto"} (Monte Carlo method, \code{N_range =
+#'       NULL}). See \code{Details}.}
+#'     \item{N_max}{The \code{N_max} argument actually in effect for the
+#'       automatic integer scan (\code{search_type == "integer_scan_auto"});
+#'       \code{NA_integer_} otherwise (an explicit \code{N_range} or
+#'       \code{method = "monte_carlo"} does not use \code{N_max}).}
 #'     \item{joint_assurance}{The joint assurance achieved at \code{N_total}
 #'       (point estimate, not the lower confidence bound used to accept it
 #'       under \code{method = "monte_carlo"}; under \code{method = "exact"}
 #'       this already \emph{is} the exact probability, with no further bound
-#'       to distinguish it from).}
+#'       to distinguish it from). \code{NA_real_} when
+#'       \code{target_reached = FALSE} -- see \code{max_assurance_evaluated}
+#'       for the diagnostic value in that case.}
+#'     \item{max_assurance_evaluated}{The highest assurance (exact
+#'       probability, or Monte Carlo point estimate, according to
+#'       \code{method}) observed anywhere among \code{N_range_used}. Always
+#'       populated, including when \code{target_reached = TRUE} (where it
+#'       equals \code{joint_assurance}, since assurance is evaluated in
+#'       ascending \code{N} and the search stops at the first crossing).
+#'       This is the field to read for "how close did the search get" when
+#'       \code{target_reached = FALSE}.}
+#'     \item{N_at_max_assurance}{The \code{N} (one element of
+#'       \code{N_range_used}) at which \code{max_assurance_evaluated} was
+#'       observed. Equals \code{N_total} when \code{target_reached = TRUE}.}
 #'     \item{assurance_mcse}{Monte Carlo standard error of
 #'       \code{joint_assurance}, i.e.
 #'       \code{sqrt(joint_assurance * (1 - joint_assurance) / B)}, under
@@ -318,6 +468,7 @@ bam_sample_size <- function(prior_se = c(17, 3),
                             alpha_ci = 0.95,
                             seed = 2026,
                             N_range = NULL,
+                            N_max = 3000L,
                             method = c("exact", "monte_carlo")) {
   method <- match.arg(method)
 
@@ -341,6 +492,7 @@ bam_sample_size <- function(prior_se = c(17, 3),
   stopifnot(target_assurance > 0, target_assurance < 1)
   stopifnot(B >= 1)
   stopifnot(is.null(N_range) || (length(N_range) >= 1 && all(N_range > 0)))
+  stopifnot(length(N_max) == 1, N_max >= 2)
 
   # Small-B advisory, scoped to what B actually governs under each mode. B
   # always affects the legacy per-arm fields (n_diseased, n_non_diseased,
@@ -466,29 +618,40 @@ bam_sample_size <- function(prior_se = c(17, 3),
   N_total_P75 <- stats::quantile(N_total_draws, 0.75, names = FALSE)
   N_total_P90 <- stats::quantile(N_total_draws, 0.90, names = FALSE)
 
-  # --- Joint search for total N (headline result, v0.5.0) -----------------
+  # --- Joint search for total N (headline result, v0.5.0; M-01 contract,
+  # v0.6.6) ------------------------------------------------------------
   # Unlike the two searches above, this one evaluates BOTH arms within the
   # SAME replication of a single cohort of size N, with n_d ~ Binomial(N,
   # prev) (the disease count is random, not fixed at floor(N * prev)). See
-  # @details for the full generative model and the anti-noise acceptance
-  # rule.
-  if (is.null(N_range)) {
-    N_lo <- max(20L, n_se, n_sp)
-    N_hi <- max(N_lo + 1L, ceiling(N_total_P90))
-    N_range_used <- N_lo:N_hi
-  } else {
-    N_range_used <- N_range
-  }
+  # @details for the full generative model, the anti-noise acceptance rule,
+  # the deterministic integer scan (method = "exact", N_range = NULL), and
+  # the "no crossing found" contract shared by both methods.
+  exact_n_max_practical <- 3000L
 
   N_total <- NA_integer_
   joint_assurance_achieved <- NA_real_
   assurance_mcse_achieved <- NA_real_
+  target_reached <- FALSE
+  max_assurance_evaluated <- NA_real_
+  N_at_max_assurance <- NA_integer_
+  N_max_out <- NA_integer_
 
   if (method == "monte_carlo") {
-    z_mcse <- stats::qnorm(0.95)
+    # N_range = NULL keeps the legacy heuristic grid for this mode (a Monte
+    # Carlo search already manages its own sampling error and gains nothing
+    # from the deterministic integer scan used by method = "exact"; see
+    # @details).
+    if (is.null(N_range)) {
+      N_lo <- max(20L, n_se, n_sp)
+      N_hi <- max(N_lo + 1L, ceiling(N_total_P90))
+      N_range_used <- N_lo:N_hi
+      search_type <- "monte_carlo_auto"
+    } else {
+      N_range_used <- N_range
+      search_type <- "user_N_range"
+    }
 
-    joint_assurance_last <- NA_real_
-    assurance_mcse_last <- NA_real_
+    z_mcse <- stats::qnorm(0.95)
 
     for (N in N_range_used) {
       set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rejection")
@@ -521,8 +684,10 @@ bam_sample_size <- function(prior_se = c(17, 3),
       joint_assurance <- mean(success)
       assurance_mcse <- sqrt(joint_assurance * (1 - joint_assurance) / B)
 
-      joint_assurance_last <- joint_assurance
-      assurance_mcse_last <- assurance_mcse
+      if (is.na(max_assurance_evaluated) || joint_assurance > max_assurance_evaluated) {
+        max_assurance_evaluated <- joint_assurance
+        N_at_max_assurance <- as.integer(N)
+      }
 
       # Anti-noise rule: accept N only if the lower bound of the one-sided
       # 95% CI of the Monte Carlo estimate itself still reaches the target.
@@ -530,84 +695,191 @@ bam_sample_size <- function(prior_se = c(17, 3),
         N_total <- as.integer(N)
         joint_assurance_achieved <- joint_assurance
         assurance_mcse_achieved <- assurance_mcse
+        target_reached <- TRUE
         break
       }
     }
 
-    if (is.na(N_total)) {
-      warning("No N in N_range achieved the target JOINT assurance (at the ",
-              "95% Monte Carlo confidence lower bound). Consider expanding ",
-              "N_range or increasing B.")
-      N_total <- as.integer(max(N_range_used))
-      joint_assurance_achieved <- joint_assurance_last
-      assurance_mcse_achieved <- assurance_mcse_last
+    if (!target_reached) {
+      # M-01 (v0.6.6): no longer silently returns max(N_range) as if it
+      # were a validated solution (the defect this corrects; see
+      # @details, "No crossing found"). N_total / n_total /
+      # joint_assurance are NA_integer_/NA_real_; the diagnostics
+      # max_assurance_evaluated and N_at_max_assurance report what the
+      # search actually saw, and N_range covers the fix: expanding it is
+      # the only way to search further under this mode.
+      warning(
+        "No N in N_range achieved the target JOINT assurance (at the 95% ",
+        "Monte Carlo confidence lower bound): the highest assurance seen ",
+        "was ", sprintf("%.6f", max_assurance_evaluated), " at N = ",
+        N_at_max_assurance, ", against target_assurance = ",
+        target_assurance, ". N_total, n_total and joint_assurance are NA ",
+        "(target_reached = FALSE). Expand N_range or increase B to search ",
+        "further; see max_assurance_evaluated / N_at_max_assurance for ",
+        "diagnostics.",
+        call. = FALSE
+      )
     }
   } else {
     # --- method == "exact": closed-form Beta-Binomial enumeration, no
-    # simulation, no seed/B dependence, no sampling error to guard against
-    # (hence no anti-noise rule). See @details for the derivation.
-    N_max_exact <- max(N_range_used)
+    # simulation, no sampling error to guard against (hence no anti-noise
+    # rule), and (since v0.6.6) no dependence on seed/B for the headline
+    # N_total / joint_assurance either way -- see @details.
+    if (is.null(N_range)) {
+      # --- deterministic integer scan, N = 2, 3, 4, ..., in doubling
+      # blocks capped at N_max (see @details). Never depends on n_se,
+      # n_sp, N_total_P90, B or seed.
+      search_type <- "integer_scan_auto"
+      N_max_out <- as.integer(N_max)
 
-    # O(N^2) qbeta calls to build the cache below; warn rather than silently
-    # grinding for minutes on an oversized N_range.
-    exact_n_max_practical <- 3000L
-    if (N_max_exact > exact_n_max_practical) {
-      warning(
-        "method = \"exact\" caches per-arm probabilities up to N = ",
-        N_max_exact, ", which is O(N^2) qbeta evaluations and may be very ",
-        "slow. Consider method = \"monte_carlo\" for N_range this large."
-      )
-    }
+      block_cap <- min(500L, as.integer(N_max))
+      start_N <- 2L
+      cache_hi <- -1L
+      P_se_exact <- NULL
+      P_sp_exact <- NULL
+      warned_slow <- FALSE
 
-    # Cached once per arm, up to N_max_exact, and reused across every
-    # candidate N below -- P_se(k) / P_sp(m) depend only on arm size.
-    P_se_exact <- .bam_exact_width_prob(
-      N_max_exact, a_se, b_se, delta_se, ci_lower_q, ci_upper_q
-    )
-    P_sp_exact <- .bam_exact_width_prob(
-      N_max_exact, a_sp, b_sp, delta_sp, ci_lower_q, ci_upper_q
-    )
+      repeat {
+        if (!warned_slow && block_cap > exact_n_max_practical) {
+          warning(
+            "method = \"exact\" caches per-arm probabilities up to N = ",
+            block_cap, ", which is O(N^2) qbeta evaluations and may be ",
+            "very slow. Consider method = \"monte_carlo\" for an N_max ",
+            "this large."
+          )
+          warned_slow <- TRUE
+        }
+        # Extend (not rebuild) the per-arm caches: only arm sizes
+        # (cache_hi + 1):block_cap are newly computed; see
+        # .bam_exact_extend_cache().
+        P_se_exact <- .bam_exact_extend_cache(
+          P_se_exact, cache_hi, block_cap, a_se, b_se, delta_se,
+          ci_lower_q, ci_upper_q
+        )
+        P_sp_exact <- .bam_exact_extend_cache(
+          P_sp_exact, cache_hi, block_cap, a_sp, b_sp, delta_sp,
+          ci_lower_q, ci_upper_q
+        )
+        cache_hi <- block_cap
+        # Degenerate arm-size-0 override (see the long comment below, kept
+        # with the final non-auto branch); idempotent, so reapplying it on
+        # every block extension is harmless.
+        P_se_exact[1] <- 0
+        P_sp_exact[1] <- 0
 
-    # A degenerate replication (n_d = 0 or n_nd = 0) is always a FAILURE,
-    # never a success -- the same convention already enforced under method =
-    # "monte_carlo" (see @details). In the joint sum inside
-    # .bam_exact_joint_assurance(), n_d = 0 occurs only at k = 0 and n_nd = 0
-    # only at k = N, and both terms read the arm-size-0 entry of the
-    # relevant cache (P_se_exact[1] for k = 0, P_sp_exact[1] for k = N),
-    # regardless of which candidate N is being evaluated. Zeroing that entry
-    # once, here, therefore removes exactly the degenerate contribution from
-    # every candidate N's sum, with no change needed to
-    # .bam_exact_joint_assurance() itself. Without this, P_arm(0) is simply
-    # the credible-interval width evaluated at the PRIOR (no data), which is
-    # not 0 in general and can even be 1 for tight informative priors --
-    # wrongly crediting an arm that received no subjects at all.
-    P_se_exact[1] <- 0
-    P_sp_exact[1] <- 0
+        for (N in start_N:block_cap) {
+          joint_assurance <- .bam_exact_joint_assurance(
+            N, prior_prev[1], prior_prev[2], P_se_exact, P_sp_exact
+          )
+          if (is.na(max_assurance_evaluated) || joint_assurance > max_assurance_evaluated) {
+            max_assurance_evaluated <- joint_assurance
+            N_at_max_assurance <- N
+          }
+          if (joint_assurance >= target_assurance) {
+            N_total <- as.integer(N)
+            joint_assurance_achieved <- joint_assurance
+            assurance_mcse_achieved <- 0
+            target_reached <- TRUE
+            break
+          }
+        }
 
-    joint_assurance_last <- NA_real_
-
-    for (N in N_range_used) {
-      joint_assurance <- .bam_exact_joint_assurance(
-        N, prior_prev[1], prior_prev[2], P_se_exact, P_sp_exact
-      )
-      joint_assurance_last <- joint_assurance
-
-      if (joint_assurance >= target_assurance) {
-        N_total <- as.integer(N)
-        joint_assurance_achieved <- joint_assurance
-        # No Monte Carlo sampling error under the exact calculation -- see
-        # @return for why 0 (not NA) is used here.
-        assurance_mcse_achieved <- 0
-        break
+        if (target_reached || block_cap >= as.integer(N_max)) break
+        start_N <- block_cap + 1L
+        block_cap <- min(block_cap * 2L, as.integer(N_max))
       }
-    }
 
-    if (is.na(N_total)) {
-      warning("No N in N_range achieved the target JOINT assurance under ",
-              "the exact calculation. Consider expanding N_range.")
-      N_total <- as.integer(max(N_range_used))
-      joint_assurance_achieved <- joint_assurance_last
-      assurance_mcse_achieved <- 0
+      N_range_used <- if (target_reached) 2L:N_total else 2L:block_cap
+
+      if (!target_reached) {
+        warning(
+          "No integer N in 2:", N_max, " (N_max) achieved the target ",
+          "JOINT assurance under the exact calculation: the highest ",
+          "assurance seen was ", sprintf("%.6f", max_assurance_evaluated),
+          " at N = ", N_at_max_assurance, ", against target_assurance = ",
+          target_assurance, ". N_total, n_total and joint_assurance are NA ",
+          "(target_reached = FALSE). Increase N_max to search further; ",
+          "see max_assurance_evaluated / N_at_max_assurance for ",
+          "diagnostics.",
+          call. = FALSE
+        )
+      }
+    } else {
+      # --- user-supplied N_range: searched as sort(unique(as.integer(.))),
+      # ascending -- see @details, "Which N are searched".
+      search_type <- "user_N_range"
+      N_range_used <- sort(unique(as.integer(N_range)))
+      N_max_exact <- max(N_range_used)
+
+      # O(N^2) qbeta calls to build the cache below; warn rather than
+      # silently grinding for minutes on an oversized N_range.
+      if (N_max_exact > exact_n_max_practical) {
+        warning(
+          "method = \"exact\" caches per-arm probabilities up to N = ",
+          N_max_exact, ", which is O(N^2) qbeta evaluations and may be ",
+          "very slow. Consider method = \"monte_carlo\" for N_range this ",
+          "large."
+        )
+      }
+
+      # Cached once per arm, up to N_max_exact, and reused across every
+      # candidate N below -- P_se(k) / P_sp(m) depend only on arm size.
+      P_se_exact <- .bam_exact_width_prob(
+        N_max_exact, a_se, b_se, delta_se, ci_lower_q, ci_upper_q
+      )
+      P_sp_exact <- .bam_exact_width_prob(
+        N_max_exact, a_sp, b_sp, delta_sp, ci_lower_q, ci_upper_q
+      )
+
+      # A degenerate replication (n_d = 0 or n_nd = 0) is always a FAILURE,
+      # never a success -- the same convention already enforced under
+      # method = "monte_carlo" (see @details). In the joint sum inside
+      # .bam_exact_joint_assurance(), n_d = 0 occurs only at k = 0 and
+      # n_nd = 0 only at k = N, and both terms read the arm-size-0 entry of
+      # the relevant cache (P_se_exact[1] for k = 0, P_sp_exact[1] for
+      # k = N), regardless of which candidate N is being evaluated. Zeroing
+      # that entry once, here, therefore removes exactly the degenerate
+      # contribution from every candidate N's sum, with no change needed to
+      # .bam_exact_joint_assurance() itself. Without this, P_arm(0) is
+      # simply the credible-interval width evaluated at the PRIOR (no
+      # data), which is not 0 in general and can even be 1 for tight
+      # informative priors -- wrongly crediting an arm that received no
+      # subjects at all.
+      P_se_exact[1] <- 0
+      P_sp_exact[1] <- 0
+
+      for (N in N_range_used) {
+        joint_assurance <- .bam_exact_joint_assurance(
+          N, prior_prev[1], prior_prev[2], P_se_exact, P_sp_exact
+        )
+        if (is.na(max_assurance_evaluated) || joint_assurance > max_assurance_evaluated) {
+          max_assurance_evaluated <- joint_assurance
+          N_at_max_assurance <- N
+        }
+
+        if (joint_assurance >= target_assurance) {
+          N_total <- as.integer(N)
+          joint_assurance_achieved <- joint_assurance
+          # No Monte Carlo sampling error under the exact calculation --
+          # see @return for why 0 (not NA) is used here.
+          assurance_mcse_achieved <- 0
+          target_reached <- TRUE
+          break
+        }
+      }
+
+      if (!target_reached) {
+        warning(
+          "No N in N_range achieved the target JOINT assurance under the ",
+          "exact calculation: the highest assurance seen was ",
+          sprintf("%.6f", max_assurance_evaluated), " at N = ",
+          N_at_max_assurance, ", against target_assurance = ",
+          target_assurance, ". N_total, n_total and joint_assurance are NA ",
+          "(target_reached = FALSE). Consider expanding N_range; see ",
+          "max_assurance_evaluated / N_at_max_assurance for diagnostics.",
+          call. = FALSE
+        )
+      }
     }
   }
 
@@ -621,7 +893,13 @@ bam_sample_size <- function(prior_se = c(17, 3),
       n_non_diseased = n_sp,
       n_total = N_total,
       N_total = N_total,
+      target_reached = target_reached,
+      N_range_used = N_range_used,
+      search_type = search_type,
+      N_max = N_max_out,
       joint_assurance = joint_assurance_achieved,
+      max_assurance_evaluated = max_assurance_evaluated,
+      N_at_max_assurance = N_at_max_assurance,
       assurance_mcse = assurance_mcse_achieved,
       assurance_method = method,
       assurance_se = assurance_se_achieved,

@@ -187,6 +187,15 @@ test_that("BAM treats a degenerate replication (n_d = 0 or n_nd = 0) as a failur
   # would credit those enumerated terms using the prior-only credible
   # interval width, which is not generally 0 (see the regression test
   # below).
+  # M-01 (v0.6.6) note: versions <= 0.6.5 (the defect this corrects) returned
+  # N_total = max(N_range) = 1L and joint_assurance = 0 here, as if N = 1
+  # were a validated (if poor) solution. Since v0.6.6 a non-crossing search
+  # never returns max(N_range) as a solution under EITHER method (see
+  # @details, "No crossing found"): N_total / n_total / joint_assurance are
+  # now NA, target_reached is FALSE, and the diagnostic VALUE this test
+  # actually cares about (joint_assurance forced to exactly 0 by the
+  # degenerate-replication override at N = 1) lives in
+  # max_assurance_evaluated / N_at_max_assurance instead.
   expect_warning(
     result <- bam_sample_size(
       prior_se = c(1000, 100), prior_sp = c(1000, 100),
@@ -199,8 +208,12 @@ test_that("BAM treats a degenerate replication (n_d = 0 or n_nd = 0) as a failur
     ),
     "No N in N_range achieved the target JOINT assurance"
   )
-  expect_identical(result$joint_assurance, 0)
-  expect_identical(result$N_total, 1L)
+  expect_false(result$target_reached)
+  expect_identical(result$N_total, NA_integer_)
+  expect_identical(result$n_total, NA_integer_)
+  expect_identical(result$joint_assurance, NA_real_)
+  expect_identical(result$max_assurance_evaluated, 0)
+  expect_identical(result$N_at_max_assurance, 1L)
 })
 
 test_that("H-06: an arm of size 1 is NOT treated as degenerate (unlike n_d = 0)", {
@@ -215,6 +228,12 @@ test_that("H-06: an arm of size 1 is NOT treated as degenerate (unlike n_d = 0)"
   # wrongly treated as degenerate too, joint_assurance here would be ~0,
   # identical to the N = 1 case; it must instead be close to
   # P(n_d = 1) = dbinom(1, 2, prev).
+  # target_assurance = 0.80 is not reached at N = 2 under either method
+  # here (the achieved assurance is close to P(n_d = 1 | N = 2) ~ 0.33, well
+  # below 0.80), so both calls are non-crossing: since v0.6.6, that means
+  # joint_assurance is NA and the diagnostic value this test actually cares
+  # about -- whether n = 1 was wrongly treated as degenerate -- lives in
+  # max_assurance_evaluated instead (see the M-01 note above).
   prev <- 0.5
   res <- suppressWarnings(bam_sample_size(
     prior_se = c(1000, 100), prior_sp = c(1000, 100),
@@ -226,8 +245,9 @@ test_that("H-06: an arm of size 1 is NOT treated as degenerate (unlike n_d = 0)"
     N_range = 2,
     B = 40000, seed = 2026, method = "monte_carlo"
   ))
-  expect_gt(res$joint_assurance, 0.05) # clearly not ~0 (the n=1-is-degenerate outcome)
-  expect_lt(res$joint_assurance, 0.95) # clearly not ~1 either (n=0/2 still fail)
+  expect_false(res$target_reached)
+  expect_gt(res$max_assurance_evaluated, 0.05) # clearly not ~0 (the n=1-is-degenerate outcome)
+  expect_lt(res$max_assurance_evaluated, 0.95) # clearly not ~1 either (n=0/2 still fail)
 
   res_exact <- suppressWarnings(bam_sample_size(
     prior_se = c(1000, 100), prior_sp = c(1000, 100),
@@ -238,10 +258,17 @@ test_that("H-06: an arm of size 1 is NOT treated as degenerate (unlike n_d = 0)"
     N_range = 2,
     method = "exact"
   ))
+  expect_false(res_exact$target_reached)
   # method = "exact" is deterministic: it must agree with the Monte Carlo
-  # estimate within a small number of Monte Carlo standard errors.
-  expect_lt(abs(res_exact$joint_assurance - res$joint_assurance),
-            4 * res$assurance_mcse)
+  # estimate within a small number of Monte Carlo standard errors. Both
+  # being non-crossing, the comparison is on max_assurance_evaluated (the
+  # assurance actually observed at N = 2, which is all that was searched);
+  # assurance_mcse is NA_real_ on the Monte Carlo side in this contract (no
+  # "achieved" result to attach a standard error to), so it is recomputed
+  # here directly from the diagnostic value and B.
+  mcse_at_max <- sqrt(res$max_assurance_evaluated * (1 - res$max_assurance_evaluated) / res$B)
+  expect_lt(abs(res_exact$max_assurance_evaluated - res$max_assurance_evaluated),
+            4 * mcse_at_max)
 })
 
 ## ---------------------------------------------------------------------
@@ -265,22 +292,32 @@ test_that("BAM exact mode reproduces independently verified reference values", {
   expect_identical(res_678$assurance_method, "exact")
 
   # N = 591 and N = 677 both fall short of target_assurance, so the search
-  # (restricted to that single candidate) falls back to max(N_range) with a
-  # warning; only the resulting joint_assurance VALUE is of interest here.
-  # n_range is deliberately tiny: N_range is explicit, so n_se / n_sp never
-  # feed into this exact search, and there is no need to pay for the (much
-  # more expensive, and here irrelevant) default per-arm search.
+  # (restricted to that single candidate) does not converge: since v0.6.6,
+  # that means N_total/joint_assurance are NA (target_reached = FALSE; see
+  # the M-01 note above) and the exact probability AT that single N --
+  # independently verified via a hand-computed exact Beta-Binomial sum --
+  # is instead read from max_assurance_evaluated (the diagnostic field that
+  # replaced this use of joint_assurance). n_range is deliberately tiny:
+  # N_range is explicit, so n_se / n_sp never feed into this exact search,
+  # and there is no need to pay for the (much more expensive, and here
+  # irrelevant) default per-arm search.
   res_591 <- suppressWarnings(bam_sample_size(
     prior_prev = c(4, 16), target_assurance = 0.80, method = "exact",
     n_range = 20:20, N_range = 591
   ))
-  expect_equal(res_591$joint_assurance, 0.7244942, tolerance = 1e-6)
+  expect_false(res_591$target_reached)
+  expect_identical(res_591$joint_assurance, NA_real_)
+  expect_equal(res_591$max_assurance_evaluated, 0.7244942, tolerance = 1e-6)
+  expect_identical(res_591$N_at_max_assurance, 591L)
 
   res_677 <- suppressWarnings(bam_sample_size(
     prior_prev = c(4, 16), target_assurance = 0.80, method = "exact",
     n_range = 20:20, N_range = 677
   ))
-  expect_equal(res_677$joint_assurance, 0.7996849, tolerance = 1e-6)
+  expect_false(res_677$target_reached)
+  expect_identical(res_677$joint_assurance, NA_real_)
+  expect_equal(res_677$max_assurance_evaluated, 0.7996849, tolerance = 1e-6)
+  expect_identical(res_677$N_at_max_assurance, 677L)
 })
 
 test_that("BAM exact mode defaults to method = \"exact\" when method is not passed", {
@@ -372,6 +409,13 @@ test_that("BAM exact mode treats a degenerate replication (n_d = 0 or n_nd = 0) 
     n_range = 20:20
   )
 
+  # target_assurance = 0.999 is not reached at any of these N (max observed
+  # assurance tops out around 0.61 at N = 30), so every call here is
+  # non-crossing: since v0.6.6, joint_assurance is NA and the diagnostic
+  # value this test cares about is max_assurance_evaluated instead (see the
+  # M-01 note above). assurance_mcse is likewise NA on the non-crossing
+  # Monte Carlo side, so it is recomputed directly from the diagnostic
+  # value and B for the agreement check.
   for (N in c(10L, 20L, 30L)) {
     res_exact <- suppressWarnings(do.call(bam_sample_size, c(common, list(
       method = "exact", N_range = N
@@ -380,16 +424,20 @@ test_that("BAM exact mode treats a degenerate replication (n_d = 0 or n_nd = 0) 
       method = "monte_carlo", N_range = N, B = 100000, seed = 2026
     ))))
 
+    expect_false(res_exact$target_reached)
+    expect_false(res_mc$target_reached)
+
     # A joint assurance of 1 at these small N, under informative priors this
     # tight, is only possible if degenerate splits are being credited as
     # successes -- the exact defect this test guards against.
-    expect_lt(res_exact$joint_assurance, 0.9)
+    expect_lt(res_exact$max_assurance_evaluated, 0.9)
     # The exact and Monte Carlo calculations must agree on the same
     # generative model, within a small number of Monte Carlo standard
     # errors (not merely both be "less than 1").
+    mcse_at_max <- sqrt(res_mc$max_assurance_evaluated * (1 - res_mc$max_assurance_evaluated) / 100000)
     expect_lt(
-      abs(res_exact$joint_assurance - res_mc$joint_assurance),
-      5 * res_mc$assurance_mcse
+      abs(res_exact$max_assurance_evaluated - res_mc$max_assurance_evaluated),
+      5 * mcse_at_max
     )
   }
 })
