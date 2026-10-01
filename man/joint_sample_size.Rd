@@ -63,44 +63,142 @@ session is restored on exit.}
 \value{
 Object of class \code{"dtasamplesize"} with additional elements:
   \describe{
-    \item{n_total}{Minimum total N achieving the joint target.}
-    \item{n_diseased}{Number of diseased at optimal N. Under
+    \item{n_total}{The first \code{N} in \code{N_range} (searched in the
+      order given) achieving the joint target for Se and Sp, subject to
+      the AUC gate. \strong{Not} the smallest integer \code{N} with that
+      property unless \code{N_range} contains every integer in its span;
+      see \code{Details}. \code{NA_integer_} when \code{target_reached =
+      FALSE} (see \code{Details}, "No crossing found") -- never
+      \code{max(N_range)}.}
+    \item{target_reached}{Logical. \code{TRUE} if some candidate \code{N}
+      in \code{N_range} reached \code{target_prob} for Se/Sp (subject to
+      the AUC gate); \code{FALSE} otherwise, in which case \code{n_total},
+      \code{n_diseased}, \code{n_non_diseased} and \code{joint_prob_se_sp}
+      (and its alias \code{joint_prob}) are all \code{NA}, and
+      \code{max_joint_prob_evaluated} / \code{N_at_max_joint_prob} carry
+      the diagnostics instead. See \code{Details}, "No crossing found".}
+    \item{n_diseased}{Number of diseased at \code{n_total}. Under
       \code{design = "cohort"} this is \eqn{\lfloor N \cdot prev
       \rfloor}, the \strong{expected} count, not a value fixed by
       design: the number actually diseased varies from one replicate,
-      and one real study, to the next.}
-    \item{n_non_diseased}{Number of non-diseased at optimal N. Same
-      caveat as \code{n_diseased} under \code{design = "cohort"}.}
+      and one real study, to the next. \code{NA_integer_} when
+      \code{target_reached = FALSE}.}
+    \item{n_non_diseased}{Number of non-diseased at \code{n_total}. Same
+      caveat as \code{n_diseased} under \code{design = "cohort"};
+      \code{NA_integer_} when \code{target_reached = FALSE}.}
     \item{design}{The sampling design used for the Se/Sp Monte Carlo
       (\code{"cohort"} or \code{"fixed"}). Does not affect the AUC gate.}
     \item{joint_prob_se_sp}{Monte Carlo probability that the \strong{Se
-      and Sp} intervals both meet their target width at the optimal N.
+      and Sp} intervals both meet their target width at \code{n_total}.
       This is \strong{not} a three-way joint probability: the AUC
       criterion is a deterministic median-style gate (see
-      \code{Details}). \code{NA} when the AUC gate was never passed
-      anywhere in \code{N_range}, in which case no Se/Sp probability was
-      ever computed.}
+      \code{Details}). \code{NA_real_} when \code{target_reached = FALSE}
+      -- see \code{max_joint_prob_evaluated} for the diagnostic value in
+      that case.}
     \item{joint_prob}{\strong{Deprecated} alias of
       \code{joint_prob_se_sp}, kept for backward compatibility with
       version 0.2.0. Use \code{joint_prob_se_sp}.}
+    \item{joint_prob_mcse}{Monte Carlo standard error of
+      \code{joint_prob_se_sp} at \code{n_total}, i.e.
+      \code{sqrt(joint_prob_se_sp * (1 - joint_prob_se_sp) / B)}.
+      \code{NA_real_} when \code{target_reached = FALSE} (no \code{n_total}
+      to evaluate it at).}
+    \item{search_type}{Always \code{"grid_first_candidate"}: \code{n_total}
+      is the first candidate in \code{N_range}, searched in the order
+      given, reaching \code{target_prob} -- see \code{Details}.}
+    \item{N_range_used}{The candidate \code{N} values actually searched,
+      i.e. \code{N_range} as supplied (every element is visited by the
+      search, whether or not its Se/Sp probability was ultimately
+      computed; see \code{auc_gate}).}
+    \item{seed}{The \code{seed} argument actually used.}
     \item{auc_gate_passed}{Logical: whether any \code{N} in
-      \code{N_range} satisfied the AUC precision criterion.}
+      \code{N_range} satisfied the AUC precision criterion. Kept for
+      backward compatibility; see \code{auc_gate} for the full detail.}
+    \item{auc_gate}{A list describing the deterministic Hanley-McNeil AUC
+      filter applied at every candidate \code{N}: \code{AUC} and
+      \code{delta_auc} (the parameters used), \code{table} (a
+      \code{data.frame} with one row per element of \code{N_range_used},
+      columns \code{N}, \code{n_d_exp}, \code{n_nd_exp}, \code{auc_width}
+      and \code{auc_pass}; \code{auc_pass} is \code{NA} for a candidate
+      skipped because its \strong{expected} margin was already 0 -- i.e.
+      the AUC gate itself was never evaluated for that \code{N} --
+      \code{FALSE} for a candidate whose AUC gate was evaluated and
+      failed, so no Se/Sp joint probability was computed for it either,
+      and \code{TRUE} for a candidate that passed, meaning its Se/Sp
+      joint probability WAS computed; see \code{Details}), and
+      \code{first_N_auc_pass} (the first \code{N} in \code{N_range_used}
+      with \code{auc_pass = TRUE}; \code{NA_integer_} if none).}
     \item{AUC_min}{The geometric lower bound on AUC implied by
       \code{Se} and \code{Sp}.}
+    \item{max_joint_prob_evaluated}{The highest Se/Sp joint probability
+      actually computed anywhere in \code{N_range} (i.e. at a candidate
+      whose AUC gate passed). Always populated when any Se/Sp probability
+      was computed, including when \code{target_reached = TRUE} (where it
+      equals \code{joint_prob_se_sp}, since the search evaluates \code{N}
+      in the given order and stops at the first crossing).
+      \code{NA_real_} if the AUC gate blocked every candidate in
+      \code{N_range} (no Se/Sp probability was ever computed; see
+      \code{Details}).}
+    \item{N_at_max_joint_prob}{The \code{N} (one element of
+      \code{N_range_used}) at which \code{max_joint_prob_evaluated} was
+      observed. Equals \code{n_total} when \code{target_reached = TRUE}.
+      \code{NA_integer_} in the same AUC-blocked-everywhere case as
+      \code{max_joint_prob_evaluated}.}
     \item{buderer_N}{Buderer-based total N for comparison.}
+    \item{B}{The \code{B} argument actually used.}
   }
 }
 \description{
-Finds the minimum total sample size \code{N} at which sensitivity and
-specificity simultaneously achieve their target precision with joint
-probability at least \code{target_prob}, subject to the AUC also
-achieving its target precision. Se and Sp are evaluated by Monte Carlo;
-AUC precision is computed deterministically via the Hanley-McNeil
-variance approximation. \strong{Read the \code{Details}: the AUC
-component is not probabilistic.}
+Finds the \strong{first candidate \code{N} in \code{N_range}} (searched
+in the order given) at which sensitivity and specificity simultaneously
+achieve their target precision with joint probability at least
+\code{target_prob}, subject to the AUC also achieving its target
+precision. Se and Sp are evaluated by Monte Carlo; AUC precision is
+computed deterministically via the Hanley-McNeil variance approximation.
+\strong{Read the \code{Details}: the AUC component is not probabilistic,
+and the result is \strong{not} the smallest integer \code{N} unless
+\code{N_range} itself contains every integer.}
 }
 \details{
-The parameters \code{delta_se}, \code{delta_sp}, and
+\strong{The estimand.} At each candidate total \code{N}, Se and
+  Sp are point values (not random draws of a prior, unlike
+  \code{\link{bam_sample_size}}): sensitivity, specificity and prevalence
+  are the \strong{expected} (point) values supplied via \code{Se},
+  \code{Sp} and \code{prev}. The Se and Sp confidence intervals are
+  \strong{Wilson} intervals (frequentist), not the Beta-Binomial credible
+  intervals used by \code{bam_sample_size()}; \code{delta_se} and
+  \code{delta_sp} are their \strong{half}-widths (the target \strong{full}
+  CI width checked internally is \code{2 * delta}), unlike
+  \code{bam_sample_size()}'s \code{delta_se}/\code{delta_sp}, which are
+  full widths. \code{joint_sample_size()} and \code{bam_sample_size()}
+  therefore measure \strong{related but distinct estimands}, evaluated by
+  different computational routes (Wilson/Monte Carlo here; Beta-Binomial
+  credible interval, exact or Monte Carlo, there): \strong{do not treat
+  one as an independent validation of the other}. The joint probability
+  returned (\code{joint_prob_se_sp}) is over Se and Sp \strong{only}; see
+  below for how the AUC criterion enters.
+
+  \strong{"First candidate in \code{N_range}", not "smallest \code{N}".}
+  The search evaluates \code{N_range} in the order given (ascending, for
+  the default grid) and stops at the first candidate whose joint
+  probability reaches \code{target_prob}. This is the smallest value
+  \strong{actually searched}, not necessarily the smallest \strong{integer}
+  \code{N} with that property, unless \code{N_range} happens to contain
+  every integer in its span (the default, \code{seq(100, 800, by = 10)},
+  does not: it is a grid of step 10). For example, at the package's
+  documented worked example (\code{Se = 0.85}, \code{Sp = 0.90},
+  \code{prev = 0.20}, \code{delta_se = 0.07}, \code{delta_sp = 0.05},
+  \code{B = 20000}, \code{seed = 2026}), the default grid returns
+  \code{n_total = 580} with \code{joint_prob_se_sp = 0.8041}, but a finer,
+  integer-step search over the same neighbourhood crosses the target
+  \code{target_prob = 0.80} as early as \code{N = 578}-\code{579}
+  (verified independently; see the package's audit trail). \code{580} is
+  correctly described as "the first point of the step-10 grid reaching
+  the target", \strong{not} as "the minimum sample size". \code{search_type
+  = "grid_first_candidate"} and \code{N_range_used} in the return value
+  make this explicit and queryable.
+
+  The parameters \code{delta_se}, \code{delta_sp}, and
   \code{delta_auc} are \strong{half-widths} of the confidence interval.
   The target full CI width checked internally is \code{2 * delta}.
 
@@ -143,7 +241,37 @@ The parameters \code{delta_se}, \code{delta_sp}, and
   \eqn{n_d = \lfloor N \cdot prev \rfloor} and \eqn{n_{nd} = N - n_d},
   regardless of \code{design}: it is a deterministic criterion (see
   above), so there is no sampling distribution of \eqn{n_d} to average
-  over in the first place.
+  over in the first place. A candidate \code{N} that fails the AUC gate
+  is \strong{not} assigned a Se/Sp joint probability of 0: it is simply
+  never evaluated for Se/Sp at all (the Monte Carlo step is skipped for
+  that \code{N}; see \code{auc_gate} in \code{Return}). "Blocked by the
+  AUC gate" and "evaluated and found to have joint probability 0" are
+  different things, and the return value keeps them distinguishable via
+  \code{auc_gate$auc_pass} (\code{NA} for a candidate skipped for a
+  different reason -- see \strong{No crossing found} below -- \code{FALSE}
+  for one that failed the AUC gate, \code{TRUE} for one that passed it and
+  so had its Se/Sp joint probability actually computed).
+
+  \strong{No crossing found.} If no \code{N} in \code{N_range} reaches
+  \code{target_prob} for Se/Sp (either because the AUC gate blocked every
+  candidate, or because it was cleared somewhere but the Se/Sp joint
+  probability never reached \code{target_prob}), this function sets
+  \code{n_total = NA_integer_}, \code{target_reached = FALSE},
+  \code{joint_prob_se_sp = NA_real_} (and its alias \code{joint_prob}),
+  \code{n_diseased = NA_integer_}, \code{n_non_diseased = NA_integer_},
+  and reports the diagnostics \code{max_joint_prob_evaluated} (the highest
+  Se/Sp joint probability actually computed anywhere in \code{N_range};
+  \code{NA_real_} if the AUC gate blocked every candidate, since then no
+  Se/Sp probability was ever computed at all) and \code{N_at_max_joint_prob}
+  (the \code{N} at which that maximum was observed; \code{NA_integer_} in
+  the same AUC-blocked-everywhere case), together with a warning naming
+  which of the two situations occurred and how to search further (widen
+  \code{N_range} or relax \code{delta_auc}). \code{n_total} is
+  \strong{never} \code{max(N_range)} when no candidate reaches the target
+  -- that would silently misrepresent an unreached target as a validated
+  sample size, which versions \verb{<= 0.6.5} did (the defect corrected
+  here, the same class of defect M-01 corrected in
+  \code{\link{bam_sample_size}}).
 
   \strong{The two sampling designs for Se and Sp differ in what is
   random, and therefore in the variance of the joint probability.}

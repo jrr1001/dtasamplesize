@@ -53,8 +53,11 @@ cat("Assurance Se:", round(bam_result$assurance_se, 3), "\n")
 ## Joint optimization of Se, Sp, and AUC
 
 In practice, investigators need adequate precision for sensitivity,
-specificity, and AUC simultaneously. The joint approach finds the
-minimum N satisfying all three constraints:
+specificity, and AUC simultaneously. The joint approach searches `N_range`
+(in the order given) for the first candidate N satisfying all three
+constraints -- the first value *searched*, not necessarily the smallest
+integer N, unless `N_range` itself contains every integer in its span; see
+`?joint_sample_size`:
 
 Note that `Se`, `Sp` and `AUC` are not free parameters: any concave ROC
 curve through the operating point `(1 - Sp, Se)` has area at least

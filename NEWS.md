@@ -68,13 +68,76 @@ calculation:
   was independently re-verified via the internal exact Beta-Binomial
   helpers: A(677) = 0.7996848824 < 0.80 <= A(678) = 0.8003489948, and no
   integer in 2..677 reaches 0.80 either.
-* **`joint_sample_size()` (Monte Carlo, unrelated search code) and the
-  decision on whether it needs an analogous fix (P-DISEÑO)** are
-  analyzed, not changed, in this release; see
-  `CORRECCION_INTEGRAL_2026-09-30/analisis_joint/EVIDENCIA_P-DISENO.md`.
-  The published N = 580 (joint probability 0.8041) is unaffected by
-  anything in this release.
-* **Tests.** `tests/testthat/test-bam_exact_contract.R` (new) locks in
+* **`joint_sample_size()` (Monte Carlo, unrelated search code): M-03
+  correction, Option A (lote 01b).** `CORRECCION_INTEGRAL_2026-09-30/
+  DECISION_JOINT_SAMPLE_SIZE.md` analyzed this function's non-crossing
+  behavior and its "smallest N" wording (P-DISEÑO) and presented two
+  options; the author approved **Option A** (2026-10-01): keep the
+  step-10 default grid (`N_range = seq(100, 800, by = 10)`) and its
+  published figure unchanged, reinterpret `N = 580` as "the first
+  candidate of the step-10 grid reaching the target" rather than "the
+  smallest sample size" (it is not: a finer, integer-step search crosses
+  the same target as early as N = 578-579 at the manuscript's operating
+  point), plus the output changes common to both options:
+    - **Non-crossing searches no longer return `max(N_range)` as a
+      solution** (the same class of defect M-01 corrected in
+      `bam_sample_size()` above). When no candidate in `N_range` reaches
+      `target_prob` for Se/Sp, `joint_sample_size()` now sets `n_total =
+      NA_integer_`, `target_reached = FALSE`, `joint_prob_se_sp =
+      NA_real_` (and its alias `joint_prob`), `n_diseased = NA_integer_`,
+      `n_non_diseased = NA_integer_`, and reports `max_joint_prob_evaluated`
+      / `N_at_max_joint_prob` as diagnostics, together with a warning
+      distinguishing "the AUC gate blocked every candidate" from "the AUC
+      gate passed somewhere but Se/Sp never reached target_prob".
+    - **New fields, always present:** `target_reached`, `N_range_used`,
+      `search_type` (always `"grid_first_candidate"`), `seed` (previously
+      not echoed back), `joint_prob_mcse` (the Monte Carlo standard error
+      of `joint_prob_se_sp` at `n_total`), `auc_gate` (a list with `AUC`,
+      `delta_auc`, a `table` of the deterministic Hanley-McNeil gate's
+      outcome at every candidate N -- `NA`/`FALSE`/`TRUE` for
+      skipped/blocked/passed, never a probability of 0 standing in for
+      "blocked" -- and `first_N_auc_pass`), `max_joint_prob_evaluated`,
+      and `N_at_max_joint_prob`. `auc_gate_passed` is kept for backward
+      compatibility.
+    - **The search itself is unchanged**: same candidate order, same
+      per-candidate `set.seed()`, same `joint_prob >= target_prob` rule, so
+      **no published number changes**. The published N = 580 (joint
+      probability 0.8041, now also reported with `joint_prob_mcse` =
+      0.002806 under `B = 20000`, `seed = 2026`, the values used for that
+      figure -- the function's own `B` default remains 5000) is
+      byte-identical before and after this change
+      (`tools/L01b_verificar_cifra.R`).
+    - **`print.dtasamplesize()`** now reports a non-crossing
+      `joint_sample_size()` result explicitly ("Target NOT reached -- no
+      sample size returned") instead of printing `N_total: NA` under the
+      normal, converged-looking label, and a successful result now shows
+      `joint_prob_se_sp`, an explicit "first candidate in N_range"
+      statement (never "smallest"), `joint_prob_mcse`, and the first N
+      passing the AUC gate.
+    - **RNG preservation was already correct** (`save_rng_state()` /
+      `restore_rng_state()`, unchanged by this release) and is now also
+      pinned by a dedicated test on the non-crossing branch.
+  See `CORRECCION_INTEGRAL_2026-09-30/analisis_joint/EVIDENCIA_P-DISENO.md`
+  for the original analysis.
+* **Tests.** `tests/testthat/test-joint_contract.R` (new) locks in the
+  published-case figure (580 / 0.8041 / MCSE 0.002806) together with
+  `search_type`, `N_range_used`, `seed`, `auc_gate`, both non-crossing
+  branches (AUC-gate-blocked-everywhere vs. AUC-gate-passed-but-below-
+  target), the AUC-gate-blocked-is-not-probability-0 distinction, RNG
+  preservation on the non-crossing branch, and that `print()` never shows
+  an N as a solution when `target_reached = FALSE` nor the word
+  "smallest" when it is `TRUE`. `tests/testthat/test-joint_sample_size.R`'s
+  tests that used a single-value `N_range` purely as a Monte Carlo
+  probability calculator (not a search) now pass an explicit, very low
+  `target_prob` so the single candidate is still accepted and the real
+  computed probability is reported (`joint_prob_se_sp`) rather than `NA`;
+  the one case where the true probability is exactly 0 (and so can never
+  cross any positive `target_prob`) now reads `max_joint_prob_evaluated`
+  instead, which is exactly the value that field used to be reported as
+  before this release. The "expected margin of exactly 0" test is updated
+  to probe `target_reached` / `auc_gate` instead of the removed
+  `max(N_range)` fallback it used to rely on.
+* **Tests (unrelated to the above).** `tests/testthat/test-bam_exact_contract.R` (new) locks in
   B/seed invariance (reduced battery inline, full battery under
   `skip_on_cran()`), the explicit-`N_range` sort/unique/ascending
   contract, the shared no-crossing contract for both methods, RNG
