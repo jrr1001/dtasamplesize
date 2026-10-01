@@ -114,16 +114,26 @@ cat(sprintf("joint assurance at N=678 = %.10f   (article: 0.8003489948)   %s\n",
 # N = 677 is one below the crossing and does not reach the target on its
 # own; bam_sample_size() warns that the search "did not achieve the target
 # JOINT assurance" for a single-value N_range like this one -- expected and
-# suppressed here, since the joint_assurance value it still returns (the
-# exact value AT N = 677, not a search failure) is exactly what this check
-# needs.
+# suppressed here. Since target_reached = FALSE for this call (by design --
+# see ?bam_sample_size, @return), N_total/n_total/joint_assurance are all
+# NA_real_/NA_integer_: joint_assurance is NOT the exact value at N = 677 in
+# this case. The exact value at N = 677 is instead reported in
+# max_assurance_evaluated (the highest exact/Monte-Carlo-estimated assurance
+# seen over the N_range swept, together with N_at_max_assurance identifying
+# which N achieved it) -- see ?bam_sample_size, @return. This check confirms
+# both that target_reached is indeed FALSE here (so reading
+# max_assurance_evaluated instead of joint_assurance is the correct call,
+# not an oversight) and that max_assurance_evaluated at N = 677 matches the
+# article.
 bam_677 <- suppressWarnings(bam_sample_size(
   prior_se = c(17, 3), prior_sp = c(2, 2), prior_prev = c(4, 16),
   delta_se = 0.14, delta_sp = 0.10, target_assurance = 0.80,
   method = "exact", N_range = 677, B = 5000, seed = SEED))
-cat(sprintf("joint assurance at N=677 = %.10f   (article: 0.7996848824)   %s\n",
-            bam_677$joint_assurance,
-            ok(near(bam_677$joint_assurance, 0.7996848824, 1e-8))))
+cat(sprintf("target_reached at N=677 = %s   (expected: FALSE)   %s\n",
+            bam_677$target_reached, ok(isTRUE(bam_677$target_reached == FALSE))))
+cat(sprintf("max_assurance_evaluated at N=677 = %.10f   (article: 0.7996848824)   %s\n",
+            bam_677$max_assurance_evaluated,
+            ok(near(bam_677$max_assurance_evaluated, 0.7996848824, 1e-8))))
 
 ## ---- 3. Table 4: three surviving methods under common assumptions ----
 sep("3. Table 4: Buderer, BAM (exact, harmonized priors), joint Se/Sp")

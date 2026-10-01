@@ -1,27 +1,27 @@
 FECHA_ISO=2026-10-01T05:46:55-05:00
-DIRECTORIO=<ROOT>/CORRECCION_INTEGRAL_2026-09-30
+DIRECTORIO=<REPO>
 COMANDO=bash -c 
         echo 'FECHA_ISO='"$(date -Iseconds)"
         echo 'COMMIT=8c36391a4503fba982439eb01d39ae417aa73170'
         echo 'VERSION=0.6.6'
-        echo 'COMANDO=Rscript validation/make_manuscript_assets.R (R_LIBS=C:/tmp/dtalib066)'
-        echo 'ENTORNO: R_LIBS=C:/tmp/dtalib066'
-        cd 'D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/R-package/dtasamplesize' &&
-        R_LIBS='C:/tmp/dtalib066' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' 'validation/make_manuscript_assets.R'
+        echo 'COMANDO=Rscript validation/make_manuscript_assets.R (R_LIBS=<LIB>)'
+        echo 'ENTORNO: R_LIBS=<LIB>'
+        cd '<REPO>/R-package/dtasamplesize' &&
+        R_LIBS='<LIB>' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' 'validation/make_manuscript_assets.R'
         ec=$?
         echo '---- sessionInfo ----'
-        R_LIBS='C:/tmp/dtalib066' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' -e 'sessionInfo()'
+        R_LIBS='<LIB>' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' -e 'sessionInfo()'
         exit $ec
     
 ---- SALIDA ----
 FECHA_ISO=2026-10-01T05:46:55-05:00
 COMMIT=8c36391a4503fba982439eb01d39ae417aa73170
 VERSION=0.6.6
-COMANDO=Rscript validation/make_manuscript_assets.R (R_LIBS=C:/tmp/dtalib066)
-ENTORNO: R_LIBS=C:/tmp/dtalib066
+COMANDO=Rscript validation/make_manuscript_assets.R (R_LIBS=<LIB>)
+ENTORNO: R_LIBS=<LIB>
 Package version: 0.6.6 
-Figures -> D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/submission-BMC-MRM/figures 
-Tables   -> D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/R-package/manuscript_assets 
+Figures -> <REPO>/submission-BMC-MRM/figures 
+Tables   -> <REPO>/R-package/manuscript_assets 
 
 Figure size: 6.6929 in x 4.7807 in (170.0 mm x 121.4 mm)
 
@@ -40,13 +40,13 @@ Registered S3 method overwritten by 'MKmisc':
   print.confint MKinfer
 Table 3: 9 capability rows x 7 comparator packages; provenance written for 5 packages
 
-Files written to D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/submission-BMC-MRM/figures :
+Files written to <REPO>/submission-BMC-MRM/figures :
 Figure_1.pdf
 Figure_1.tiff
 Figure_2.pdf
 Figure_2.tiff
 
-Files written to D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/R-package/manuscript_assets :
+Files written to <REPO>/R-package/manuscript_assets :
 table1_functions.csv
 table2_crossvalidation.csv
 table3_feature_matrix.csv
