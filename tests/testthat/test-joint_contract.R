@@ -20,17 +20,32 @@ test_that("the published-case call reaches n_total = 580 with joint_prob_se_sp =
   result <- joint_sample_size(B = 20000, seed = 2026)
 
   expect_true(result$target_reached)
+  # n_total = 580 is stable across R RNG streams (same grid, same AUC gate,
+  # same first-crossing candidate); the Monte Carlo *probability* at that N
+  # is NOT bit-identical across R versions (R-devel/4.6.x changed the RNG
+  # stream used by this sampling loop relative to R 4.5.x -- see NEWS
+  # 0.6.6.9000 and NOTAS_L067.md). We pin n_total exactly, and check
+  # joint_prob_se_sp against its own reported MCSE rather than against the
+  # single value observed under R 4.5.x.
   expect_equal(result$n_total, 580L)
-  expect_equal(result$joint_prob_se_sp, 0.8041, tolerance = 1e-4)
   expect_equal(result$joint_prob, result$joint_prob_se_sp) # deprecated alias
 
   expect_equal(result$search_type, "grid_first_candidate")
   expect_equal(result$B, 20000)
   expect_equal(result$seed, 2026)
-  expect_equal(result$joint_prob_mcse,
-               sqrt(result$joint_prob_se_sp * (1 - result$joint_prob_se_sp) / 20000),
-               tolerance = 1e-9)
-  expect_equal(result$joint_prob_mcse, 0.002806, tolerance = 1e-3)
+  mcse_from_p <- sqrt(result$joint_prob_se_sp * (1 - result$joint_prob_se_sp) / 20000)
+  expect_equal(result$joint_prob_mcse, mcse_from_p, tolerance = 1e-9)
+
+  # Published-figure value (R 4.5.x RNG stream): within +/- 3 MCSE of the
+  # value reported in the manuscript/NEWS, robust to the RNG-stream change
+  # observed on R-devel (>= 4.6.0).
+  expect_lt(abs(result$joint_prob_se_sp - 0.8041), 3 * mcse_from_p)
+  if (getRversion() < "4.6.0") {
+    # Exact published figure, reproducible deterministically on R < 4.6.0
+    # (the RNG stream used by this Monte Carlo loop is unchanged there).
+    expect_equal(result$joint_prob_se_sp, 0.8041, tolerance = 1e-4)
+    expect_equal(result$joint_prob_mcse, 0.002806, tolerance = 1e-3)
+  }
 
   # N_range_used is the default grid, exactly: seq(100, 800, by = 10). The
   # search stops at the first crossing (580), but N_range_used still

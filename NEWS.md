@@ -1,3 +1,76 @@
+# dtasamplesize (development version)
+
+**Test robustness across R versions (R-devel/R >= 4.6.0 RNG-stream
+change).** R-devel (tested: R 4.6.0 r90605, 2026-09-30) changed the RNG
+stream consumed internally by some sampling primitives relative to
+R 4.5.x, so several Monte Carlo-derived test figures that were pinned to
+an exact decimal value captured under R 4.5.x (e.g.
+`test-joint_contract.R`'s `joint_prob_se_sp == 0.8041`,
+`joint_prob_mcse == 0.002806`) failed on R-devel for the *same*,
+unaffected `n_total`/grid outcome -- only the continuous Monte Carlo
+estimate at that `N` shifted, by less than its own reported MCSE. Every
+such assertion across the suite (`test-joint_contract.R`,
+`test-rng_state.R`, `test-ss_imperfect_ref.R`, `test-ss_unified.R`) now
+checks the value against a tolerance derived from its own reported Monte
+Carlo standard error (typically 3x MCSE), with the exact historical
+figure kept as an additional check guarded by
+`if (getRversion() < "4.6.0")` so the published-manuscript numbers remain
+pinned on the R series they were produced on. Deterministic exact-mode
+tests (`bam_sample_size(method = "exact")`'s finite sum,
+`joint_sample_size()`'s grid/AUC-gate structure, `nb_assurance_ceiling()`'s
+closed-form quadrature) are unaffected and were left untouched -- they do
+not depend on R's RNG at all. No published figure changes on the R series
+it was computed on.
+
+**Non-crossing contract extended to `ss_time_dependent_roc()`.** Applies
+the same non-crossing rule introduced for `bam_sample_size()`/
+`joint_sample_size()` in 0.6.6 (and already respected by
+`ss_unified()`/`ss_net_benefit()`, reviewed and confirmed compliant in
+this release): if no candidate `N` in `N_range` reaches `target_prob` for
+a given `censoring_rates` entry, `ss_time_dependent_roc()` versions
+`<= 0.6.6` set `N_required` to `max(N_range)` and reported the (failing)
+probability observed there in `results`, with no field distinguishing
+that outcome from a genuine solution short of reading the warning text --
+and if ANY entry failed to converge, the top-level `n_total` (the max
+over `results$N_required`) was itself silently pinned to that
+`max(N_range)` value rather than reflecting that the true worst case was
+unknown. Confirmed against the installed 0.6.6
+(`CORRECCION_INTEGRAL_2026-09-30/tools/L067_tests_contra_066` log): a
+deliberately impossible target (`delta_auc = 0.001`, `target_prob =
+0.999`, `N_range = seq(100, 140, by = 20)`) returned `n_total = 140` with
+`prob_achieved = 0` for every censoring rate, as if `N = 140` were a
+validated design. `ss_time_dependent_roc()` now sets, per censoring rate,
+`N_required = NA_integer_` and `prob_achieved = NA_real_` (never
+`max(N_range)`) whenever that rate's search does not cross `target_prob`,
+and reports the new `target_reached`, `max_prob_evaluated` and
+`N_at_max_prob` diagnostic columns in `results`; the top-level `n_total`/
+`n_diseased` are `NA` and a new top-level `target_reached` field is
+`FALSE` whenever ANY censoring rate failed to converge, mirroring
+`bam_sample_size()`/`joint_sample_size()`/`ss_net_benefit()`'s
+`N_conservative`. See `?ss_time_dependent_roc`, `@return`.
+`ss_unified()`, `ss_net_benefit()`, `ss_imperfect_ref()` and
+`ss_adaptive_prevalence()` were reviewed against the same non-crossing
+contract in this release: `ss_unified()` already reports `status =
+"unreachable"`/`"grid_exhausted"` with `N_effective = NA_integer_`;
+`ss_net_benefit()` already reports `N_conservative = NA_integer_` on a
+non-crossing or structurally-infeasible threshold; `ss_imperfect_ref()`
+and `ss_adaptive_prevalence()` compute sample size in closed form (no
+`N_range` grid search), so the non-crossing failure mode does not apply
+to them. No published figure changes.
+
+**Sole package authorship.** `Authors@R` now lists only Jesús D.
+Rojas (`aut`, `cre`, ORCID 0000-0003-0912-490X); Rafael
+Pichardo-Rodriguez is no longer listed as an author of this package (he
+was not assigned any other role). The maintainer email
+(`jrojasrivero@gmail.com`) is unchanged -- that is a separate decision,
+not made here. `LICENSE`/`LICENSE.md` already named the generic
+"dtasamplesize authors" as copyright holder and needed no change; a
+search of `README.md`, the vignettes and `inst/` found no other mention
+of Rafael Pichardo-Rodriguez as a package author. Added `.zenodo.json`
+(title "dtasamplesize", creator Jesús D. Rojas with the same ORCID,
+`upload_type: software`, `license: MIT`) for future Zenodo deposits;
+listed in `.Rbuildignore`. No published figure, API, or behavior changes.
+
 # dtasamplesize 0.6.6
 
 **M-01 correction: `bam_sample_size()`'s exact-mode joint search.**

@@ -54,10 +54,25 @@ session is restored on exit.}
 \value{
 Object of class \code{"dtasamplesize"} with additional elements:
   \describe{
+    \item{target_reached}{Logical. \code{TRUE} only if, for EVERY entry of
+      \code{censoring_rates}, some candidate \code{N} in \code{N_range}
+      reached \code{target_prob}. When \code{FALSE}, \code{n_total} and
+      \code{n_diseased} are \code{NA} (never \code{max(N_range)}); see
+      \code{results} for which censoring rate(s) failed to converge.}
     \item{results}{Data frame with columns \code{censoring_rate} (the
       nominal \eqn{P(C < t\_horizon)} value from \code{censoring_rates},
       not the observed censoring proportion; see Details),
-      \code{N_required}, \code{prob_achieved}.}
+      \code{N_required} (the first \code{N} in \code{N_range} reaching
+      \code{target_prob} for this rate, or \code{NA_integer_} if none
+      did -- never \code{max(N_range)}), \code{prob_achieved} (the
+      probability at \code{N_required}, or \code{NA_real_} if
+      \code{N_required} is \code{NA}), \code{target_reached} (logical,
+      per censoring rate), \code{max_prob_evaluated} (the highest
+      probability observed anywhere in \code{N_range} for this rate,
+      always populated), and \code{N_at_max_prob} (the \code{N} at which
+      \code{max_prob_evaluated} occurred; equals \code{N_required} when
+      \code{target_reached} is \code{TRUE}, and \code{max(N_range)}
+      otherwise).}
   }
 }
 \description{
