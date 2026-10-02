@@ -12,3 +12,5 @@
 ^doc$
 ^Meta$
 ^\.impeccable$
+^\.zenodo\.json$
+^\.git$

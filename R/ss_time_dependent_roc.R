@@ -57,10 +57,25 @@
 #'   guide for the package defaults, not a general conversion factor.
 #' @return Object of class \code{"dtasamplesize"} with additional elements:
 #'   \describe{
+#'     \item{target_reached}{Logical. \code{TRUE} only if, for EVERY entry of
+#'       \code{censoring_rates}, some candidate \code{N} in \code{N_range}
+#'       reached \code{target_prob}. When \code{FALSE}, \code{n_total} and
+#'       \code{n_diseased} are \code{NA} (never \code{max(N_range)}); see
+#'       \code{results} for which censoring rate(s) failed to converge.}
 #'     \item{results}{Data frame with columns \code{censoring_rate} (the
 #'       nominal \eqn{P(C < t\_horizon)} value from \code{censoring_rates},
 #'       not the observed censoring proportion; see Details),
-#'       \code{N_required}, \code{prob_achieved}.}
+#'       \code{N_required} (the first \code{N} in \code{N_range} reaching
+#'       \code{target_prob} for this rate, or \code{NA_integer_} if none
+#'       did -- never \code{max(N_range)}), \code{prob_achieved} (the
+#'       probability at \code{N_required}, or \code{NA_real_} if
+#'       \code{N_required} is \code{NA}), \code{target_reached} (logical,
+#'       per censoring rate), \code{max_prob_evaluated} (the highest
+#'       probability observed anywhere in \code{N_range} for this rate,
+#'       always populated), and \code{N_at_max_prob} (the \code{N} at which
+#'       \code{max_prob_evaluated} occurred; equals \code{N_required} when
+#'       \code{target_reached} is \code{TRUE}, and \code{max(N_range)}
+#'       otherwise).}
 #'   }
 #' @note Parameters in the default example are HYPOTHETICAL. No published
 #'   AUC values exist for ctDNA as a continuous discriminator in DLBCL.
@@ -225,21 +240,27 @@ ss_time_dependent_roc <- function(mu_case = 4.5,
       }
     }
 
-    if (is.na(found_N)) {
+    target_reached_cr <- !is.na(found_N)
+    if (!target_reached_cr) {
       warning("Nominal censoring rate ", cens_rate, ": target precision not ",
               "reached within N_range (best = ", round(best_prob, 3),
-              "). Consider expanding N_range or increasing B.")
-      # Report the largest N tried together with the assurance achieved
-      # *at that N* (a consistent (N, prob) pair); best_prob over the grid
-      # is conveyed in the warning above.
-      found_N <- max(N_range)
-      found_prob <- prob
+              "). Consider expanding N_range or increasing B.",
+              call. = FALSE)
+      # Non-crossing contract (bam_sample_size()/joint_sample_size(), NEWS
+      # 0.6.6/0.6.6.9000): N_required/prob_achieved stay NA_integer_/NA_real_
+      # rather than silently reporting max(N_range) with the probability
+      # observed there as though it were a validated design. The highest
+      # probability actually seen anywhere in N_range, and the N at which it
+      # occurred, are reported separately below so no information is lost.
     }
 
     results_list[[cr_idx]] <- data.frame(
       censoring_rate = cens_rate,
       N_required = found_N,
       prob_achieved = found_prob,
+      target_reached = target_reached_cr,
+      max_prob_evaluated = best_prob,
+      N_at_max_prob = if (target_reached_cr) found_N else max(N_range),
       stringsAsFactors = FALSE
     )
   }
@@ -247,15 +268,32 @@ ss_time_dependent_roc <- function(mu_case = 4.5,
   results <- do.call(rbind, results_list)
   rownames(results) <- NULL
 
-  # Use the result for the middle censoring rate (or max) as primary
-  N_primary <- max(results$N_required)
-  n_events_expected <- floor(N_primary * (1 - exp(-lambda_event * t_horizon)))
+  # Use the result for the middle censoring rate (or max) as primary. If
+  # ANY censoring rate failed to reach target_prob within N_range, the
+  # true worst-case N is unknown (it could exceed N_range entirely), so
+  # the overall N_total/n_total/n_diseased must be NA rather than the
+  # (necessarily smaller) max over whichever rates happened to converge --
+  # same non-crossing contract as bam_sample_size()/joint_sample_size()/
+  # ss_net_benefit()'s N_conservative.
+  target_reached <- all(results$target_reached)
+  if (target_reached) {
+    N_primary <- max(results$N_required)
+    n_events_expected <- floor(N_primary * (1 - exp(-lambda_event * t_horizon)))
+  } else {
+    warning("At least one censoring_rate did not reach target_prob within ",
+            "N_range; n_total/n_diseased are NA. See results$target_reached, ",
+            "results$max_prob_evaluated and results$N_at_max_prob.",
+            call. = FALSE)
+    N_primary <- NA_integer_
+    n_events_expected <- NA_integer_
+  }
 
   structure(
     list(
       method = "Sample Size for Time-Dependent ROC (AUC(t))",
       n_diseased = n_events_expected,
       n_total = N_primary,
+      target_reached = target_reached,
       results = results,
       mu_case = mu_case,
       mu_control = mu_control,

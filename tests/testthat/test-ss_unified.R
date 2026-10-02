@@ -198,7 +198,16 @@ test_that("decision = \"point\" reproduces the pre-0.5.0 behaviour (N_effective 
     N_range = seq(200, 1600, by = 20), delta_auc = 0, check_nb = FALSE
   ))
   expect_equal(result$decision, "point")
-  expect_equal(result$N_effective, 920)
+  # N_effective = 920 was captured under R <= 4.5's RNG sampler; the
+  # comment above already documents that this point estimate sits close to
+  # its own MCSE, i.e. right at a grid-crossing boundary. A sampler change
+  # (R-devel/4.6.x) can therefore shift the first crossing by one grid step
+  # (by = 20) without indicating any defect. Allow that single-step slack;
+  # pin the exact historical value only on R < 4.6.0.
+  expect_true(abs(result$N_effective - 920) <= 20)
+  if (getRversion() < "4.6.0") {
+    expect_equal(result$N_effective, 920)
+  }
 })
 
 test_that("assurance_mcse and assurance_lower are present and internally consistent", {
@@ -559,7 +568,16 @@ test_that("decision = \"isotonic\" does not error on the reported single-N repro
   # this N rather than accepting a size whose true assurance sits on the
   # boundary. An independent reference curve places the truth at N = 2216
   # at 0.80000, so declining is the correct, conservative outcome.
-  expect_equal(result$joint_assurance, 0.800112, tolerance = 1e-4)
+  # 0.800112 was captured under R <= 4.5's RNG sampler at B = 1e6; the
+  # MCSE there is sqrt(0.8 * 0.2 / 1e6) =~ 4e-4, i.e. LARGER than the old
+  # fixed tolerance (1e-4), so this check was already too tight even for
+  # ordinary seed noise. Use 3 * MCSE instead, robust to the RNG-stream
+  # change on R-devel/4.6.x; keep the tight historical check guarded.
+  mcse_2216 <- sqrt(0.80 * 0.20 / 1e6)
+  expect_lt(abs(result$joint_assurance - 0.800112), 3 * mcse_2216)
+  if (getRversion() < "4.6.0") {
+    expect_equal(result$joint_assurance, 0.800112, tolerance = 1e-4)
+  }
   expect_lt(result$assurance_lower, 0.80)
   expect_true(is.na(result$N_effective))
   expect_identical(result$status, "grid_exhausted")
