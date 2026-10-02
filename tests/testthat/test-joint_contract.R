@@ -24,7 +24,7 @@ test_that("the published-case call reaches n_total = 580 with joint_prob_se_sp =
   # same first-crossing candidate); the Monte Carlo *probability* at that N
   # is NOT bit-identical across R versions (R-devel/4.6.x changed the RNG
   # stream used by this sampling loop relative to R 4.5.x -- see NEWS
-  # 0.6.6.9000 and NOTAS_L067.md). We pin n_total exactly, and check
+  # 0.6.7). We pin n_total exactly, and check
   # joint_prob_se_sp against its own reported MCSE rather than against the
   # single value observed under R 4.5.x.
   expect_equal(result$n_total, 580L)

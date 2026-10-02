@@ -29,7 +29,7 @@ test_that("A short N_range still warns and does not silently converge", {
   )
   expect_true(any(grepl("target precision not", w)))
   # Non-crossing contract (bam_sample_size()/joint_sample_size()/
-  # ss_net_benefit(), NEWS 0.6.6/0.6.6.9000): a non-crossing search must
+  # ss_net_benefit(), NEWS 0.6.6/0.6.7): a non-crossing search must
   # report NA, never max(N_range) as though it were a validated design.
   # Versions <= 0.6.6 set N_required/n_total to max(N_range) (= 150) here.
   expect_false(result$target_reached)
@@ -42,7 +42,7 @@ test_that("A short N_range still warns and does not silently converge", {
 })
 
 # --- regression: non-crossing must never report max(N_range) as a real
-# solution (confirmed against the installed 0.6.6, see NOTAS_L067.md) ------
+# solution (confirmed against the installed 0.6.6) ------
 
 test_that("non-crossing across ALL censoring_rates: n_total/n_diseased are NA, never max(N_range)", {
   skip_if_not_installed("timeROC")
