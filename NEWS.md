@@ -1,4 +1,4 @@
-# dtasamplesize (development version)
+# dtasamplesize 0.6.7
 
 **Test robustness across R versions (R-devel/R >= 4.6.0 RNG-stream
 change).** R-devel (tested: R 4.6.0 r90605, 2026-09-30) changed the RNG
@@ -34,8 +34,7 @@ that outcome from a genuine solution short of reading the warning text --
 and if ANY entry failed to converge, the top-level `n_total` (the max
 over `results$N_required`) was itself silently pinned to that
 `max(N_range)` value rather than reflecting that the true worst case was
-unknown. Confirmed against the installed 0.6.6
-(`CORRECCION_INTEGRAL_2026-09-30/tools/L067_tests_contra_066` log): a
+unknown. Confirmed against the installed 0.6.6: a
 deliberately impossible target (`delta_auc = 0.001`, `target_prob =
 0.999`, `N_range = seq(100, 140, by = 20)`) returned `n_total = 140` with
 `prob_achieved = 0` for every censoring rate, as if `N = 140` were a

@@ -247,7 +247,7 @@ ss_time_dependent_roc <- function(mu_case = 4.5,
               "). Consider expanding N_range or increasing B.",
               call. = FALSE)
       # Non-crossing contract (bam_sample_size()/joint_sample_size(), NEWS
-      # 0.6.6/0.6.6.9000): N_required/prob_achieved stay NA_integer_/NA_real_
+      # 0.6.6/0.6.7): N_required/prob_achieved stay NA_integer_/NA_real_
       # rather than silently reporting max(N_range) with the probability
       # observed there as though it were a validated design. The highest
       # probability actually seen anywhere in N_range, and the N at which it

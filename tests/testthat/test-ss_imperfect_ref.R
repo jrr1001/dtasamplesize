@@ -286,7 +286,7 @@ test_that("ss_imperfect_ref's mc_validation is unaffected by the caller's normal
   expect_equal(unname(se_by_gen), rep(unname(se_by_gen[1]), length(se_by_gen)))
   # Published-manuscript figure (R <= 4.5 sampler): within +/- 3 MCSE at
   # B = 6000, robust to the RNG-stream change on R-devel/4.6.x (see NEWS
-  # 0.6.6.9000 and NOTAS_L067.md); exact rounded check kept as a guarded
+  # 0.6.7); exact rounded check kept as a guarded
   # sanity check on R < 4.6.0.
   p_hat <- unname(se_by_gen[1])
   mcse <- sqrt(p_hat * (1 - p_hat) / 6000)
