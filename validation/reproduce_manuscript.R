@@ -43,9 +43,9 @@ library(dtasamplesize)
 options(width = 110, digits = 6)
 
 # The article reports the numbers produced by version 0.6.6; the
-# computational code is unchanged through 0.6.8 (0.6.7 and 0.6.8 changed
+# computational code is unchanged through 0.6.9 (0.6.7, 0.6.8 and 0.6.9 changed
 # only documentation, tests and validation tooling -- see NEWS.md), so this
-# script now pins to 0.6.8, the current release, which reproduces the same
+# script now pins to 0.6.9, the current release, which reproduces the same
 # published figures bit-for-bit. Earlier releases
 # (historical only; not presented here as current validation evidence)
 # contain the validity errors that 0.3.0, 0.5.0 and 0.6.0 correct in turn
@@ -63,14 +63,14 @@ options(width = 110, digits = 6)
 # older or newer installation is not guaranteed to reproduce today's
 # published numbers bit-for-bit. Stop early rather than let a stale
 # installation look like a discrepancy in the article.
-if (utils::packageVersion("dtasamplesize") != "0.6.8") {
+if (utils::packageVersion("dtasamplesize") != "0.6.9") {
   stop("dtasamplesize ", utils::packageVersion("dtasamplesize"), " is installed, ",
-       "but this script reproduces the numbers of version 0.6.8 ",
+       "but this script reproduces the numbers of version 0.6.9 ",
        "exactly: the published figures were computed under 0.6.6 and are ",
-       "unchanged through 0.6.8 (documentation/tooling-only releases; see ",
+       "unchanged through 0.6.9 (documentation/tooling-only releases; see ",
        "NEWS.md), but neither an older nor a newer installation is ",
        "guaranteed to reproduce them bit-for-bit.\n",
-       "  Install version 0.6.8 from a local copy of the repository:\n",
+       "  Install version 0.6.9 from a local copy of the repository:\n",
        "    install.packages('.', repos = NULL, type = 'source')",
        call. = FALSE)
 }

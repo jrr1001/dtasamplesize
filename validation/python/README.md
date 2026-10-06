@@ -74,9 +74,9 @@ The confirmatory grid is correctly described as **defined before the
 confirmatory execution according to the local hash record**, never as
 "pre-registered" and never cited as proof of preespecification by itself.
 
-## Regeneration under 0.6.8 (current)
+## Regeneration under 0.6.9 (current)
 
-The "Reverification (2026-09-28, H-05)", "How to run" and the pre-0.6.8
+The "Reverification (2026-09-28, H-05)", "How to run" and the pre-0.6.9
 part of "Results" below describe earlier runs against
 **dtasamplesize 0.6.5 / 0.6.3**; those sections are kept, explicitly
 labelled by version, as the historical record of those runs and are not
@@ -84,13 +84,13 @@ current validation evidence. The current evidence is the full
 `run_all.sh`/`run_all.ps1` pipeline (dev_01-03, conf_R_01, conf_PY_02,
 conf_R_03, conf_R_04, conf_PY_05, conf_PY_06, conf_R_07, conf_PY_08,
 conf_PY_09) plus the top-level `validation/*.R` scripts, re-run against a
-privately installed **dtasamplesize 0.6.8** (not the system library;
+privately installed **dtasamplesize 0.6.9** (not the system library;
 `R_LIBS_PRIVATE` pointed at a private library) on 2026-10-06, exit code 0
 end to end. `validation/python/generate_report.R` (the public, versioned
 replacement for the undocumented machine-local
 `tools/generar_report_html.R` referenced by earlier revisions of this
 file, never committed to this repository) regenerated `report.html` from
-those logs. The "Results" table below is the 0.6.8 confirmation.
+those logs. The "Results" table below is the 0.6.9 confirmation.
 
 This run also exercised the M-03 fix (see `NEWS.md`, "dtasamplesize
 0.6.8"): `conf_R_01_package.R` no longer crashes probing `N_total +/- 1`
@@ -125,13 +125,13 @@ The rerun documented here (`run_all_top.log`, `logs/*.log`, 2026-09-16) used
 "Reverification (2026-09-28, H-05)" above for the 0.6.5 re-run of the two
 R-side confirmatory scripts).
 
-## Results (0.6.8, current)
+## Results (0.6.9, current)
 
 Manuscript claims checked against the 2026-10-06 logs/JSON produced by the
-0.6.8 pipeline run described above. Only MATCH rows carry reproduced
+0.6.9 pipeline run described above. Only MATCH rows carry reproduced
 values.
 
-| Claim | Verdict | 0.6.8 value | Source |
+| Claim | Verdict | 0.6.9 value | Source |
 |---|---|---|---|
 | Analytic routes agree within 4.086e-14 | MATCH | 4.086e-14 | `logs/conf_PY_02_reference.py.log:150` |
 | Reference vs package agree within 7.20e-13 (max diff) | MATCH | 7.20e-13 (C06) | `logs/conf_PY_02_reference.py.log` section A |
@@ -149,7 +149,7 @@ values.
 | joint_sample_size N=580, p=0.8041, mcse=0.002806 | MATCH | reproduced exactly | `logs/reproduce_manuscript.log` |
 | Buderer P(CI width <= target) = 0.5730 | MATCH | 0.5730 | `logs/reproduce_manuscript.log` |
 | Wald/Wilson sweep ranges 0.469-0.872 and 0.000-1.000 | MATCH | Wald 0.4688-0.8721; Wilson 0.0000-1.0000 | `logs/sweep_wald_wilson.log` |
-| G04 exact-mode invariance (0.6.8, expected PASS) | MATCH | PASS across 80 B/seed/N_range combinations + no-crossing contract | `logs/exact_invariance.log` |
+| G04 exact-mode invariance (0.6.9, expected PASS) | MATCH | PASS across 80 B/seed/N_range combinations + no-crossing contract | `logs/exact_invariance.log` |
 | RNG-kind invariance (5 kinds) | MATCH | PASS | `logs/rng_invariance.log` |
 | Integration check (full pipeline, reproducibility, ordering) | MATCH | PASS | `logs/integration_check.log` |
 | Cross-validation (V1-V8: Wilson/Wald/Buderer/Hanley-McNeil/net benefit/Beta posterior/imperfect-ref) | MATCH | all PASS (2 documented expected deviations under V1/V4, not held to tolerance) | `logs/cross_validation.log` |
@@ -191,7 +191,7 @@ headline.
 
 Manuscript claims checked against the 2026-09-16 logs/JSON, under
 **dtasamplesize 0.6.3** (see "How to run" below). Kept for provenance;
-not current evidence -- see "Results (0.6.8, current)" above. Only MATCH
+not current evidence -- see "Results (0.6.9, current)" above. Only MATCH
 rows carry reproduced values.
 
 | Claim | Verdict | Today's value | Source |

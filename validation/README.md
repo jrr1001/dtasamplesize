@@ -26,10 +26,10 @@ R -f validation/exact_invariance.R        # G04: exact-mode N/A invariance acros
   AUC gate inside it, `ss_net_benefit()`, `ss_imperfect_ref()`,
   `ss_adaptive_prevalence()` and `ss_time_dependent_roc()` remain in the
   package but are no longer described in the article, so this script no
-  longer checks their numbers. It requires version 0.6.8 exactly (the
-  published figures were computed under 0.6.6; 0.6.7 and 0.6.8 changed only
-  documentation, tests and validation tooling, so the numbers are
-  unchanged -- see NEWS.md) and stops with an explanatory message on any
+  longer checks their numbers. It requires version 0.6.9 exactly (the
+  published figures were computed under 0.6.6; 0.6.7, 0.6.8 and 0.6.9
+  changed only documentation, tests and validation tooling, so the numbers
+  are unchanged -- see NEWS.md) and stops with an explanatory message on any
   other installed version, whose results are not guaranteed to reproduce
   the article's bit-for-bit.
 - **`make_manuscript_assets.R`** — the public generator behind every figure
@@ -114,29 +114,22 @@ R -f validation/exact_invariance.R        # G04: exact-mode N/A invariance acros
   FAILS there, demonstrating that it actually detects the defect this
   correction fixes rather than passing vacuously.
 
-## Package check logs (0.6.8, current)
+## Package check logs (0.6.9, current)
 
 - `logs/R_CMD_check_00check.log`: `R CMD check --as-cran --no-manual` of the
-  0.6.8 source tarball built from commit `1a0b3be` (the two
-  documentation-only changes: a plotting example added to the vignette's
-  sensitivity-analysis section, and a reference added to `wald_ci()`'s
-  roxygen), R 4.5.2, Windows 11, the same options as the archived checks
-  of earlier releases. Status: 0 errors, 0 warnings, 3 NOTEs (new CRAN
-  submission; the `bam_sample_size` example exceeding 5 s elapsed on this
-  machine; a left-over `00LOCK-dtasamplesize` directory in the check
-  folder). The earlier run of this same check also reported "unable to
-  verify current time", a NOTE that depends on the check machine's clock
-  skew at the moment it runs rather than on the package; it did not
-  recur here. None reflects a package defect.
-- `logs/testthat.Rout`: the test suite run inside that check,
-  `[ FAIL 0 | WARN 0 | SKIP 3 | PASS 746 ]`.
+  0.6.9 source tarball (a maintenance release: the only substantive change
+  is the generic wording of the provenance note in
+  `validation/python/README.md`; no code, API, or documentation-of-functions
+  change), R 4.5.2, Windows 11, the same options as the archived checks of
+  earlier releases. See this log for the current NOTE count.
+- `logs/testthat.Rout`: the test suite run inside that check.
 - `logs/R_CMD_check_with_pdf_manual_00check.log`: an additional
-  `R CMD check --as-cran` run that also attempted the PDF manual. It ended
-  with 1 ERROR and 1 WARNING because the local TeX installation lacks the
-  Courier font metrics (`pcrr8t`) needed to typeset the manual, plus an
-  HTML-manual NOTE (nested emphasis in `joint_sample_size.Rd`). It was run
-  on a tarball built before the 0.6.8 NEWS entry was committed; the code,
-  tests and documentation are otherwise identical.
+  `R CMD check --as-cran` run that also attempted the PDF manual. As with
+  0.6.8, this ended with 1 ERROR and 1 WARNING because the local TeX
+  installation lacks the Courier font metrics (`pcrr8t`) needed to typeset
+  the manual, plus an HTML-manual NOTE (nested emphasis in
+  `joint_sample_size.Rd`); unrelated to this release, since no `.Rd` file
+  changed.
 
 ## A note on what these scripts prove
 

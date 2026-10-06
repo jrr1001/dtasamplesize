@@ -18,7 +18,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 unset LC_ALL LC_CTYPE LANG
 RSCRIPT="${RSCRIPT:-/c/Program Files/R/R-4.5.2/bin/Rscript.exe}"
 PYTHON="${PYTHON:-python}"
-# Use a privately installed dtasamplesize (0.6.8) rather than the system
+# Use a privately installed dtasamplesize (0.6.9) rather than the system
 # library when R_LIBS_PRIVATE is set by the caller, e.g.:
 #   R_LIBS_PRIVATE="/d/.../audit_outputs/surgical_2026-10-05/lib" ./run_all.sh
 if [ -n "${R_LIBS_PRIVATE:-}" ]; then

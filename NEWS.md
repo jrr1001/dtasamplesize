@@ -1,3 +1,15 @@
+# dtasamplesize 0.6.9
+
+Maintenance release. No change to computational code, the public API, or
+the documentation of the functions, relative to 0.6.8; the published
+results are unchanged. The only substantive edit is to the provenance
+note in `validation/python/README.md`, which now describes the
+coding-assistance tool used during development in generic terms
+("LLM-based coding agent") rather than naming the specific tool.
+Validation evidence (package check, confirmatory pipeline, and the
+top-level reproduction scripts) was regenerated under 0.6.9 to confirm
+nothing else changed.
+
 # dtasamplesize 0.6.8
 
 **Experimental labelling for the five modules outside the validated

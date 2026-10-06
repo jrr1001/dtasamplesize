@@ -19,7 +19,7 @@ Remove-Item Env:\LANG -ErrorAction SilentlyContinue
 
 $RSCRIPT = if ($env:RSCRIPT) { $env:RSCRIPT } else { "C:/Program Files/R/R-4.5.2/bin/Rscript.exe" }
 $PYTHON  = if ($env:PYTHON) { $env:PYTHON } else { "python" }
-# Use a privately installed dtasamplesize (0.6.8) rather than the system
+# Use a privately installed dtasamplesize (0.6.9) rather than the system
 # library when R_LIBS_PRIVATE is set by the caller, e.g.:
 #   $env:R_LIBS_PRIVATE = "D:/.../audit_outputs/surgical_2026-10-05/lib"; .\run_all.ps1
 if ($env:R_LIBS_PRIVATE) {

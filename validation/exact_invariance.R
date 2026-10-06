@@ -39,7 +39,7 @@
 # against a non-0.6.6 installation so G04 can show the check actually
 # detects the pre-0.6.6 defect rather than passing vacuously everywhere.
 #
-# Run from the package root (against the 0.6.8 private library):
+# Run from the package root (against the 0.6.9 private library):
 #   Rscript validation/exact_invariance.R 2>&1 | tee validation/logs/exact_invariance.log
 # Run against the 0.6.5 library (expected to FAIL; log kept separately):
 #   R_LIBS=<path to lib065> Rscript validation/exact_invariance.R --version-check=off \
@@ -52,10 +52,10 @@ args <- commandArgs(trailingOnly = TRUE)
 version_check_off <- any(grepl("^--version-check=off$", args))
 
 installed_version <- utils::packageVersion("dtasamplesize")
-if (!version_check_off && installed_version != "0.6.8") {
+if (!version_check_off && installed_version != "0.6.9") {
   stop("dtasamplesize ", installed_version, " is installed, but this script ",
        "checks the exact-mode invariance contract introduced in 0.6.6 ",
-       "(unchanged through the current 0.6.8 release). Pass ",
+       "(unchanged through the current 0.6.9 release). Pass ",
        "--version-check=off to run anyway (e.g. to demonstrate the gate ",
        "FAILS against an earlier version).", call. = FALSE)
 }
