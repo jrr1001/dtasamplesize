@@ -78,6 +78,17 @@ cat("Joint N:", joint_result$n_total,
 
 ## Imperfect reference standard
 
+**Experimental.** `ss_imperfect_ref()`, `ss_unified()`, and the other
+modules illustrated from here on (`ss_net_benefit()`,
+`ss_adaptive_prevalence()`, `ss_time_dependent_roc()`) are outside the
+validated scope of the dtasamplesize software article, which covers
+`bam_sample_size(method = "exact")` and `joint_sample_size()` (plus the
+helpers `mc_validate_buderer()`, `buderer_n()`, `wilson_ci()`, and
+`wald_ci()`). They are shown here for illustration only; do not rely on
+them for design decisions until validated separately. See the README's
+"Validated scope and experimental modules" section and each function's
+`?help` page.
+
 When the reference standard is imperfect, there is no single "inflation
 factor" that turns the classical Buderer sample size into the right one.
 An imperfect reference forces a choice of what is actually being sized:
@@ -117,7 +128,10 @@ prevalences would confound the method with the prevalence, since the required
 total N scales roughly as `1 / prev` on the sensitivity arm. The imperfect-
 reference row below reuses `imp_result` from above and reports its
 *apparent*-estimand N (the exact closed form, and `ss_imperfect_ref()`'s
-default); the larger corrected-estimand N is not repeated here.
+default); the larger corrected-estimand N is not repeated here. Note that
+"Imperfect ref" is the experimental `ss_imperfect_ref()` module (see
+above); only "Buderer", "BAM", and "Joint" fall inside the validated
+scope.
 
 ```{r comparison}
 comparison <- data.frame(

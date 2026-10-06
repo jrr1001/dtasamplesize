@@ -159,6 +159,12 @@ different target quantities (\code{estimand}) can be sized for; both are
 always reported (see Details and Value).
 }
 \details{
+Experimental: outside the validated scope of the dtasamplesize software
+article (which covers \code{bam_sample_size(method = "exact")} and
+\code{joint_sample_size()}); not independently validated, do not rely on
+it for design decisions until validated separately.
+
+
 \strong{Two estimands, two different sample sizes.} An imperfect
 reference standard forces a choice of what quantity the study is
 actually powered to estimate precisely:

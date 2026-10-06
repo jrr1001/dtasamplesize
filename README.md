@@ -1,7 +1,7 @@
 # dtasamplesize
 
 Simulation-based sample size estimation for diagnostic test accuracy
-(DTA) studies. Version 0.6.5.
+(DTA) studies. Version 0.6.8.
 
 Every simulation function takes a `seed`, is exactly reproducible, and
 restores the caller's random-number state on exit, so calling it never
@@ -44,15 +44,35 @@ time-to-event outcomes, and multiple accuracy metrics simultaneously.
 | `mc_validate_buderer()` | Validate classical formula via Monte Carlo |
 | `bam_sample_size()` | Bayesian Assurance Method |
 | `joint_sample_size()` | Joint Se + Sp + AUC optimization |
-| `ss_imperfect_ref()` | Imperfect reference standard correction |
-| `ss_time_dependent_roc()` | Time-dependent ROC sample size |
-| `ss_adaptive_prevalence()` | Adaptive prevalence re-estimation |
-| `ss_net_benefit()` | Net Benefit / Decision Curve Analysis (`design = "cohort"` or `"fixed"`) |
-| `ss_unified()` | Unified framework combining all methods |
+| `ss_imperfect_ref()` | Imperfect reference standard correction (**experimental**, see below) |
+| `ss_time_dependent_roc()` | Time-dependent ROC sample size (**experimental**, see below) |
+| `ss_adaptive_prevalence()` | Adaptive prevalence re-estimation (**experimental**, see below) |
+| `ss_net_benefit()` | Net Benefit / Decision Curve Analysis (`design = "cohort"` or `"fixed"`) (**experimental**, see below) |
+| `ss_unified()` | Unified framework combining all methods (**experimental**, see below) |
 | `sensitivity_analysis()` | Recompute sample size across a grid of alternative prior scenarios |
 | `plot_assurance_curve()` | Plot achieved assurance vs. sample size from a unified search (requires ggplot2) |
 | `plot_inflation_heatmap()` | Plot the imperfect-reference variance inflation heatmap (requires ggplot2) |
 | `plot_method_comparison()` | Plot required sample size by method from a unified search (requires ggplot2) |
+
+## Validated scope and experimental modules
+
+The validated scope of the package -- the methods checked against the
+dtasamplesize software article's Monte Carlo/exact-mode validation
+evidence (R CMD check, `tests/testthat`, and the confirmatory validation
+pipeline under `validation/`) -- comprises `bam_sample_size(method =
+"exact")` and `joint_sample_size()`, together with the helper functions
+`mc_validate_buderer()`, `buderer_n()`, `wilson_ci()`, and `wald_ci()`.
+
+The following five modules are **experimental**: they are exported and
+documented, but are outside that validated scope and have not been
+independently validated against an external reference implementation.
+Do not rely on them for design decisions until validated separately.
+
+- `ss_unified()`
+- `ss_net_benefit()`
+- `ss_imperfect_ref()`
+- `ss_adaptive_prevalence()`
+- `ss_time_dependent_roc()`
 
 ## References
 

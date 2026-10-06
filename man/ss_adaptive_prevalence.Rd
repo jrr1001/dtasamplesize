@@ -69,6 +69,11 @@ at an interim stage and the sample size is adjusted upward if the
 observed prevalence is lower than initially assumed.
 }
 \details{
+Experimental: outside the validated scope of the dtasamplesize software
+article (which covers \code{bam_sample_size(method = "exact")} and
+\code{joint_sample_size()}); not independently validated, do not rely on
+it for design decisions until validated separately.
+
 The parameters \code{d_se} and \code{d_sp} are
   \strong{half-widths} of the confidence interval. The full CI width
   target is \code{2 * d}.

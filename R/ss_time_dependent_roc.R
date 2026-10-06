@@ -5,6 +5,11 @@
 #' at a given time horizon. Uses the \pkg{timeROC} package for
 #' AUC(t) estimation with inverse-probability-of-censoring weighting.
 #'
+#' Experimental: outside the validated scope of the dtasamplesize software
+#' article (which covers \code{bam_sample_size(method = "exact")} and
+#' \code{joint_sample_size()}); not independently validated, do not rely on
+#' it for design decisions until validated separately.
+#'
 #' @param mu_case Mean biomarker value in cases. Default 4.5.
 #' @param mu_control Mean biomarker value in controls. Default 2.5.
 #' @param sigma SD of biomarker (both groups). Default 2.5.

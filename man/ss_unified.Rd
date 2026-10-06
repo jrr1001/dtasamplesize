@@ -238,6 +238,11 @@ uncertainty, reference standard misclassification, and optionally
 AUC and net benefit constraints.
 }
 \details{
+Experimental: outside the validated scope of the dtasamplesize software
+article (which covers \code{bam_sample_size(method = "exact")} and
+\code{joint_sample_size()}); not independently validated, do not rely on
+it for design decisions until validated separately.
+
 The parameters \code{delta_se}, \code{delta_sp}, and
   \code{delta_auc} are \strong{half-widths} of the confidence interval.
   The target full CI width checked internally is \code{2 * delta}.

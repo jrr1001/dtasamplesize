@@ -1,7 +1,7 @@
 Package: dtasamplesize
 Type: Package
 Title: Simulation-Based Sample Size Estimation for Diagnostic Accuracy Studies
-Version: 0.6.7
+Version: 0.6.8
 Authors@R:
     person("Jes\u00fas D.", "Rojas", role = c("aut", "cre"),
            email = "jrojasrivero@gmail.com",
@@ -22,6 +22,10 @@ Description: Provides simulation-based (Monte Carlo) methods for sample size
     Addresses limitations of classical formulas (Buderer 1996
     <doi:10.1111/j.1553-2712.1996.tb03538.x>) demonstrated via Monte Carlo
     validation. Includes a unified framework that integrates all approaches.
+    The validated scope is bam_sample_size(method = "exact") and
+    joint_sample_size(); ss_unified(), ss_net_benefit(), ss_imperfect_ref(),
+    ss_adaptive_prevalence() and ss_time_dependent_roc() are experimental
+    and outside that validated scope.
 License: MIT + file LICENSE
 Encoding: UTF-8
 RoxygenNote: 7.3.3

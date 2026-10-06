@@ -88,6 +88,11 @@ test has positive net benefit and outperforms the default strategies
 (treat-all and treat-none) across a range of threshold probabilities.
 }
 \details{
+Experimental: outside the validated scope of the dtasamplesize software
+article (which covers \code{bam_sample_size(method = "exact")} and
+\code{joint_sample_size()}); not independently validated, do not rely on
+it for design decisions until validated separately.
+
 For each threshold probability \code{pt} (write
   \eqn{w = pt / (1 - pt)} for the threshold odds), the population net
   benefit of the test and of the treat-all strategy are

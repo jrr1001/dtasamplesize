@@ -82,6 +82,11 @@ at a given time horizon. Uses the \pkg{timeROC} package for
 AUC(t) estimation with inverse-probability-of-censoring weighting.
 }
 \details{
+Experimental: outside the validated scope of the dtasamplesize software
+article (which covers \code{bam_sample_size(method = "exact")} and
+\code{joint_sample_size()}); not independently validated, do not rely on
+it for design decisions until validated separately.
+
 \code{censoring_rates} parameterizes the exponential model for
   the censoring time \eqn{C} alone: each entry \code{cens_rate} sets
   \eqn{P(C < t\_horizon) = cens\_rate} exactly, via
