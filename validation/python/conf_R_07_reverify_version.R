@@ -40,15 +40,26 @@ for (p in pub) {
 cat("\n-- locked confirmatory grid, re-run on", v, "--\n")
 cat(sprintf("%-5s %8s %8s %8s %15s %15s\n",
             "id", "N(baseline)", "N(now)", "same", "A(baseline)", "A(now)"))
+# conf_package.json serialises an infeasible scenario's N_total/
+# joint_assurance (C12) as JSON null (na = "null" in conf_R_01_package.R,
+# fixed alongside the M-03 crash); fromJSON(..., simplifyDataFrame = FALSE)
+# reads a JSON null as an R NULL, not NA, so old$N_total/old$joint_assurance
+# below can be NULL for C12. as.numeric(NULL) is numeric(0), not NA, and
+# identical(NA_real_, numeric(0)) is FALSE -- this null-coalesce keeps the
+# comparison NA-safe (NA vs NA keeps counting as "same") instead of letting
+# a NULL silently mismatch every infeasible scenario.
+`%||%` <- function(x, default) if (is.null(x)) default else x
 allsame <- TRUE
 for (s in grid$scenarios) {
   r <- run1(s)
   old <- prev[[s$id]]$main
-  same <- identical(as.numeric(r$N_total), as.numeric(old$N_total)) &&
-          isTRUE(all.equal(r$joint_assurance, old$joint_assurance, tolerance = 1e-12))
+  old_N <- old$N_total %||% NA_real_
+  old_A <- old$joint_assurance %||% NA_real_
+  same <- identical(as.numeric(r$N_total), as.numeric(old_N)) &&
+          isTRUE(all.equal(r$joint_assurance, old_A, tolerance = 1e-12))
   allsame <- allsame && same
-  cat(sprintf("%-5s %8s %8s %8s %15.10f %15.10f\n", s$id,
-              format(old$N_total), format(r$N_total), same,
-              old$joint_assurance, r$joint_assurance))
+  cat(sprintf("%-5s %8s %8s %8s %15s %15s\n", s$id,
+              format(old_N), format(r$N_total), same,
+              format(old_A, nsmall = 10), format(r$joint_assurance, nsmall = 10)))
 }
 cat("\nALL CONFIRMATORY RESULTS UNCHANGED ACROSS THE REBUILD:", allsame, "\n")
