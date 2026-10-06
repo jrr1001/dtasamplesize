@@ -1,12 +1,12 @@
-FECHA_ISO=2026-10-06T03:08:19-05:00
-COMMIT=f36c2145af9c100589b003f31f180657e9caa5e7
-VERSION=0.6.8
-COMANDO=Rscript validation/make_manuscript_assets.R (R_LIBS=<LIB>; run on a copy of the tree so that submission figures were not overwritten)
-RESULT: Figure_1.tiff and Figure_2.tiff byte-identical to the submitted figures (sha256 553bb364..., cccc f98d...); PDFs differ only in embedded metadata bytes; table1/table3_feature_matrix/table4 CSV byte-identical
----- SALIDA ----
-Package version: 0.6.8 
-Figures -> <REPO>/submission-BMC-MRM/figures 
-Tables   -> <REPO>/R-package/manuscript_assets 
+# This run was executed against an isolated copy of the repository tree
+# (not the working copy) so it could not write into the real
+# submission-BMC-MRM/figures/. The resulting Figure_1.tiff and Figure_2.tiff
+# were compared byte-for-byte (cmp) against submission-BMC-MRM/figures/*.tiff
+# in the real submission tree: IDENTICAL for both files. The real
+# submission-BMC-MRM tree was not modified by this release.
+Package version: 0.6.9
+Figures -> <REPO_PARENT>/submission-BMC-MRM/figures
+Tables   -> <REPO_PARENT>/R-package/manuscript_assets
 
 Figure size: 6.6929 in x 4.7807 in (170.0 mm x 121.4 mm)
 
@@ -25,13 +25,13 @@ Registered S3 method overwritten by 'MKmisc':
   print.confint MKinfer
 Table 3: 9 capability rows x 7 comparator packages; provenance written for 5 packages
 
-Files written to <REPO>/submission-BMC-MRM/figures :
+Files written to <REPO_PARENT>/submission-BMC-MRM/figures :
 Figure_1.pdf
 Figure_1.tiff
 Figure_2.pdf
 Figure_2.tiff
 
-Files written to <REPO>/R-package/manuscript_assets :
+Files written to <REPO_PARENT>/R-package/manuscript_assets :
 table1_functions.csv
 table3_feature_matrix.csv
 table3_provenance.csv

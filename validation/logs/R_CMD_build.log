@@ -1,15 +1,9 @@
-FECHA_ISO=2026-10-06T12:03:31-05:00
-COMMIT=1a0b3beb96104949fc6afd7b93b84110f257c208
-VERSION=0.6.8
-COMANDO=R CMD build (from git archive of the commit; pandoc from RStudio)
----- SALIDA ----
-* checking for file 'src/DESCRIPTION' ... OK
+* checking for file '<ARCHIVE>/DESCRIPTION' ... OK
 * preparing 'dtasamplesize':
 * checking DESCRIPTION meta-information ... OK
 * installing the package to build vignettes
 * creating vignettes ... OK
 * checking for LF line-endings in source and make files and shell scripts
 * checking for empty or unneeded directories
-* building 'dtasamplesize_0.6.8.tar.gz'
-
-sha256 b7d87189b36a21c95f698c561b5565bb0bc8207abcc7d0c125ec1622d4454458  dtasamplesize_0.6.8.tar.gz
+* building 'dtasamplesize_0.6.9.tar.gz'
+built: dtasamplesize_0.6.9.tar.gz, from a git archive of commit 3cd7ebafdb6be2f57176cc5627a106c02d1ae27a, via R CMD build . (R 4.5.2, roxygen2-driven vignette build with RSTUDIO_PANDOC set).

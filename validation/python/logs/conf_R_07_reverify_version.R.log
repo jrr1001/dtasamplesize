@@ -1,10 +1,10 @@
-dtasamplesize now installed: 0.6.8 
+dtasamplesize now installed: 0.6.9 
 
 -- published scenarios --
 P1: N_total=678 (claim 678)  A=0.8003489948 (claim 0.800349)  A(N-1)=NA
 P2: N_total=672 (claim 672)  A=0.8002692084 (claim 0.800269)  A(N-1)=NA
 
--- locked confirmatory grid, re-run on 0.6.8 --
+-- locked confirmatory grid, re-run on 0.6.9 --
 id    N(baseline)   N(now)     same     A(baseline)          A(now)
 C01       1188     1188     TRUE    0.8002190725    0.8002190725
 C02        599      599     TRUE    0.8013636252    0.8013636252

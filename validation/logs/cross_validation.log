@@ -48,6 +48,6 @@ max |simulation - closed form| = 0.0020 (B=200000)  PASS
 VIF package=1.384083  Rogan-Gladen=1.384083  PASS
 apparent Se: MC=0.7638  closed-form=0.7639  PASS
 
-Table 2 written to <REPO>/R-package/manuscript_assets/table2_crossvalidation.csv (5 rows, all pass = TRUE)
+Table 2 written to D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/R-package/manuscript_assets/table2_crossvalidation.csv (5 rows, all pass = TRUE)
 
 === cross_validation done ===

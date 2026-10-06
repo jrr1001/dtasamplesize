@@ -1,8 +1,3 @@
-FECHA_ISO=2026-10-06T04:36:57Z
-DIRECTORIO=<REPO>
-COMANDO=bash -c 
-    cd '<REPO>/R-package/dtasamplesize' && R_LIBS='<LIB>' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' -e 'library(dtasamplesize, lib.loc="<LIB>"); sessionInfo(); packageVersion("dtasamplesize")'
-
 R version 4.5.2 (2025-10-31 ucrt)
 Platform: x86_64-w64-mingw32/x64
 Running under: Windows 11 x64 (build 26200)
@@ -24,8 +19,7 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] dtasamplesize_0.6.8
+[1] dtasamplesize_0.6.9
 
 loaded via a namespace (and not attached):
 [1] compiler_4.5.2
-[1] '0.6.8'

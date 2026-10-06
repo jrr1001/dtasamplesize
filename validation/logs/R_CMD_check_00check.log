@@ -1,9 +1,4 @@
-FECHA_ISO=2026-10-06T12:03:31-05:00
-COMMIT=1a0b3beb96104949fc6afd7b93b84110f257c208 (source of the checked tarball)
-VERSION=0.6.8
-COMANDO=R CMD check --as-cran --no-manual dtasamplesize_0.6.8.tar.gz (R_LIBS=<LIB>; tarball sha256 b7d87189b36a21c95f698c561b5565bb0bc8207abcc7d0c125ec1622d4454458)
----- 00check.log ----
-* using log directory '<REPO>/R-package/audit_outputs/surgical_2026-10-05/check_nomanual_1a0b3be/dtasamplesize.Rcheck'
+* using log directory '<OUT>/check/dtasamplesize.Rcheck'
 * using R version 4.5.2 (2025-10-31 ucrt)
 * using platform: x86_64-w64-mingw32
 * R was compiled by
@@ -14,9 +9,9 @@ COMANDO=R CMD check --as-cran --no-manual dtasamplesize_0.6.8.tar.gz (R_LIBS=<LI
 * using options '--no-manual --as-cran'
 * checking for file 'dtasamplesize/DESCRIPTION' ... OK
 * checking extension type ... Package
-* this is package 'dtasamplesize' version '0.6.8'
+* this is package 'dtasamplesize' version '0.6.9'
 * package encoding: UTF-8
-* checking CRAN incoming feasibility ... [32s] NOTE
+* checking CRAN incoming feasibility ... [37s] NOTE
 Maintainer: 'Jesús D. Rojas <jrojasrivero@gmail.com>'
 
 New submission
@@ -65,17 +60,15 @@ New submission
 * checking examples ... NOTE
 Examples with CPU (user + system) or elapsed time > 5s
                 user system elapsed
-bam_sample_size 5.14   0.25    7.53
-* checking examples with --run-donttest ... [69s] OK
+bam_sample_size 4.95   0.25    5.73
+* checking examples with --run-donttest ... [60s] OK
 * checking for unstated dependencies in 'tests' ... OK
-* checking tests ... [27m] OK
-  Running 'testthat.R' [27m]
+* checking tests ... [26m] OK
+  Running 'testthat.R' [26m]
 * checking for unstated dependencies in vignettes ... OK
 * checking package vignettes ... OK
-* checking re-building of vignette outputs ... [21s] OK
-* checking for non-standard things in the check directory ... NOTE
-Found the following files/directories:
-  '00LOCK-dtasamplesize'
+* checking re-building of vignette outputs ... [16s] OK
+* checking for non-standard things in the check directory ... OK
 * checking for detritus in the temp directory ... OK
 * DONE
-Status: 3 NOTEs
+Status: 2 NOTEs

@@ -1,4 +1,4 @@
-rows = 145   elapsed = 6.8s
+rows = 145   elapsed = 9.3s
 max |quad_full  - closed_form| = 3.708e-14
 max |enum_trip  - closed_form| = 6.217e-15
 max |quad_full  - enum_trip  | = 3.608e-14

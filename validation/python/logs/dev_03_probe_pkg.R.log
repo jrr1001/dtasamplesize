@@ -1,4 +1,4 @@
-package version: 0.6.8 
+package version: 0.6.9 
 
 -- single-N probes around the published crossing (P1, N*=678) --
    [warn] No N in N_range achieved the target JOINT assurance under the exact calculation: the highest assurance seen was 0.799017 at N = 676, against target_assurance = 0.8. N_total, n_total and joint_assurance are NA (target_reached = FALSE). Consider expanding N_range; see max_assurance_evaluated / N_at_max_assurance for diagnostics. 
