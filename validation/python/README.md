@@ -74,19 +74,34 @@ The confirmatory grid is correctly described as **defined before the
 confirmatory execution according to the local hash record**, never as
 "pre-registered" and never cited as proof of preespecification by itself.
 
-## Pending regeneration under 0.6.6 (Lote 02)
+## Regeneration under 0.6.8 (current)
 
-This file and `report.html` still describe the run against
-**dtasamplesize 0.6.5 / 0.6.3** (see "Reverification" and "How to run"
-below); those sections are kept, explicitly labelled by version, as the
-historical record of that run. They are not presented as current
-validation evidence for 0.6.6. `conf_R_07_reverify_version.R` and the
-confirmatory Python scripts are re-run against a privately installed
-0.6.6 by `tools/L02_run_all.sh` (see `$WORK/tools/`); `tools/generar_report_html.R`
-regenerates this directory's `report.html` and the results table below
-from those new logs once that run completes. Until that run has produced
-logs under `validation/logs/`, do not read the "Results" table below as a
-0.6.6 confirmation.
+The "Reverification (2026-09-28, H-05)", "How to run" and the pre-0.6.8
+part of "Results" below describe earlier runs against
+**dtasamplesize 0.6.5 / 0.6.3**; those sections are kept, explicitly
+labelled by version, as the historical record of those runs and are not
+current validation evidence. The current evidence is the full
+`run_all.sh`/`run_all.ps1` pipeline (dev_01-03, conf_R_01, conf_PY_02,
+conf_R_03, conf_R_04, conf_PY_05, conf_PY_06, conf_R_07, conf_PY_08,
+conf_PY_09) plus the top-level `validation/*.R` scripts, re-run against a
+privately installed **dtasamplesize 0.6.8** (not the system library;
+`R_LIBS_PRIVATE` pointed at a private library) on 2026-10-06, exit code 0
+end to end. `validation/python/generate_report.R` (the public, versioned
+replacement for the undocumented machine-local
+`tools/generar_report_html.R` referenced by earlier revisions of this
+file, never committed to this repository) regenerated `report.html` from
+those logs. The "Results" table below is the 0.6.8 confirmation.
+
+This run also exercised the M-03 fix (see `NEWS.md`, "dtasamplesize
+0.6.8"): `conf_R_01_package.R` no longer crashes probing `N_total +/- 1`
+around the infeasible scenario C12, and reports it explicitly
+(`target_reached = FALSE`, `N_total = NA`, `joint_assurance = NA`,
+`max_assurance_evaluated = 0` at `N = 10`); `conf_PY_02_reference.py` and
+`conf_R_03_properties.R`'s PT3 agree C12 is infeasible rather than
+crashing on a `None`/`NA` `N_total`; `conf_R_07_reverify_version.R`'s
+rebuild comparison reports all 12 scenarios (C01-C12) as unchanged,
+including C12 (`ALL CONFIRMATORY RESULTS UNCHANGED ACROSS THE REBUILD:
+TRUE`).
 
 ## Design
 
@@ -110,9 +125,73 @@ The rerun documented here (`run_all_top.log`, `logs/*.log`, 2026-09-16) used
 "Reverification (2026-09-28, H-05)" above for the 0.6.5 re-run of the two
 R-side confirmatory scripts).
 
-## Results
+## Results (0.6.8, current)
 
-Manuscript claims checked against today's (2026-09-16) logs/JSON. Only MATCH
+Manuscript claims checked against the 2026-10-06 logs/JSON produced by the
+0.6.8 pipeline run described above. Only MATCH rows carry reproduced
+values.
+
+| Claim | Verdict | 0.6.8 value | Source |
+|---|---|---|---|
+| Analytic routes agree within 4.086e-14 | MATCH | 4.086e-14 | `logs/conf_PY_02_reference.py.log:150` |
+| Reference vs package agree within 7.20e-13 (max diff) | MATCH | 7.20e-13 (C06) | `logs/conf_PY_02_reference.py.log` section A |
+| 12 scenarios; 11 feasible (C12 infeasible) | MATCH | C01-C12; C12 infeasible-by-design (`target_reached = FALSE`, `N_total`/`joint_assurance` = NA) | `logs/conf_PY_02_reference.py.log` sections A, B, E; `logs/conf_R_01_package.R.log` |
+| N-1/N/N+1 target reached at N not N-1, all feasible scenarios | MATCH | PASS on all 11; C12 "INFEASIBLE-by-design" | `logs/conf_PY_02_reference.py.log` section B |
+| 41 property-based tests total | MATCH | 19/19 R + 22/22 Python (PT1 x11 + PT2 x11) = 41, 0 violations | `logs/conf_R_03_properties.R.log` ("19/19 property checks passed"); `logs/conf_PY_02_reference.py.log` ("PT1 violations = 0   PT2 violations = 0") |
+| 1,846,401 enumerated triplets | MATCH | 604,173+631,595+610,633=1,846,401 (C09/C10/C11) | `logs/conf_PY_02_reference.py.log` section C |
+| N=678 (0.8003489948) and N=672 (0.8002692084) | MATCH | reproduced exactly; all 12 scenarios (incl. C12 as NA/NA) unchanged across the rebuild | `logs/conf_R_07_reverify_version.R.log` |
+| A(677) = 0.7996848824 | MATCH | 0.7996848824 | `logs/reproduce_manuscript.log` |
+| Half-width misreading -> assurance 0.0032 at N=678 | MATCH | 0.003178 | `logs/conf_PY_05_shared_assumptions.py.log` (P1, V3) |
+| Fixed diseased count -> N=533 | MATCH | N=533 (P1 and P2) | `logs/conf_PY_05_shared_assumptions.py.log` (V5) |
+| HPD intervals -> 666 and 658 | MATCH | 666 (P1), 658 (P2) | `logs/conf_PY_05_shared_assumptions.py.log` (V2) |
+| 73 real non-monotone per-arm reversals for m<=800 (TOL=1e-9, P clipped to [0,1]); joint assurance non-decreasing | MATCH | 73 (P1/P2 P_Se) | `logs/conf_PY_06_monotone_in_N.py.log` |
+| RNG state unchanged after a call | MATCH | PT5 PASS | `logs/conf_R_03_properties.R.log` |
+| joint_sample_size N=580, p=0.8041, mcse=0.002806 | MATCH | reproduced exactly | `logs/reproduce_manuscript.log` |
+| Buderer P(CI width <= target) = 0.5730 | MATCH | 0.5730 | `logs/reproduce_manuscript.log` |
+| Wald/Wilson sweep ranges 0.469-0.872 and 0.000-1.000 | MATCH | Wald 0.4688-0.8721; Wilson 0.0000-1.0000 | `logs/sweep_wald_wilson.log` |
+| G04 exact-mode invariance (0.6.8, expected PASS) | MATCH | PASS across 80 B/seed/N_range combinations + no-crossing contract | `logs/exact_invariance.log` |
+| RNG-kind invariance (5 kinds) | MATCH | PASS | `logs/rng_invariance.log` |
+| Integration check (full pipeline, reproducibility, ordering) | MATCH | PASS | `logs/integration_check.log` |
+| Cross-validation (V1-V8: Wilson/Wald/Buderer/Hanley-McNeil/net benefit/Beta posterior/imperfect-ref) | MATCH | all PASS (2 documented expected deviations under V1/V4, not held to tolerance) | `logs/cross_validation.log` |
+
+**MC-vs-exact internal consistency (`conf_R_04_mc_vs_exact.R`), NOT a
+discrepancy in the manuscript numbers above.** This script probes
+`bam_sample_size(method = "monte_carlo")` at the single, fixed published
+N (678, 672) for 3 seeds each and compares the returned
+`joint_assurance` against the exact value. Under the current API
+(the "anti-noise" acceptance rule added in 0.6.6 -- see `NEWS.md`), a
+single-N Monte Carlo probe only returns a finite `joint_assurance` when
+the lower bound of its own 95% Monte Carlo CI still clears
+`target_assurance`; otherwise it returns `NA` by design (never a noisy
+point estimate passed off as a validated one). Since the published
+`joint_assurance` (~0.8003) sits well within Monte Carlo noise of the
+0.80 target at `B = 160000` (`mcse ~= 0.00100`), most single-N probes are
+expected to land on the "not accepted" side and return `NA`. Of the 6
+case/seed combinations, only one (P1, seed 70117) cleared the bound:
+`joint_assurance = 0.8020937500`, `mcse = 0.00100`,
+`z = (MC - exact)/mcse = +1.75`. The other 5 returned `NA` and no `z`
+could be computed for them. **The only MCSE multiple this run
+measures/supports is `|z| = 1.75` (one data point); it does not support
+a stronger claim such as "compatible within 3x MCSE" across multiple
+replications, because the current API does not expose a raw simulated
+`joint_assurance` at a single N independent of the accept/reject
+decision.** The git-tracked `logs/conf_R_04_mc_vs_exact.R.log` prior to
+this release (last touched in the 0.6.4-era commit, before the 0.6.6
+anti-noise fix) showed finite values for all 6 rows; that was a stale
+log that predated the current, deliberate design and was never
+regenerated across the 0.6.5/0.6.6/0.6.7 releases. This is now
+corrected (the log is regenerated here), but the anti-noise design
+itself means this particular script cannot usefully report "Monte Carlo
+compatible within its MCSE" the way earlier, stale evidence implied;
+anyone relying on that claim should re-derive it from a probe that
+requests the raw simulated assurance rather than the accept/reject
+headline.
+
+## Results (2026-09-16, historical)
+
+Manuscript claims checked against the 2026-09-16 logs/JSON, under
+**dtasamplesize 0.6.3** (see "How to run" below). Kept for provenance;
+not current evidence -- see "Results (0.6.8, current)" above. Only MATCH
 rows carry reproduced values.
 
 | Claim | Verdict | Today's value | Source |

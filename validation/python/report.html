@@ -1,4 +1,4 @@
-<title>BAM Assurance Confirmation (0.6.6)</title>
+<title>BAM Assurance Confirmation (0.6.8)</title>
 <style>
 body{font-family:ui-monospace,Consolas,monospace;max-width:72ch;margin:2em auto;line-height:1.5}
 table{border-collapse:collapse;width:100%}
@@ -6,21 +6,25 @@ td,th{border:1px solid #888;padding:4px 8px;text-align:left}
 .fail{color:#963528;font-weight:bold}
 .pass{color:#2C6A43;font-weight:bold}
 </style>
-<h1>BAM joint-assurance confirmation -- dtasamplesize 0.6.6</h1>
-<p>Regenerated automatically by tools/generar_report_html.R from the logs
-under validation/logs/ produced by tools/L02_run_all.sh. Generated at
-2026-10-01 07:23:11 -0500. This file replaces hand edits; to update it, re-run the logged
-validation scripts and this generator, never edit the HTML directly.</p>
+<h1>BAM joint-assurance confirmation -- dtasamplesize 0.6.8</h1>
+<p>Regenerated automatically by validation/python/generate_report.R from the
+logs under validation/logs/ produced by validation/python/run_all.sh (or
+run_all.ps1) and the top-level validation/*.R scripts. Generated at
+2026-10-06 02:17:56 -0500. This file replaces hand edits; to update it, re-run the
+logged validation scripts and this generator, never edit the HTML
+directly.</p>
 <table>
 <tr><th>Item</th><th>Value</th><th>Source log</th></tr>
-<tr><td>Package version (sessionInfo)</td><td>0.6.6</td><td>sessionInfo.txt</td></tr>
-<tr><td>R CMD check status</td><td>OK</td><td>R_CMD_check_00check.log</td></tr>
-<tr><td>G04 exact_invariance (0.6.6, expected PASS)</td><td class="pass">PASS</td><td>exact_invariance.log</td></tr>
-<tr><td>G04 exact_invariance (0.6.5, expected FAIL)</td><td class="pass">FAIL</td><td>exact_invariance_v065.log</td></tr>
-<tr><td>N=678 reproduced</td><td>678</td><td>reproduce_manuscript.log</td></tr>
-<tr><td>N=672 reproduced</td><td>672</td><td>reproduce_manuscript.log</td></tr>
+<tr><td>Package version (sessionInfo)</td><td>0.6.8</td><td>sessionInfo.txt</td></tr>
+<tr><td>R CMD check status</td><td>Status: 1 ERROR, 1 WARNING, 4 NOTEs</td><td>R_CMD_check_00check.log</td></tr>
+<tr><td>testthat summary</td><td>[ FAIL 0 | WARN 0 | SKIP 3 | PASS 746 ]</td><td>testthat.Rout</td></tr>
+<tr><td>G04 exact_invariance (current, expected PASS)</td><td class="pass">PASS</td><td>exact_invariance.log</td></tr>
+<tr><td>G04 exact_invariance (0.6.5, historical, expected FAIL)</td><td class="fail">FAIL (expected, historical 0.6.5 demonstration)</td><td>historical_not_current/exact_invariance_v065.log</td></tr>
+<tr><td>N=678 reproduced</td><td>N_total = 678   (article: 678)   PASS</td><td>reproduce_manuscript.log</td></tr>
+<tr><td>N=672 reproduced</td><td>BAM (exact, harmonized priors), N = 672   (article: 672)   PASS</td><td>reproduce_manuscript.log</td></tr>
 </table>
 <p>See validation/python/README.md for the full historical provenance
-(2026-08-27/2026-09-16/2026-09-28 Python confirmatory run) and
-validation/README.md for what each script proves and does not prove.</p>
+(2026-08-27/2026-09-16/2026-09-28 Python confirmatory run, superseded
+material under historical_not_current/) and validation/README.md for what
+each script proves and does not prove.</p>
 

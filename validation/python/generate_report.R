@@ -14,10 +14,6 @@
 # Usage (from the package root):
 #   Rscript validation/python/generate_report.R
 
-repo_root <- normalizePath(file.path(dirname(sys.frame(1)$ofile %||% "."), "..", ".."),
-                           mustWork = FALSE)
-`%||%` <- function(a, b) if (is.null(a)) b else a
-
 # Resolve paths relative to the repository root regardless of cwd.
 find_root <- function() {
   d <- normalizePath(".", mustWork = TRUE)
@@ -50,7 +46,7 @@ get_num <- function(text, pattern) {
   if (length(m) && nzchar(m)) trimws(m) else "NOT FOUND"
 }
 n678_line <- get_num(repro, "N_total = 678[^\\n]*")
-n672_line <- get_num(repro, "N_total = 672[^\\n]*")
+n672_line <- get_num(repro, "BAM \\(exact, harmonized priors\\), N = 672[^\\n]*")
 
 exact_inv <- read_log("exact_invariance.log")
 exact_inv_status <- if (grepl("PASS", exact_inv, fixed = TRUE) &&
