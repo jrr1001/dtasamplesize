@@ -1,14 +1,21 @@
 # Historical artefacts (not current validation evidence)
 
 The files in this folder are kept for provenance only. They are **not**
-evidence for the 0.6.8 release and must not be cited as such.
+evidence for the 0.6.9 release and must not be cited as such.
 
 - `HASHES_2026-10-01.txt` -- an earlier SHA-256 manifest of
   `validation/`, superseded the same day by `HASHES_2026-10-01_v2.txt`
   (which differs only in the hashes of `python/report.html` and
   `reproduce_manuscript.R`, both regenerated after the v1 manifest was
-  recorded). Superseded again by `validation/HASHES_2026-10-05_v0.6.8.txt`
-  for this release.
+  recorded). Superseded by `HASHES_2026-10-05_v0.6.8.txt` (0.6.8), itself
+  superseded by `validation/HASHES_2026-10-06_v0.6.9.txt` for this
+  release.
+- `HASHES_2026-10-05_v0.6.8.txt` -- the SHA-256 manifest of `validation/`
+  for the 0.6.8 release, superseded by
+  `validation/HASHES_2026-10-06_v0.6.9.txt` (0.6.9 is a maintenance
+  release: no computational code, API, or results changed; most file
+  hashes are unchanged, but the manifest itself is recomputed per
+  release).
 - `exact_invariance_v065.log` -- the deliberate demonstration run of
   `validation/exact_invariance.R --version-check=off` against the
   (pre-fix) 0.6.5 installation, kept to show the G04 gate correctly
