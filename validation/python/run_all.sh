@@ -16,8 +16,14 @@ set -u
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 unset LC_ALL LC_CTYPE LANG
-RSCRIPT="/c/Program Files/R/R-4.5.2/bin/Rscript.exe"
-PYTHON="C:/Users/DELL/AppData/Local/Python/bin/python.exe"
+RSCRIPT="${RSCRIPT:-/c/Program Files/R/R-4.5.2/bin/Rscript.exe}"
+PYTHON="${PYTHON:-C:/Users/DELL/AppData/Local/Python/bin/python.exe}"
+# Use a privately installed dtasamplesize (0.6.8) rather than the system
+# library when R_LIBS_PRIVATE is set by the caller, e.g.:
+#   R_LIBS_PRIVATE="/d/.../audit_outputs/surgical_2026-10-05/lib" ./run_all.sh
+if [ -n "${R_LIBS_PRIVATE:-}" ]; then
+  export R_LIBS="${R_LIBS_PRIVATE}"
+fi
 
 mkdir -p logs
 

@@ -26,9 +26,12 @@ R -f validation/exact_invariance.R        # G04: exact-mode N/A invariance acros
   AUC gate inside it, `ss_net_benefit()`, `ss_imperfect_ref()`,
   `ss_adaptive_prevalence()` and `ss_time_dependent_roc()` remain in the
   package but are no longer described in the article, so this script no
-  longer checks their numbers. It requires version 0.6.6 exactly and stops
-  with an explanatory message on any other installed version, whose results
-  are not guaranteed to reproduce the article's bit-for-bit.
+  longer checks their numbers. It requires version 0.6.8 exactly (the
+  published figures were computed under 0.6.6; 0.6.7 and 0.6.8 changed only
+  documentation, tests and validation tooling, so the numbers are
+  unchanged -- see NEWS.md) and stops with an explanatory message on any
+  other installed version, whose results are not guaranteed to reproduce
+  the article's bit-for-bit.
 - **`make_manuscript_assets.R`** — the public generator behind every figure
   and data-derived table in the article's current, reduced scope: Figure 1
   (unchanged) and Figure 2 (the joint-assurance-vs-N curve), written as a

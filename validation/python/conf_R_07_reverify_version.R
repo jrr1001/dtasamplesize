@@ -2,8 +2,8 @@
 # evidence): the installed package was originally rebuilt (0.6.2 -> 0.6.3)
 # by a parallel agent while the confirmatory grid was running, which is why
 # conf_package.json's baseline predates later releases.  Re-verify the
-# headline numbers against whatever is installed NOW (as of Lote 02, a
-# privately installed dtasamplesize 0.6.6), so the report states a single
+# headline numbers against whatever is installed NOW (as of this release, a
+# privately installed dtasamplesize 0.6.8), so the report states a single
 # reproducible provenance.  Compares against the baseline values recorded in
 # conf_package.json.
 suppressPackageStartupMessages({library(dtasamplesize); library(jsonlite)})

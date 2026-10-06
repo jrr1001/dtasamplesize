@@ -73,11 +73,24 @@ for s in SC:
     refN, refA = ex.search(s["target"], s["N_lo"], s["N_hi"])
     p = pkg[sid]["main"]
     pN, pA = p["N_total"], p["joint_assurance"]
-    refA_at_pN = ex.assurance(pN) if pN is not None else float("nan")
-    ok = (refN == pN)
-    print(f"{sid:4} {pN:>6} {str(refN):>6} {str(ok):>6} "
-          f"{pA:>13.10f} {refA_at_pN:>13.10f} {abs(pA-refA_at_pN):>10.2e}")
+    pkg_feasible = p.get("target_reached", pN is not None)
+    # A non-feasible scenario (pN is None, e.g. C12) has no N_total to probe
+    # the reference implementation at; reported as infeasible on both sides
+    # rather than crashing ex.assurance(None).
+    if pN is None:
+        refA_at_pN = float("nan")
+        ok = (refN is None)
+        print(f"{sid:4} {'NA':>6} {str(refN):>6} {str(ok):>6} "
+              f"{'NA':>13} {'NA':>13} {'NA':>10}")
+    else:
+        refA_at_pN = ex.assurance(pN)
+        ok = (refN == pN)
+        print(f"{sid:4} {pN:>6} {str(refN):>6} {str(ok):>6} "
+              f"{pA:>13.10f} {refA_at_pN:>13.10f} {abs(pA-refA_at_pN):>10.2e}")
     results[sid] = dict(pkgN=pN, refN=refN, pkgA=pA, refA=refA_at_pN,
+                        pkg_feasible=pkg_feasible,
+                        pkg_max_assurance_evaluated=p.get("max_assurance_evaluated"),
+                        pkg_N_at_max_assurance=p.get("N_at_max_assurance"),
                         pkg_warnings=p["warnings"], ex=ex,
                         secs=time.time() - t0)
 
@@ -90,6 +103,17 @@ print(f"{'id':4} {'target':>7} {'N':>6} | {'ref A(N-1)':>12} {'ref A(N)':>12} "
 for s in SC:
     sid = s["id"]; r = results[sid]; ex = r["ex"]; N = r["pkgN"]
     tgt = s["target"]
+    if N is None:
+        # Infeasible scenario (target_reached = FALSE): no N_total exists to
+        # probe N-1/N/N+1 or Monte Carlo confirm. Report feasibility status
+        # consistently with the package's own diagnostics instead of
+        # crashing on None - 1 / None + 1.
+        a_m1 = a_0 = a_p1 = ph = mcse = float("nan")
+        verdict = "INFEASIBLE-by-design (see PT3)"
+        print(f"{sid:4} {tgt:>7.2f} {'NA':>6} | {'NA':>12} {'NA':>12} "
+              f"{'NA':>12} | {'NA':>9} {'NA':>7} | {verdict}")
+        r.update(a_m1=a_m1, a_0=a_0, a_p1=a_p1, mc=ph, mcse=mcse, verdict=verdict)
+        continue
     a_m1 = ex.assurance(N - 1) if N - 1 >= 1 else float("nan")
     a_0 = ex.assurance(N)
     a_p1 = ex.assurance(N + 1) if N + 1 <= ex.nmax else ex.assurance(N)
@@ -193,9 +217,16 @@ print(f"  reference: any N in [{s12['N_lo']},{s12['N_hi']}] reaching "
       f"{s12['target']}?  {'NO' if n12 is None else 'YES at N='+str(n12)}")
 print(f"  reference assurance at N_hi={s12['N_hi']}: "
       f"{ex12.assurance(s12['N_hi']):.8f}")
-print(f"  package returned N_total = {results['C12']['pkgN']} with "
-      f"joint_assurance = {results['C12']['pkgA']:.8f}")
-print(f"  package warnings = {results['C12']['pkg_warnings']}")
+c12r = results["C12"]
+if c12r["pkgN"] is None:
+    print(f"  package: target_reached = FALSE, N_total = NA, "
+          f"joint_assurance = NA; max_assurance_evaluated = "
+          f"{c12r['pkg_max_assurance_evaluated']:.8f} at N = "
+          f"{c12r['pkg_N_at_max_assurance']}")
+else:
+    print(f"  package returned N_total = {c12r['pkgN']} with "
+          f"joint_assurance = {c12r['pkgA']:.8f}")
+print(f"  package warnings = {c12r['pkg_warnings']}")
 
 # serialise
 dump = {k: {kk: (vv if kk != "ex" else None) for kk, vv in v.items()}

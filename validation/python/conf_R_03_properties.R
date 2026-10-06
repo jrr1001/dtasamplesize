@@ -56,9 +56,16 @@ for (id in unlist(PT$PT2_delta_monotone$package_scenarios)) {
 cat("== PT3  infeasible scenario is not passed off as valid ==\n")
 s <- SC[["C12"]]
 r <- run(s)
-say("PT3-C12", length(r$warns) > 0 && r$A < s$target,
-    sprintf("raw N_total=%s A=%.6f (<target %.2f: %s), warned: %s",
-            r$raw_N, r$A, s$target, r$A < s$target, length(r$warns) > 0))
+# C12 is infeasible by design: the current API records this explicitly as
+# raw_N (N_total) = NA and A (joint_assurance) = NA, plus a warning -- never
+# a finite N_total/A pair that could be mistaken for a genuine solution
+# (versions before this fix silently returned N_total = max(N_range) with
+# a sub-target A, which this check would also have treated as a FAIL
+# below; NA-safe now since neither read is used inside a bare `if`).
+infeasible_flagged <- is.na(r$raw_N) && is.na(r$A)
+say("PT3-C12", length(r$warns) > 0 && infeasible_flagged,
+    sprintf("raw N_total=%s A=%s (infeasible, i.e. NA/NA: %s), warned: %s",
+            r$raw_N, r$A, infeasible_flagged, length(r$warns) > 0))
 cat("      warning text: ", paste(r$warns, collapse = " | "), "\n")
 
 cat("== PT4  monte_carlo reproducible with the same seed ==\n")

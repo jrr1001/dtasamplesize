@@ -21,6 +21,9 @@ call_pkg <- function(s, N_range, target = NULL, dmult = 1) {
                             invokeRestart("muffleWarning") })
   list(N_total = r$N_total, joint_assurance = r$joint_assurance,
        mcse = r$assurance_mcse, assurance_method = r$assurance_method,
+       target_reached = r$target_reached,
+       max_assurance_evaluated = r$max_assurance_evaluated,
+       N_at_max_assurance = r$N_at_max_assurance,
        warnings = warns)
 }
 
@@ -30,19 +33,36 @@ for (s in sc) {
   cat(sprintf("[%s] searching N_range=%d:%d ... ", s$id, s$N_lo, s$N_hi))
   flush.console()
   main <- call_pkg(s, s$N_lo:s$N_hi)
-  # the package's own assurance at N-1, N, N+1 (single-N N_range probes)
+  # the package's own assurance at N-1, N, N+1 (single-N N_range probes).
+  # Only evaluated when the main search actually crossed the target: an
+  # infeasible scenario (target_reached = FALSE) has N_total = NA, and
+  # NA +/- 1 is not a meaningful N to query -- recorded explicitly as
+  # infeasible instead of crashing bam_sample_size() with a non-finite N.
   trio <- list()
-  for (d in c(-1, 0, 1)) {
-    Nq <- main$N_total + d
-    if (Nq >= 1) {
-      q <- call_pkg(s, Nq)
-      trio[[as.character(d)]] <- list(N = Nq, assurance = q$joint_assurance)
+  if (isTRUE(main$target_reached) && !is.na(main$N_total)) {
+    for (d in c(-1, 0, 1)) {
+      Nq <- main$N_total + d
+      if (Nq >= 1) {
+        q <- call_pkg(s, Nq)
+        trio[[as.character(d)]] <- list(N = Nq, assurance = q$joint_assurance)
+      }
     }
+  } else {
+    trio[["infeasible"]] <- list(
+      N = NA_integer_, assurance = NA_real_,
+      note = "main search did not reach target_assurance; N_total +/- 1 not evaluated")
   }
   el <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
-  cat(sprintf("N_total=%s  A=%.10f  (%.0fs)  warns=%d\n",
-              format(main$N_total), main$joint_assurance, el,
-              length(main$warnings)))
+  if (isTRUE(main$target_reached)) {
+    cat(sprintf("N_total=%s  A=%.10f  (%.0fs)  warns=%d\n",
+                format(main$N_total), main$joint_assurance, el,
+                length(main$warnings)))
+  } else {
+    cat(sprintf(
+      "INFEASIBLE (target_reached=FALSE)  N_total=NA  joint_assurance=NA  max_assurance_evaluated=%.10f @ N=%s  (%.0fs)  warns=%d\n",
+      main$max_assurance_evaluated, format(main$N_at_max_assurance), el,
+      length(main$warnings)))
+  }
   out[[s$id]] <- list(id = s$id, main = main, trio = trio, secs = el)
 }
 

@@ -1,3 +1,89 @@
+# dtasamplesize 0.6.8
+
+**Experimental labelling for the five modules outside the validated
+scope (documentation only; no code, API or behaviour change).**
+`ss_unified()`, `ss_net_benefit()`, `ss_imperfect_ref()`,
+`ss_adaptive_prevalence()` and `ss_time_dependent_roc()` are exported and
+documented, but are outside the validated scope of the dtasamplesize
+software article -- which covers `bam_sample_size(method = "exact")` and
+`joint_sample_size()`, plus the helpers `mc_validate_buderer()`,
+`buderer_n()`, `wilson_ci()` and `wald_ci()` -- and have not been
+independently validated against an external reference implementation.
+Each of the five now carries an explicit "Experimental: outside the
+validated scope..." label at the top of its `@details`/documentation
+(`R/ss_unified.R`, `R/ss_net_benefit.R`, `R/ss_imperfect_ref.R`,
+`R/ss_adaptive_prevalence.R`, `R/ss_time_dependent_roc.R`, and the
+corresponding `man/*.Rd`, regenerated with roxygen2 7.3.3, matching
+`RoxygenNote`); `DESCRIPTION`'s `Description` field, `README.md` (new
+"Validated scope and experimental modules" section), and
+`vignettes/introduction.Rmd` (an explicit note ahead of the sections that
+illustrate these modules) now state the same thing. This is a
+documentation/lifecycle change only: no function gained a runtime
+warning, no default or argument changed, and no computed value changed
+-- `git diff v0.6.7 -- R/` touches only `#'` roxygen comment lines (25
+insertions across the five files, 0 code lines), confirmed before this
+release was built.
+
+**Validation-pipeline fix for the C12 (infeasible) confirmatory
+scenario.** `validation/python/conf_R_01_package.R` crashed
+(`if (Nq >= 1)` on `Nq = NA`, "missing value where TRUE/FALSE needed")
+when probing `N_total +/- 1` around an infeasible scenario, because the
+current `bam_sample_size()` API (already correct, unchanged by this
+release) reports a non-crossing search explicitly as
+`target_reached = FALSE`, `N_total = NA_integer_`,
+`joint_assurance = NA_real_`, with the diagnostics
+`max_assurance_evaluated` and `N_at_max_assurance` populated instead.
+`conf_R_01_package.R` now checks `target_reached` before forming the
+`N_total +/- 1` trio, records the infeasible case explicitly (never
+evaluating `N_total +/- 1` when `N_total` is `NA`), and logs
+`max_assurance_evaluated`/`N_at_max_assurance` for C12. The dependent
+scripts that read `conf_package.json` or otherwise assumed `N_total` is
+always numeric were reviewed and fixed minimally so C12 is reported as
+infeasible consistently rather than crashing:
+`conf_PY_02_reference.py` (sections A, B and E: guards against `pN`/`pA`
+being `None` for C12 instead of formatting or subtracting `None`),
+`conf_R_03_properties.R` (PT3 now recognises infeasibility via
+`is.na(raw_N) && is.na(A)`, which is `NA`-safe, instead of the old
+`A < target` comparison that produced `NA` and crashed the `if` inside
+`say()`). `conf_R_03_properties.R`'s PT1/PT2/PT4/PT5/PT6,
+`conf_R_04_mc_vs_exact.R`, `conf_R_07_reverify_version.R`,
+`conf_PY_05_shared_assumptions.py`, `conf_PY_06_monotone_in_N.py`
+(already skipped C12), `conf_PY_08_degeneracy_bite.py` and
+`conf_PY_09_published_mc.py` do not reference C12's `N_total` and needed
+no change. `validation/python/LOCKED_confirmatory_grid.json` was not
+modified; its SHA-256
+(`da53f05987f22511634ab085d585f5aef372c176461d9cc6cde8beeb185a4500`)
+still matches the hash recorded in `HASHES_2026-08-27.txt`,
+`HASHES_2026-10-01.txt` and `HASHES_2026-10-01_v2.txt`.
+
+**Validation evidence regenerated under 0.6.8.** The confirmatory R/Python
+pipeline (`validation/python/run_all.sh`/`run_all.ps1`), `R CMD check
+--as-cran`, `tests/testthat`, and the top-level `validation/*.R` scripts
+were re-run against a privately installed 0.6.8 (not the system library).
+`validation/python/README.md` and `report.html` are regenerated to
+describe this run as current and no longer say "Pending regeneration" or
+present a 0.6.3/0.6.5 run as current validation evidence.
+`validation/reproduce_manuscript.R`, `validation/rng_invariance.R`, and
+`validation/exact_invariance.R`'s version guards, and
+`validation/python/conf_R_07_reverify_version.R`'s comments, now expect
+0.6.8 (the manuscript's published figures were computed under 0.6.6 and
+are unchanged through 0.6.8, which changed only documentation, tests and
+validation tooling -- confirmed by the `R/` diff above being
+comment-only).
+
+**Historical artefacts relocated.** Superseded logs and hash records from
+earlier releases (the 0.6.3/0.6.5-era Python validation narrative, the
+`*.SUPERSEDED*` logs, `exact_invariance_v065.log`, and superseded
+`HASHES_*.txt` files) were moved with `git mv` into clearly labelled
+`historical_not_current/` subfolders (under `validation/` and
+`validation/python/`), each with a short README stating they are
+historical and not evidence for 0.6.8.
+
+**No computational code, API or published figure changed in this
+release.** This release is documentation, validation-tooling and
+lifecycle-labelling only; see the `R/` diff note above and the
+reproduced manuscript figures in `validation/logs/`.
+
 # dtasamplesize 0.6.7
 
 **Test robustness across R versions (R-devel/R >= 4.6.0 RNG-stream

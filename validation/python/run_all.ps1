@@ -17,8 +17,14 @@ Remove-Item Env:\LC_ALL -ErrorAction SilentlyContinue
 Remove-Item Env:\LC_CTYPE -ErrorAction SilentlyContinue
 Remove-Item Env:\LANG -ErrorAction SilentlyContinue
 
-$RSCRIPT = "C:/Program Files/R/R-4.5.2/bin/Rscript.exe"
-$PYTHON  = "C:/Users/DELL/AppData/Local/Python/bin/python.exe"
+$RSCRIPT = if ($env:RSCRIPT) { $env:RSCRIPT } else { "C:/Program Files/R/R-4.5.2/bin/Rscript.exe" }
+$PYTHON  = if ($env:PYTHON) { $env:PYTHON } else { "C:/Users/DELL/AppData/Local/Python/bin/python.exe" }
+# Use a privately installed dtasamplesize (0.6.8) rather than the system
+# library when R_LIBS_PRIVATE is set by the caller, e.g.:
+#   $env:R_LIBS_PRIVATE = "D:/.../audit_outputs/surgical_2026-10-05/lib"; .\run_all.ps1
+if ($env:R_LIBS_PRIVATE) {
+    $env:R_LIBS = $env:R_LIBS_PRIVATE
+}
 
 New-Item -ItemType Directory -Force -Path "logs" | Out-Null
 
