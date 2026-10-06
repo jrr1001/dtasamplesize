@@ -114,6 +114,25 @@ R -f validation/exact_invariance.R        # G04: exact-mode N/A invariance acros
   FAILS there, demonstrating that it actually detects the defect this
   correction fixes rather than passing vacuously.
 
+## Package check logs (0.6.8, current)
+
+- `logs/R_CMD_check_00check.log`: `R CMD check --as-cran --no-manual` of the
+  0.6.8 source tarball (R 4.5.2, Windows 11), the same options as the
+  archived checks of earlier releases. Status: 0 errors, 0 warnings,
+  4 NOTEs (new CRAN submission; "unable to verify current time"; the
+  `bam_sample_size` example exceeding 5 s elapsed on this machine; a
+  left-over `00LOCK-dtasamplesize` directory in the check folder). None
+  reflects a package defect.
+- `logs/testthat.Rout`: the test suite run inside that check,
+  `[ FAIL 0 | WARN 0 | SKIP 3 | PASS 746 ]`.
+- `logs/R_CMD_check_with_pdf_manual_00check.log`: an additional
+  `R CMD check --as-cran` run that also attempted the PDF manual. It ended
+  with 1 ERROR and 1 WARNING because the local TeX installation lacks the
+  Courier font metrics (`pcrr8t`) needed to typeset the manual, plus an
+  HTML-manual NOTE (nested emphasis in `joint_sample_size.Rd`). It was run
+  on a tarball built before the 0.6.8 NEWS entry was committed; the code,
+  tests and documentation are otherwise identical.
+
 ## A note on what these scripts prove
 
 `reproduce_manuscript.R` and `integration_check.R` are reproducibility

@@ -1,6 +1,6 @@
 # Environment used to run the scripts in this directory (recorded 2026-09-16).
 #
-# Python (checked with: C:/Users/DELL/AppData/Local/Python/bin/python.exe --version
+# Python (checked with: python --version
 # and python -c "import numpy, scipy; print(numpy.__version__, scipy.__version__)"):
 # python 3.14.2
 numpy==2.4.0

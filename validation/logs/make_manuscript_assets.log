@@ -1,25 +1,10 @@
-FECHA_ISO=2026-10-01T05:46:55-05:00
-DIRECTORIO=<REPO>
-COMANDO=bash -c 
-        echo 'FECHA_ISO='"$(date -Iseconds)"
-        echo 'COMMIT=8c36391a4503fba982439eb01d39ae417aa73170'
-        echo 'VERSION=0.6.6'
-        echo 'COMANDO=Rscript validation/make_manuscript_assets.R (R_LIBS=<LIB>)'
-        echo 'ENTORNO: R_LIBS=<LIB>'
-        cd '<REPO>/R-package/dtasamplesize' &&
-        R_LIBS='<LIB>' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' 'validation/make_manuscript_assets.R'
-        ec=$?
-        echo '---- sessionInfo ----'
-        R_LIBS='<LIB>' '/c/Program Files/R/R-4.5.2/bin/Rscript.exe' -e 'sessionInfo()'
-        exit $ec
-    
+FECHA_ISO=2026-10-06T03:08:19-05:00
+COMMIT=f36c2145af9c100589b003f31f180657e9caa5e7
+VERSION=0.6.8
+COMANDO=Rscript validation/make_manuscript_assets.R (R_LIBS=<LIB>; run on a copy of the tree so that submission figures were not overwritten)
+RESULT: Figure_1.tiff and Figure_2.tiff byte-identical to the submitted figures (sha256 553bb364..., cccc f98d...); PDFs differ only in embedded metadata bytes; table1/table3_feature_matrix/table4 CSV byte-identical
 ---- SALIDA ----
-FECHA_ISO=2026-10-01T05:46:55-05:00
-COMMIT=8c36391a4503fba982439eb01d39ae417aa73170
-VERSION=0.6.6
-COMANDO=Rscript validation/make_manuscript_assets.R (R_LIBS=<LIB>)
-ENTORNO: R_LIBS=<LIB>
-Package version: 0.6.6 
+Package version: 0.6.8 
 Figures -> <REPO>/submission-BMC-MRM/figures 
 Tables   -> <REPO>/R-package/manuscript_assets 
 
@@ -48,33 +33,8 @@ Figure_2.tiff
 
 Files written to <REPO>/R-package/manuscript_assets :
 table1_functions.csv
-table2_crossvalidation.csv
 table3_feature_matrix.csv
 table3_provenance.csv
 table4_method_comparison.csv
 
 === make_manuscript_assets.R done ===
----- sessionInfo ----
-R version 4.5.2 (2025-10-31 ucrt)
-Platform: x86_64-w64-mingw32/x64
-Running under: Windows 11 x64 (build 26200)
-
-Matrix products: default
-  LAPACK version 3.12.1
-
-locale:
-[1] LC_COLLATE=English_United States.utf8 
-[2] LC_CTYPE=English_United States.utf8   
-[3] LC_MONETARY=English_United States.utf8
-[4] LC_NUMERIC=C                          
-[5] LC_TIME=English_United States.utf8    
-
-time zone: America/Lima
-tzcode source: internal
-
-attached base packages:
-[1] stats     graphics  grDevices utils     datasets  methods   base     
-
-loaded via a namespace (and not attached):
-[1] compiler_4.5.2
-EXIT=0

@@ -1,4 +1,9 @@
-* using log directory '<REPORT_DIR>/check/dtasamplesize.Rcheck'
+FECHA_ISO=2026-10-06T03:08:19-05:00
+COMMIT=f36c2145af9c100589b003f31f180657e9caa5e7 (source of the checked tarball)
+VERSION=0.6.8
+COMANDO=R CMD check --as-cran --no-manual dtasamplesize_0.6.8.tar.gz (R_LIBS=<LIB>; tarball sha256 55181bc0f2706d972a9f29ef163891a2672a6382a11ec7c0b831a04fc82f1473)
+---- 00check.log ----
+* using log directory '<REPO>/R-package/audit_outputs/surgical_2026-10-05/check_nomanual/dtasamplesize.Rcheck'
 * using R version 4.5.2 (2025-10-31 ucrt)
 * using platform: x86_64-w64-mingw32
 * R was compiled by
@@ -6,12 +11,12 @@
     GNU Fortran (GCC) 14.3.0
 * running under: Windows 11 x64 (build 26200)
 * using session charset: UTF-8
-* using option '--as-cran'
+* using options '--no-manual --as-cran'
 * checking for file 'dtasamplesize/DESCRIPTION' ... OK
 * checking extension type ... Package
 * this is package 'dtasamplesize' version '0.6.8'
 * package encoding: UTF-8
-* checking CRAN incoming feasibility ... [24s] NOTE
+* checking CRAN incoming feasibility ... [41s] NOTE
 Maintainer: 'Jesús D. Rojas <jrojasrivero@gmail.com>'
 
 New submission
@@ -25,7 +30,8 @@ New submission
 * checking whether package 'dtasamplesize' can be installed ... OK
 * checking installed package size ... OK
 * checking package directory ... OK
-* checking for future file timestamps ... OK
+* checking for future file timestamps ... NOTE
+unable to verify current time
 * checking 'build' directory ... OK
 * checking DESCRIPTION meta-information ... OK
 * checking top-level files ... OK
@@ -45,7 +51,7 @@ New submission
 * checking S3 generic/method consistency ... OK
 * checking replacement functions ... OK
 * checking foreign function calls ... OK
-* checking R code for possible problems ... [11s] OK
+* checking R code for possible problems ... [16s] OK
 * checking Rd files ... OK
 * checking Rd metadata ... OK
 * checking Rd line widths ... OK
@@ -60,25 +66,17 @@ New submission
 * checking examples ... NOTE
 Examples with CPU (user + system) or elapsed time > 5s
                 user system elapsed
-bam_sample_size 4.73   0.38    5.54
-* checking examples with --run-donttest ... [53s] OK
+bam_sample_size  5.5   0.14     6.5
+* checking examples with --run-donttest ... [65s] OK
 * checking for unstated dependencies in 'tests' ... OK
-* checking tests ... [21m] OK
-  Running 'testthat.R' [21m]
+* checking tests ... [31m] OK
+  Running 'testthat.R' [31m]
 * checking for unstated dependencies in vignettes ... OK
 * checking package vignettes ... OK
 * checking re-building of vignette outputs ... [14s] OK
-* checking PDF version of manual ... WARNING
-LaTeX errors when creating PDF version.
-This typically indicates Rd problems.
-LaTeX errors found:
-* checking PDF version of manual without index ... ERROR
-* checking HTML version of manual ... NOTE
-Found the following HTML validation problems:
-joint_sample_size.html:29:1 (joint_sample_size.Rd:158): Warning: nested emphasis <strong>
 * checking for non-standard things in the check directory ... NOTE
 Found the following files/directories:
-  'dtasamplesize-manual.tex'
+  '00LOCK-dtasamplesize'
 * checking for detritus in the temp directory ... OK
 * DONE
-Status: 1 ERROR, 1 WARNING, 4 NOTEs
+Status: 4 NOTEs
