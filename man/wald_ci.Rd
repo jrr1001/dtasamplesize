@@ -20,4 +20,9 @@ Named numeric vector with elements \code{lower}, \code{upper},
 \description{
 Computes the standard Wald confidence interval for a binomial proportion.
 }
+\references{
+Newcombe RG (1998). Two-sided confidence intervals for the single
+proportion: comparison of seven methods. \emph{Stat Med} 17:857-872.
+\doi{10.1002/(SICI)1097-0258(19980430)17:8<857::AID-SIM777>3.0.CO;2-E}
+}
 \keyword{internal}
