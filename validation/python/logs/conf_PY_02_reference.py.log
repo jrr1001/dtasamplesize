@@ -13,7 +13,7 @@ C08     607    607   True  0.7507355152  0.7507355152   2.37e-13
 C09       8      8   True  0.6391279309  0.6391279309   1.55e-15
 C10       3      3   True  0.5727272727  0.5727272727   1.33e-15
 C11      24     24   True  0.7012670385  0.7012670385   8.33e-15
-C12     400   None  False  0.0000000000  0.0000000000   0.00e+00
+C12      NA   None   True            NA            NA         NA
 
 ============================================================================================
 B. N-1 / N / N+1 CONFIRMATION OF THE SELECTED SIZE
@@ -30,7 +30,7 @@ C08     0.75    607 |   0.74971950   0.75073552   0.75174730 |  0.749831 0.00108
 C09     0.60      8 |   0.57181818   0.63912793   0.68619292 |  0.639244 0.00120 | PASS
 C10     0.50      3 |   0.38181818   0.57272727   0.68531469 |  0.570731 0.00124 | PASS
 C11     0.70     24 |   0.68703431   0.70126704   0.71459688 |  0.700187 0.00115 | PASS
-C12     0.80    400 |   0.00000000   0.00000000   0.00000000 |  0.000000 0.00000 | INFEASIBLE-by-design (see PT3)
+C12     0.80     NA |           NA           NA           NA |        NA      NA | INFEASIBLE-by-design (see PT3)
 
 ============================================================================================
 C. EXHAUSTIVE CROSS-CHECK ON THE ENUMERABLE CONFIRMATORY SCENARIOS
@@ -77,7 +77,7 @@ E. PT3 -- infeasible scenario C12
 ============================================================================================
   reference: any N in [10,400] reaching 0.8?  NO
   reference assurance at N_hi=400: 0.00000000
-  package returned N_total = 400 with joint_assurance = 0.00000000
-  package warnings = ['No n in n_range achieved target assurance for Se. Consider expanding n_range.', 'No n in n_range achieved target assurance for Sp. Consider expanding n_range.', 'No N in N_range achieved the target JOINT assurance under the exact calculation. Consider expanding N_range.']
+  package: target_reached = FALSE, N_total = NA, joint_assurance = NA; max_assurance_evaluated = 0.00000000 at N = 10
+  package warnings = ['No n in n_range achieved target assurance for Se. Consider expanding n_range.', 'No n in n_range achieved target assurance for Sp. Consider expanding n_range.', 'No N in N_range achieved the target JOINT assurance under the exact calculation: the highest assurance seen was 0.000000 at N = 10, against target_assurance = 0.8. N_total, n_total and joint_assurance are NA (target_reached = FALSE). Consider expanding N_range; see max_assurance_evaluated / N_at_max_assurance for diagnostics.']
 
 wrote conf_reference.json

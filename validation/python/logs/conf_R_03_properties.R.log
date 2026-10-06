@@ -11,8 +11,8 @@
   [PASS] PT2-C10 delta x1/x0.85 -> N 3/3
   [PASS] PT2-C11 delta x1/x0.85 -> N 24/49
 == PT3  infeasible scenario is not passed off as valid ==
-  [PASS] PT3-C12 raw N_total=400 A=0.000000 (<target 0.80: TRUE), warned: TRUE
-      warning text:  No n in n_range achieved target assurance for Se. Consider expanding n_range. | No n in n_range achieved target assurance for Sp. Consider expanding n_range. | No N in N_range achieved the target JOINT assurance under the exact calculation. Consider expanding N_range. 
+  [PASS] PT3-C12 raw N_total=NA A=NA (infeasible, i.e. NA/NA: TRUE), warned: TRUE
+      warning text:  No n in n_range achieved target assurance for Se. Consider expanding n_range. | No n in n_range achieved target assurance for Sp. Consider expanding n_range. | No N in N_range achieved the target JOINT assurance under the exact calculation: the highest assurance seen was 0.000000 at N = 10, against target_assurance = 0.8. N_total, n_total and joint_assurance are NA (target_reached = FALSE). Consider expanding N_range; see max_assurance_evaluated / N_at_max_assurance for diagnostics. 
 == PT4  monte_carlo reproducible with the same seed ==
   [PASS] PT4-C09 seed 70118 twice -> N 8/8 A 0.639875/0.639875 ; seed 70119 -> N 8 A 0.638600
   [PASS] PT4-C10 seed 70118 twice -> N 3/3 A 0.573575/0.573575 ; seed 70119 -> N 3 A 0.569900

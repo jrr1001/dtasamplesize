@@ -1,10 +1,10 @@
-package version: 0.6.3 
+package version: 0.6.8 
 
 -- single-N probes around the published crossing (P1, N*=678) --
-   [warn] No N in N_range achieved the target JOINT assurance under the exact calculation. Consider expanding N_range. 
-N_range=676                  N_total=676  joint_assurance=0.7990173941  mcse=0
-   [warn] No N in N_range achieved the target JOINT assurance under the exact calculation. Consider expanding N_range. 
-N_range=677                  N_total=677  joint_assurance=0.7996848824  mcse=0
+   [warn] No N in N_range achieved the target JOINT assurance under the exact calculation: the highest assurance seen was 0.799017 at N = 676, against target_assurance = 0.8. N_total, n_total and joint_assurance are NA (target_reached = FALSE). Consider expanding N_range; see max_assurance_evaluated / N_at_max_assurance for diagnostics. 
+N_range=676                  N_total=NA  joint_assurance=NA  mcse=NA
+   [warn] No N in N_range achieved the target JOINT assurance under the exact calculation: the highest assurance seen was 0.799685 at N = 677, against target_assurance = 0.8. N_total, n_total and joint_assurance are NA (target_reached = FALSE). Consider expanding N_range; see max_assurance_evaluated / N_at_max_assurance for diagnostics. 
+N_range=677                  N_total=NA  joint_assurance=NA  mcse=NA
 N_range=678                  N_total=678  joint_assurance=0.8003489948  mcse=0
 N_range=679                  N_total=679  joint_assurance=0.8010097649  mcse=0
 
@@ -13,4 +13,4 @@ N_range=600:750              N_total=678  joint_assurance=0.8003489948  mcse=0
 
 -- names of the returned object --
 again                        N_total=678  joint_assurance=0.8003489948  mcse=0
-method, n_diseased, n_non_diseased, n_total, N_total, joint_assurance, assurance_mcse, assurance_method, assurance_se, assurance_sp, N_total_median, N_total_P75, N_total_P90, buderer_n_se, prior_se, prior_sp, prior_prev, delta_se, delta_sp, target_assurance, B, call 
+method, n_diseased, n_non_diseased, n_total, N_total, target_reached, N_range_used, search_type, N_max, joint_assurance, max_assurance_evaluated, N_at_max_assurance, assurance_mcse, assurance_method, assurance_se, assurance_sp, N_total_median, N_total_P75, N_total_P90, buderer_n_se, prior_se, prior_sp, prior_prev, delta_se, delta_sp, target_assurance, B, call 
