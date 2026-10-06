@@ -117,12 +117,17 @@ R -f validation/exact_invariance.R        # G04: exact-mode N/A invariance acros
 ## Package check logs (0.6.8, current)
 
 - `logs/R_CMD_check_00check.log`: `R CMD check --as-cran --no-manual` of the
-  0.6.8 source tarball (R 4.5.2, Windows 11), the same options as the
-  archived checks of earlier releases. Status: 0 errors, 0 warnings,
-  4 NOTEs (new CRAN submission; "unable to verify current time"; the
-  `bam_sample_size` example exceeding 5 s elapsed on this machine; a
-  left-over `00LOCK-dtasamplesize` directory in the check folder). None
-  reflects a package defect.
+  0.6.8 source tarball built from commit `1a0b3be` (the two
+  documentation-only changes: a plotting example added to the vignette's
+  sensitivity-analysis section, and a reference added to `wald_ci()`'s
+  roxygen), R 4.5.2, Windows 11, the same options as the archived checks
+  of earlier releases. Status: 0 errors, 0 warnings, 3 NOTEs (new CRAN
+  submission; the `bam_sample_size` example exceeding 5 s elapsed on this
+  machine; a left-over `00LOCK-dtasamplesize` directory in the check
+  folder). The earlier run of this same check also reported "unable to
+  verify current time", a NOTE that depends on the check machine's clock
+  skew at the moment it runs rather than on the package; it did not
+  recur here. None reflects a package defect.
 - `logs/testthat.Rout`: the test suite run inside that check,
   `[ FAIL 0 | WARN 0 | SKIP 3 | PASS 746 ]`.
 - `logs/R_CMD_check_with_pdf_manual_00check.log`: an additional

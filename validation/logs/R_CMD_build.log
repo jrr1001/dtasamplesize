@@ -1,5 +1,5 @@
-FECHA_ISO=2026-10-06T03:08:19-05:00
-COMMIT=f36c2145af9c100589b003f31f180657e9caa5e7
+FECHA_ISO=2026-10-06T12:03:31-05:00
+COMMIT=1a0b3beb96104949fc6afd7b93b84110f257c208
 VERSION=0.6.8
 COMANDO=R CMD build (from git archive of the commit; pandoc from RStudio)
 ---- SALIDA ----
@@ -12,4 +12,4 @@ COMANDO=R CMD build (from git archive of the commit; pandoc from RStudio)
 * checking for empty or unneeded directories
 * building 'dtasamplesize_0.6.8.tar.gz'
 
-sha256 55181bc0f2706d972a9f29ef163891a2672a6382a11ec7c0b831a04fc82f1473  dtasamplesize_0.6.8.tar.gz
+sha256 b7d87189b36a21c95f698c561b5565bb0bc8207abcc7d0c125ec1622d4454458  dtasamplesize_0.6.8.tar.gz

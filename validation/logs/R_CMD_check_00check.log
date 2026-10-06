@@ -1,9 +1,9 @@
-FECHA_ISO=2026-10-06T03:08:19-05:00
-COMMIT=f36c2145af9c100589b003f31f180657e9caa5e7 (source of the checked tarball)
+FECHA_ISO=2026-10-06T12:03:31-05:00
+COMMIT=1a0b3beb96104949fc6afd7b93b84110f257c208 (source of the checked tarball)
 VERSION=0.6.8
-COMANDO=R CMD check --as-cran --no-manual dtasamplesize_0.6.8.tar.gz (R_LIBS=<LIB>; tarball sha256 55181bc0f2706d972a9f29ef163891a2672a6382a11ec7c0b831a04fc82f1473)
+COMANDO=R CMD check --as-cran --no-manual dtasamplesize_0.6.8.tar.gz (R_LIBS=<LIB>; tarball sha256 b7d87189b36a21c95f698c561b5565bb0bc8207abcc7d0c125ec1622d4454458)
 ---- 00check.log ----
-* using log directory '<REPO>/R-package/audit_outputs/surgical_2026-10-05/check_nomanual/dtasamplesize.Rcheck'
+* using log directory '<REPO>/R-package/audit_outputs/surgical_2026-10-05/check_nomanual_1a0b3be/dtasamplesize.Rcheck'
 * using R version 4.5.2 (2025-10-31 ucrt)
 * using platform: x86_64-w64-mingw32
 * R was compiled by
@@ -16,7 +16,7 @@ COMANDO=R CMD check --as-cran --no-manual dtasamplesize_0.6.8.tar.gz (R_LIBS=<LI
 * checking extension type ... Package
 * this is package 'dtasamplesize' version '0.6.8'
 * package encoding: UTF-8
-* checking CRAN incoming feasibility ... [41s] NOTE
+* checking CRAN incoming feasibility ... [32s] NOTE
 Maintainer: 'Jesús D. Rojas <jrojasrivero@gmail.com>'
 
 New submission
@@ -30,8 +30,7 @@ New submission
 * checking whether package 'dtasamplesize' can be installed ... OK
 * checking installed package size ... OK
 * checking package directory ... OK
-* checking for future file timestamps ... NOTE
-unable to verify current time
+* checking for future file timestamps ... OK
 * checking 'build' directory ... OK
 * checking DESCRIPTION meta-information ... OK
 * checking top-level files ... OK
@@ -66,17 +65,17 @@ unable to verify current time
 * checking examples ... NOTE
 Examples with CPU (user + system) or elapsed time > 5s
                 user system elapsed
-bam_sample_size  5.5   0.14     6.5
-* checking examples with --run-donttest ... [65s] OK
+bam_sample_size 5.14   0.25    7.53
+* checking examples with --run-donttest ... [69s] OK
 * checking for unstated dependencies in 'tests' ... OK
-* checking tests ... [31m] OK
-  Running 'testthat.R' [31m]
+* checking tests ... [27m] OK
+  Running 'testthat.R' [27m]
 * checking for unstated dependencies in vignettes ... OK
 * checking package vignettes ... OK
-* checking re-building of vignette outputs ... [14s] OK
+* checking re-building of vignette outputs ... [21s] OK
 * checking for non-standard things in the check directory ... NOTE
 Found the following files/directories:
   '00LOCK-dtasamplesize'
 * checking for detritus in the temp directory ... OK
 * DONE
-Status: 4 NOTEs
+Status: 3 NOTEs
