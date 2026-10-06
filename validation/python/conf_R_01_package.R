@@ -66,8 +66,13 @@ for (s in sc) {
   out[[s$id]] <- list(id = s$id, main = main, trio = trio, secs = el)
 }
 
+# na = "null": jsonlite's default (na = "string") would otherwise write an
+# infeasible scenario's NA_integer_/NA_real_ fields (N_total,
+# joint_assurance, mcse) as the JSON STRING "NA" rather than JSON null,
+# which every downstream reader expects (Python's json.load would give the
+# string "NA", not None, and int("NA") then crashes ref_bam.assurance()).
 write_json(out, "conf_package.json", auto_unbox = TRUE, digits = 16,
-           pretty = TRUE)
+           pretty = TRUE, na = "null")
 cat("\nwrote conf_package.json\n")
 cat("sessionInfo R:", R.version.string, "\n")
 cat("dtasamplesize:", as.character(packageVersion("dtasamplesize")), "\n")
