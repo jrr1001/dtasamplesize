@@ -1,11 +1,37 @@
-#' Sensitivity Analysis Across Prior Scenarios
+#' Sensitivity Analysis Across Prior Scenarios (Experimental)
 #'
-#' @title Sample Size Sensitivity Analysis Over Prior Scenarios
-#' @description Runs \code{\link{ss_unified}} once for each of a set of
+#' @title Sample Size Sensitivity Analysis Over Prior Scenarios (Experimental)
+#' @description \strong{Experimental; outside the validated scope of the
+#'   package.} Runs \code{\link{ss_unified}} once for each of a set of
 #'   prior scenarios (e.g. optimistic/pessimistic assumptions about Se, Sp,
 #'   and prevalence) and collects the resulting sample sizes into a single
 #'   data frame. Replaces the hand-written \code{lapply()} loop over
 #'   scenarios that this kind of comparison otherwise requires.
+#'
+#' @details \strong{What it works on.} This function calls
+#'   \code{\link{ss_unified}}, a Monte Carlo search that is experimental and
+#'   outside the validated scope of the package (see the package
+#'   \code{DESCRIPTION} and \code{\link{ss_unified}}). It does \strong{not}
+#'   use \code{\link{bam_sample_size}}, and none of the validated
+#'   conventions of that function (exact calculation, design and analysis
+#'   priors, \code{width_type}, \code{assurance_for}, \code{priors} object)
+#'   apply here. Its results carry the Monte Carlo error of
+#'   \code{ss_unified()} and have not been validated against an independent
+#'   implementation.
+#'
+#'   \strong{What it accepts.} \code{scenarios}: a named list of lists with
+#'   \code{prior_se}, \code{prior_sp} and \code{prior_prev}, or a data frame
+#'   with the shape columns listed below. Anything in \code{...} is passed
+#'   unchanged to \code{ss_unified()} (so only the arguments of
+#'   \code{ss_unified()} are accepted there; \code{prior_se},
+#'   \code{prior_sp} and \code{prior_prev} are an error in \code{...}). It
+#'   does not accept a \code{"dta_bam_priors"} object, and it returns a plain
+#'   data frame, not an object of class \code{"dtasamplesize"}.
+#'
+#'   \strong{For the validated method} (exact Bayesian assurance), use
+#'   \code{\link{bam_sensitivity}} (new in version 0.7.0) and
+#'   \code{\link{bam_sensitivity_local}}, which are built on
+#'   \code{bam_sample_size()}.
 #'
 #' @param scenarios Either (a) a \strong{named list} of scenarios, where
 #'   each element is itself a list with components \code{prior_se},
@@ -51,7 +77,9 @@
 #'   N_range = seq(300, 900, by = 100), B = 200
 #' ))
 #' }
-#' @seealso \code{\link{ss_unified}}
+#' @seealso \code{\link{ss_unified}}; for the validated method see
+#'   \code{\link{bam_sensitivity}} and \code{\link{bam_sensitivity_local}}, and
+#'   \code{\link{bam_sample_size}}.
 #' @export
 sensitivity_analysis <- function(scenarios, ..., verbose = FALSE) {
   scenario_list <- as_scenario_list(scenarios)

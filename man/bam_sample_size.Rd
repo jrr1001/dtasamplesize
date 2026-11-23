@@ -17,7 +17,12 @@ bam_sample_size(
   seed = 2026,
   N_range = NULL,
   N_max = 3000L,
-  method = c("exact", "monte_carlo")
+  method = c("exact", "monte_carlo"),
+  width_type = c("full_width", "lower_half_width"),
+  assurance_for = c("joint", "se", "sp"),
+  analysis_prior_se = NULL,
+  analysis_prior_sp = NULL,
+  priors = NULL
 )
 }
 \arguments{
@@ -60,7 +65,13 @@ headline result has no Monte Carlo error to warn about there. Either
 version is silenced with \code{options(dtasamplesize.warn_small_B =
 FALSE)}.}
 
-\item{alpha_ci}{Credible interval level. Default 0.95.}
+\item{alpha_ci}{Credible interval level (e.g. 0.95): a single number
+strictly between 0 and 1 (otherwise an error). Two-sided equal-tailed
+under \code{width_type = "full_width"}; the one-sided lower bound
+\code{qbeta(1 - alpha_ci, ...)} under \code{"lower_half_width"}, where it
+must also be greater than 0.5 (error otherwise): the one-sided lower bound
+has to lie below the posterior median, or the width is negative and every
+target is met trivially. Default 0.95.}
 
 \item{seed}{Random seed. Default 2026. The RNG state of the calling
 session is restored on exit. Affects the legacy per-arm searches and
@@ -74,8 +85,18 @@ Default \code{NULL}: under \code{method = "exact"} this triggers the
 deterministic integer scan described in \code{Details} (independent of
 \code{n_se}, \code{n_sp}, \code{B} and \code{seed}); under \code{method
 = "monte_carlo"} it builds the legacy heuristic grid from \code{n_se},
-\code{n_sp}, and \code{N_total_P90} -- see \code{Details}. When supplied
-explicitly, searched as \code{sort(unique(as.integer(N_range)))}.}
+\code{n_sp}, and \code{N_total_P90} -- see \code{Details}. The automatic
+Monte Carlo grid is \code{max(20, n_se, n_sp):ceiling(N_total_P90)} for
+the joint objective; with a marginal objective
+(\code{assurance_for = "se"} or \code{"sp"}) it uses only the requested
+arm: it starts at \code{max(20, n_se)} (Se) or \code{max(20, n_sp)} (Sp)
+and ends at the 90th percentile of \code{n_se / prev} (Se) or
+\code{n_sp / (1 - prev)} (Sp) over the draws of \code{prev}, not at
+\code{N_total_P90}. With a high \code{target_assurance} this automatic
+grid can end before the target is reached (also for the joint
+objective); then \code{N_total} is \code{NA}: pass \code{N_range} or use
+\code{method = "exact"}. When supplied explicitly, searched as
+\code{sort(unique(as.integer(N_range)))}.}
 
 \item{N_max}{Integer. Upper ceiling for the automatic integer scan used
 by \code{method = "exact"} when \code{N_range = NULL}. Default
@@ -90,9 +111,40 @@ Selects how the headline joint search (\code{N_total},
 form via Beta-Binomial enumeration, with no simulation and no sampling
 error. \code{"monte_carlo"} reproduces the simulation-based search
 (including the anti-noise acceptance rule) unchanged.}
+
+\item{width_type}{Either \code{"full_width"} (the default) or
+\code{"lower_half_width"}. \code{"full_width"}: \code{delta_se} and
+\code{delta_sp} are the full width of the equal-tailed two-sided
+\code{alpha_ci} credible interval. \code{"lower_half_width"}: they are the
+posterior median minus the one-sided \code{alpha_ci} lower bound. Applies
+to the exact search, the Monte Carlo search and the legacy per-arm
+fields. Widths are compared exactly (\code{width <= delta}).}
+
+\item{assurance_for}{Either \code{"joint"} (the default), \code{"se"} or
+\code{"sp"}: whether \code{N_total} targets the joint assurance or the
+marginal assurance of one arm. See \code{Details} for the empty-arm
+convention.}
+
+\item{analysis_prior_se, analysis_prior_sp}{\code{NULL} (the default: same as
+the design prior \code{prior_se}, \code{prior_sp}; identical to version
+0.6.9) or a numeric vector \code{c(alpha, beta)}, both > 0, for the Beta
+prior used in the \emph{analysis} (posterior) of each arm. Design priors
+generate the data; analysis priors determine the interval width. There is
+no analysis prior for prevalence. See \code{Details}.}
+
+\item{priors}{\code{NULL} (the default) or an object of class
+\code{"dta_bam_priors"} (as returned by \code{bam_prior_from_pilot()}).
+If given, \code{prior_se}, \code{prior_sp}, \code{prior_prev},
+\code{analysis_prior_se} and \code{analysis_prior_sp} are taken from it,
+and passing any of those five arguments explicitly as well is an error.
+Any other non-\code{NULL} value is an error.}
 }
 \value{
-Object of class \code{"dtasamplesize"} with additional elements:
+Object of class \code{"dtasamplesize"} with additional elements.
+  With \code{assurance_for = "joint"} (the default) the assurance fields
+  hold the \emph{joint} assurance; with \code{"se"} or \code{"sp"},
+  \code{N_total}, \code{joint_assurance}, \code{max_assurance_evaluated} and
+  \code{assurance_mcse} refer to the \emph{marginal} assurance of that arm.
   \describe{
     \item{n_diseased}{Minimum diseased sample for the \strong{marginal}
       Se assurance (legacy diagnostic field; searched over \code{n_range}).}
@@ -106,7 +158,9 @@ Object of class \code{"dtasamplesize"} with additional elements:
       \code{n_total} held \code{N_total_median}: see \code{Details}.}
     \item{N_total}{The minimum total N whose \strong{joint} assurance
       (Se and Sp both within target width, in the same replication, under
-      cohort design) reaches \code{target_assurance}, among the candidate
+      cohort design) reaches \code{target_assurance} (with
+      \code{assurance_for = "se"} or \code{"sp"}: the minimum total N whose
+      \strong{marginal} assurance for that arm reaches it), among the candidate
       N actually searched (see \code{N_range_used}). Under \code{method =
       "monte_carlo"} acceptance is at the 95\% Monte Carlo confidence
       lower bound (the anti-noise rule). \code{NA_integer_} when no
@@ -135,6 +189,9 @@ Object of class \code{"dtasamplesize"} with additional elements:
       \code{NA_integer_} otherwise (an explicit \code{N_range} or
       \code{method = "monte_carlo"} does not use \code{N_max}).}
     \item{joint_assurance}{The joint assurance achieved at \code{N_total}
+      (with \code{assurance_for = "se"} or \code{"sp"} this field holds the
+      \strong{marginal} assurance of that arm, not a joint assurance; the
+      print method labels it accordingly)
       (point estimate, not the lower confidence bound used to accept it
       under \code{method = "monte_carlo"}; under \code{method = "exact"}
       this already \emph{is} the exact probability, with no further bound
@@ -183,10 +240,32 @@ Object of class \code{"dtasamplesize"} with additional elements:
       \code{target_assurance}; use \code{N_total} instead. Retained
       unchanged so that existing code and reports keep working.}
     \item{N_total_P75}{75th percentile of the same legacy heuristic
-      distribution. Also used to size the default \code{N_range}.}
+      distribution. Reported for information only: it does not set any
+      search grid.}
     \item{N_total_P90}{90th percentile of the same legacy heuristic
-      distribution. Also used to size the default \code{N_range}.}
-    \item{buderer_n_se}{Buderer sample size for comparison.}
+      distribution. It sets the upper end of the automatic grid only for
+      \code{method = "monte_carlo"}, \code{N_range = NULL} and the joint
+      objective (\code{max(20, n_se, n_sp):ceiling(N_total_P90)}). With a
+      marginal objective the automatic Monte Carlo grid ends at the 90th
+      percentile of the requested arm's own requirement instead, and under
+      \code{method = "exact"} it plays no role (the integer scan does not
+      use it).}
+    \item{buderer_n_se}{Buderer sample size for comparison, computed with
+      the design mean of \code{prior_se} and the half-width implied by
+      \code{width_type} (\code{delta_se / 2} for \code{"full_width"},
+      \code{delta_se} for \code{"lower_half_width"}). The critical value is
+      the 95\% one (\code{z = 1.96}) for \code{"full_width"}, whatever
+      \code{alpha_ci} is (inherited behaviour), and
+      \code{z = qnorm(alpha_ci)} for \code{"lower_half_width"}.}
+    \item{alpha_ci, width_type, assurance_for}{The credible level, width
+      criterion and assurance objective actually used.}
+    \item{analysis_prior_se, analysis_prior_sp}{The \emph{effective}
+      analysis priors (the design priors where the argument was
+      \code{NULL}).}
+    \item{analysis_prior_given}{Named logical vector (\code{se}, \code{sp}):
+      whether each analysis prior was given explicitly.}
+    \item{analysis_prior_size}{Named numeric vector (\code{se}, \code{sp}):
+      effective size \eqn{a + b} of each analysis prior.}
   }
 }
 \description{
@@ -196,13 +275,100 @@ their target width, with probability at least \code{target_assurance},
 under a single cohort study of size \code{N}.
 }
 \details{
-The parameters \code{delta_se} and \code{delta_sp} are the
-  \strong{full width} of the posterior credible interval (not half-width).
-  For example, \code{delta_se = 0.14} corresponds to a half-width of 0.07.
-  This differs from other functions in this package that use half-width.
+\strong{Conventions, stated explicitly.} By default
+  (\code{width_type = "full_width"}) the parameters \code{delta_se} and
+  \code{delta_sp} are the \strong{full width of the equal-tailed, two-sided
+  posterior credible interval} at level \code{alpha_ci} (quantiles
+  \code{(1 - alpha_ci) / 2} and \code{1 - (1 - alpha_ci) / 2}), not a
+  half-width. For example, \code{delta_se = 0.14} corresponds to a
+  half-width of 0.07. This differs from other functions in this package that
+  use half-width. With \code{width_type = "lower_half_width"} the criterion
+  is one-sided: the posterior median minus the \strong{one-sided} lower
+  credible bound at level \code{alpha_ci}, \code{qbeta(0.5, ...) -
+  qbeta(1 - alpha_ci, ...)}, and \code{delta_se}, \code{delta_sp} are
+  interpreted as that quantity (the convention of Williamson et al. 2023).
+  In both cases the width is compared with its target exactly
+  (\code{width <= delta}, no tolerance): a width equal to \code{delta} up to
+  floating-point error is decided by the computed value. The comparison with
+  \code{\link{buderer_n}} (\code{buderer_n_se}) uses the half-width
+  \code{delta_se / 2} for \code{"full_width"} and \code{delta_se} for
+  \code{"lower_half_width"}. The critical value also depends on the
+  criterion: with \code{"lower_half_width"} Buderer's formula is evaluated
+  at the one-sided level of the criterion, \code{z = qnorm(alpha_ci)}
+  (that is, \code{buderer_n(p, delta_se, alpha = 2 * (1 - alpha_ci))}); with
+  \code{"full_width"} it uses the 95\% value \code{z = 1.96} whatever
+  \code{alpha_ci} is (the behaviour since before version 0.7.0, kept so that
+  the result stays identical to 0.6.9).
+
+  \strong{Design prior and analysis prior.} \code{prior_se},
+  \code{prior_sp} and \code{prior_prev} are the \emph{design} priors: they
+  generate the true values (and, under \code{method = "exact"}, the
+  Beta-Binomial predictive distribution of each arm count). The
+  \emph{analysis} priors \code{analysis_prior_se} and
+  \code{analysis_prior_sp} define the posterior
+  \eqn{\mathrm{Beta}(a_A + x, b_A + n - x)} whose width is compared with the
+  target. \code{NULL} (the default) means "same as the design prior", which
+  reproduces the results of version 0.6.9 bit for bit. Wilson et al. (2022,
+  Section 4.1 and Discussion) note that the analysis may use a weaker or flat
+  prior than the one used to generate the data; this is what these
+  arguments allow. In exact mode the Beta-Binomial pmf of the count uses the
+  design hyperparameters and the interval width uses the analysis
+  hyperparameters, i.e. \code{lchoose(n, x) + lbeta(a_D + x, b_D + n - x) -
+  lbeta(a_D, b_D)}. \strong{There is no analysis prior for prevalence:}
+  \code{prior_prev} acts only in the design (it governs the split of
+  \code{N} into diseased and non-diseased subjects). The effective
+  analysis priors, an indicator of whether each was given explicitly, and
+  their effective sizes \eqn{a + b} are returned and printed. Safeguard: if
+  the \emph{effective} analysis prior of an arm used by the objective (given
+  explicitly, taken from \code{priors}, or equal to the design prior because
+  the argument was \code{NULL}) already has a prior-only interval (no data)
+  with width \eqn{\le} its \code{delta}, a warning is issued, because
+  success would then be dominated by the prior. The message says that the
+  analysis prior is equal to the design prior whenever the two have the
+  same values (whether the analysis prior was not given, given explicitly
+  or taken from \code{priors}).
+  \strong{Caution:}
+  if you pass an updated prior by hand as \code{prior_se} and leave
+  \code{analysis_prior_se = NULL}, that updated prior also enters the
+  analysis; pass the weaker prior as \code{analysis_prior_se} (or use
+  \code{priors} with an object whose analysis priors are the base priors)
+  to avoid it.
+
+  \strong{Joint or marginal objective: \code{assurance_for}.} By default
+  (\code{"joint"}) both widths must be met in the same study. With
+  \code{assurance_for = "se"} the target is the \emph{marginal} Se
+  assurance, \eqn{A(N) = \sum_k P(n_d = k) P_{se}(k)}, and with
+  \code{"sp"}, \eqn{A(N) = \sum_k P(n_d = k) P_{sp}(N - k)}. The
+  empty-arm convention is the same as for the joint objective:
+  \eqn{P_{se}(0) = 0} (no diseased subjects counts as a failure) and
+  \eqn{P_{sp}(0) = 0}. Under \code{"se"}, \code{prior_sp} and
+  \code{delta_sp} play no role in \code{N_total} (they only feed the legacy
+  per-arm fields) and need no special values; the same holds for
+  \code{prior_se}/\code{delta_se} under \code{"sp"}. Under
+  \code{method = "monte_carlo"} a replication succeeds when only the
+  requested arm meets its width, with an empty requested arm counted as a
+  failure; only the values and counts of the requested arm are simulated
+  (the unused arm is not drawn, so the result does not depend on it, not
+  even through the random-number stream), and with \code{N_range = NULL}
+  the search grid also depends only on that arm (see below). \strong{The
+  field \code{joint_assurance} (and the line printed for it) then holds the
+  marginal assurance of the requested arm, not a joint assurance}; the
+  printed output labels it \dQuote{marginal Se assurance} or
+  \dQuote{marginal Sp assurance}.
+
+  \strong{The main study is always a cohort.} The total \code{N} is fixed
+  and the number of diseased subjects is random,
+  Beta-Binomial(\code{N}, \code{prior_prev}); there is no case-control
+  variant of \code{bam_sample_size()}. A \code{priors} object built by
+  \code{\link{bam_prior_from_pilot}} with \code{design = "case_control"}
+  (the design of the \emph{pilot}, where the prevalence prior is not
+  updated because the group sizes were fixed by the design) is therefore a
+  valid input: a case-control pilot followed by a cohort main study is a
+  legitimate combination, and no warning is issued.
 
   \strong{The headline result (\code{N_total}) is a JOINT assurance under
-  cohort design.} At each candidate total \code{N}, every one of the
+  cohort design} (a marginal one with \code{assurance_for = "se"} or
+  \code{"sp"}). At each candidate total \code{N}, every one of the
   \code{B} Monte Carlo replications draws \code{prev ~ Beta(prior_prev)},
   \code{Se_true ~ Beta(prior_se)} and \code{Sp_true ~ Beta(prior_sp)}, and
   then, because the number of diseased subjects in a fixed-\code{N} cohort
@@ -283,9 +449,11 @@ The parameters \code{delta_se} and \code{delta_sp} are the
   0.20, \strong{not} the default \code{prior_prev}, which is
   \code{c(6, 14)}), the exact first \code{N} with joint assurance
   \eqn{\ge} 0.80 is 678, with assurance 0.800349, whereas
-  \code{method = "monte_carlo"} with \code{B = 20000} returns 683 because
-  of Monte Carlo noise near the crossing point -- see \strong{Anti-noise
-  acceptance rule} below).
+  \code{method = "monte_carlo"} with \code{B = 20000} returns 683, mainly
+  because its acceptance rule requires the one-sided 95\% lower bound of
+  the Monte Carlo estimate, not the estimate itself, to reach the target;
+  Monte Carlo noise near the crossing point contributes only secondarily
+  -- see \strong{Anti-noise acceptance rule} below).
 
   \strong{Evaluation is exact with respect to the discrete model above,
   up to floating-point and \code{qbeta} quantile error.} "Exact" here
@@ -338,14 +506,23 @@ The parameters \code{delta_se} and \code{delta_sp} are the
   automatic integer scan, a wider \code{N_range} otherwise).
 
   \strong{N = 2 vs. N = 1.} The integer scan starts at \code{N = 2}, not
-  \code{N = 1}: a total of \code{N = 1} puts every subject on one arm and
+  \code{N = 1}. With the joint objective (\code{assurance_for = "joint"}),
+  a total of \code{N = 1} puts every subject on one arm and
   none on the other (\code{n_d = 1, n_nd = 0} or vice versa), so its exact
   joint assurance is \strong{always} exactly \code{0} regardless of the
   priors -- the same degenerate-arm override already described above
   forces the zero-size arm's contribution to \code{0} at both \code{k = 0}
   and \code{k = N = 1}. \code{N = 1} is therefore never a useful search
   target and is skipped by construction; it is still evaluated correctly
-  (as \code{0}) if a caller explicitly includes it in \code{N_range}. An
+  (as \code{0}) if a caller explicitly includes it in \code{N_range}.
+  With a marginal objective (\code{assurance_for = "se"} or \code{"sp"})
+  the assurance at \code{N = 1}, \eqn{A(1)}, can be positive, because only
+  the arm of the quantity concerned has to reach its width; it is not
+  evaluated by the automatic scan, which also starts at \code{N = 2}, so
+  in an unusual design where \eqn{A(1)} already reaches the target (which
+  requires, with \code{assurance_for = "se"}, a prevalence prior whose
+  mean is at least the target assurance, and with \code{"sp"}, one whose
+  mean is at most 1 minus the target) the function returns \code{N = 2}. An
   arm of size exactly \strong{one} (which first becomes possible at
   \code{N = 2}, when the OTHER arm gets the other one) is, by contrast,
   \strong{not} degenerate: its one-subject posterior is well-defined and
@@ -371,7 +548,14 @@ The parameters \code{delta_se} and \code{delta_sp} are the
   since a Monte Carlo search already has its own sampling error to manage
   and gains nothing from the deterministic integer scan used by
   \code{method = "exact"}; \code{search_type} for this case is
-  \code{"monte_carlo_auto"}.
+  \code{"monte_carlo_auto"}. With a marginal objective
+  (\code{assurance_for = "se"} or \code{"sp"}) the grid uses only the
+  requested arm: it starts at \code{max(20, n_se)} (Se) or
+  \code{max(20, n_sp)} (Sp) and ends at the 90th percentile of
+  \code{n_se / prev} (Se) or \code{n_sp / (1 - prev)} (Sp) over the draws
+  of \code{prev}, dropping non-finite values. The fields
+  \code{N_total_median}, \code{N_total_P75} and \code{N_total_P90} keep
+  their definition (legacy heuristic with both arms) in every mode.
 
   \strong{Anti-noise acceptance rule (\code{method = "monte_carlo"} only).}
   Because \code{joint_assurance} at each \code{N} is itself a Monte Carlo
@@ -402,12 +586,30 @@ The parameters \code{delta_se} and \code{delta_sp} are the
   is the deterministic integer scan described above (never a function of
   \code{n_se}, \code{n_sp}, \code{B} or \code{seed}); under \code{method =
   "monte_carlo"} it remains the legacy heuristic grid
-  \code{max(20, n_se, n_sp):ceiling(N_total_P90)}, i.e. from the smallest
-  total that could possibly supply both per-arm requirements up to the
+  \code{max(20, n_se, n_sp):ceiling(N_total_P90)} (for the joint objective;
+  marginal objectives use only the requested arm, see above), i.e. from the
+  smallest total that could possibly supply both per-arm requirements up to the
   90th percentile of the legacy prevalence-uncertainty heuristic (see
   \code{N_total_P90} below), which in practice comfortably brackets the
   true joint requirement for that search mode. No existing argument name
   was removed; \code{N_range} is purely additive.
+
+  \strong{Automatic Monte Carlo grid with high targets.} The automatic
+  grid of \code{method = "monte_carlo"} (\code{N_range = NULL}) ends at the
+  90th percentile of a heuristic built from the per-arm (marginal)
+  requirements \code{n_se} and \code{n_sp}, which are searched at the level
+  \code{target_assurance}. The end of the grid therefore grows with the
+  target, but the heuristic ignores the joint requirement and the random
+  split of \code{N} between the arms. With a high \code{target_assurance}
+  (for example 0.99) the grid can end before any \code{N} reaches the
+  target, for the joint objective as well as for a marginal one. Then \code{N_total},
+  \code{n_total} and \code{joint_assurance} are \code{NA} and
+  \code{target_reached} is \code{FALSE}, and the call warns "No N in
+  N_range achieved the target ..." (naming the objective, the highest
+  assurance seen and the \code{N} where it was seen) and says to expand
+  \code{N_range} or increase \code{B}. In that case pass a wider
+  \code{N_range}, or use \code{method = "exact"}, whose integer scan does
+  not use that grid (it runs up to \code{N_max}).
 }
 \examples{
 # B and N_range kept small here for a fast example; see @param B.
@@ -415,9 +617,41 @@ result <- suppressWarnings(bam_sample_size(
   B = 500, n_range = 20:500, N_range = seq(100, 700, by = 20)
 ))
 print(result)
+
+# Separate design and analysis priors: data generated under the informative
+# design prior, interval computed under a flat analysis prior
+# (exact mode, lenient targets so the example is fast).
+ex <- suppressWarnings(bam_sample_size(
+  prior_se = c(17, 3), prior_sp = c(18, 2), prior_prev = c(4, 16),
+  delta_se = 0.25, delta_sp = 0.20,
+  analysis_prior_se = c(1, 1), analysis_prior_sp = c(1, 1),
+  n_range = 20:60, B = 1000
+))
+ex$N_total
+
+# One-sided criterion (median minus one-sided lower bound)
+one <- suppressWarnings(bam_sample_size(
+  prior_se = c(25, 7), prior_sp = c(30, 2), prior_prev = c(13.56, 122.06),
+  width_type = "lower_half_width", delta_se = 0.10, delta_sp = 0.05,
+  n_range = 20:60, B = 1000, N_range = 300:330
+))
+one$N_total
+
+# Marginal objective: Se only (the VAP example of Wilson et al. 2022)
+vap <- suppressWarnings(bam_sample_size(
+  prior_se = c(25.9, 2.1), prior_prev = c(29, 98), delta_se = 0.16,
+  assurance_for = "se", n_range = 20:60, B = 1000, N_range = 90:110
+))
+vap$N_total
 }
 \references{
 Wilson KJ et al. (2022). Bayesian sample size determination for
 diagnostic accuracy studies. \emph{Stat Med} 41:2908-2922.
 \doi{10.1002/sim.9393}
+
+Williamson SF, Williams CJ, Lendrem BC, Wilson KJ (2023). Sample size
+determination for point-of-care COVID-19 diagnostic tests: a Bayesian
+approach. \emph{Diagn Progn Res} 7:17. \doi{10.1186/s41512-023-00153-1}
+(source of the one-sided criterion and of the illustrative example
+reproduced with \code{width_type = "lower_half_width"}).
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/mc_validate_buderer.R
 \name{mc_validate_buderer}
 \alias{mc_validate_buderer}
-\title{Monte Carlo Validation of the Buderer Sample Size Formula}
+\title{Validation of the Buderer Sample Size Formula (Monte Carlo or Exact)}
 \usage{
 mc_validate_buderer(
   Se = 0.85,
@@ -11,7 +11,8 @@ mc_validate_buderer(
   B = 5000,
   ci_method = "both",
   alpha = 0.05,
-  seed = 2026
+  seed = 2026,
+  method = c("monte_carlo", "exact")
 )
 }
 \arguments{
@@ -25,7 +26,8 @@ mc_validate_buderer(
 \item{B}{Number of Monte Carlo replications. Default 5000. A warning is
 issued when \code{0 < B < 1000}, since the Monte Carlo error of the
 reported probabilities may then be substantial; silence it with
-\code{options(dtasamplesize.warn_small_B = FALSE)}.}
+\code{options(dtasamplesize.warn_small_B = FALSE)}. Ignored (no
+validation, no warning) when \code{method = "exact"}.}
 
 \item{ci_method}{CI method: \code{"wald"}, \code{"wilson"}, or
 \code{"both"} (default).}
@@ -33,34 +35,100 @@ reported probabilities may then be substantial; silence it with
 \item{alpha}{Significance level. Default 0.05.}
 
 \item{seed}{Random seed for reproducibility. Default 2026. The RNG state
-of the calling session is restored on exit.}
+of the calling session is restored on exit. Ignored when
+\code{method = "exact"}.}
+
+\item{method}{\code{"monte_carlo"} (default; simulation with \code{B}
+replications, identical to the behaviour of version 0.6.9) or
+\code{"exact"} (binomial enumeration, no Monte Carlo error). See
+Details.}
 }
 \value{
 Object of class \code{"dtasamplesize"} with:
   \describe{
-    \item{method}{Character string identifying the method.}
+    \item{method}{Character string identifying the method; the printed
+      header states whether the figures are Monte Carlo or exact.}
+    \item{method_type}{\code{"monte_carlo"} or \code{"exact"}.}
     \item{n_diseased}{Sample size used.}
     \item{n_total}{Same as \code{n_diseased} (no prevalence adjustment).}
     \item{Se}{Expected sensitivity used.}
     \item{d}{Desired precision used.}
-    \item{results}{\code{data.frame} with columns: \code{ci_method},
-      \code{P_width_target}, \code{coverage}, \code{median_width},
-      \code{P75_width}, \code{P90_width}.}
+    \item{B}{Monte Carlo replications (present only when
+      \code{method = "monte_carlo"}).}
+    \item{alpha}{Significance level used.}
+    \item{results}{\code{data.frame} with one row per interval and columns:
+      \code{ci_method}, \code{P_width_target} (probability that the
+      full width is \code{<= 2 * d}), \code{coverage} (probability that the
+      interval contains \code{Se}), \code{median_width}, \code{P75_width},
+      \code{P90_width}. The probabilities are Monte Carlo estimates or
+      exact values according to \code{method}.}
   }
 }
 \description{
-Generates simulated datasets under the exact assumptions of the
-Buderer formula and evaluates how often the resulting confidence
-interval achieves the planned precision.
+Evaluates how often the confidence interval obtained at the sample size
+given by the Buderer formula achieves the planned precision, and what
+coverage that interval has, under the assumptions of the formula (a
+binomial number of true positives among \code{n_diseased} diseased
+subjects with sensitivity \code{Se}). Two modes are available:
+\code{method = "monte_carlo"} (default) simulates \code{B} binomial
+samples, and \code{method = "exact"} enumerates the binomial distribution.
 }
 \details{
 The parameter \code{d} is the \strong{half-width} of the
   confidence interval. The target full CI width checked internally is
   \code{2 * d}. For example, \code{d = 0.07} targets a CI width of 0.14.
+  The interval is two-sided at level \code{1 - alpha}. The comparison is
+  \code{ci_width <= 2 * d} in both modes, with no tolerance.
+
+  \strong{Monte Carlo mode} (\code{method = "monte_carlo"}). Draws
+  \code{B} values of the number of true positives
+  \eqn{X \sim \mathrm{Binomial}(n, Se)}, builds the interval for each,
+  and reports the proportion of replications whose interval is no wider
+  than \code{2 * d} (\code{P_width_target}), the proportion whose interval
+  contains \code{Se} (\code{coverage}), and the sample median, 75th and 90th
+  percentiles of the width (\code{stats::median()} and
+  \code{stats::quantile()}, type 7). These figures carry Monte Carlo error.
+
+  \strong{Exact mode} (\code{method = "exact"}). Enumerates
+  \eqn{x = 0, \ldots, n} with probabilities \code{dbinom(x, n, Se)} and
+  builds the same interval as the Monte Carlo mode (same formulas: Wald
+  truncated to [0, 1], and Wilson score truncated to [0, 1]) for each
+  \eqn{x}. \code{P_width_target} is the sum of the probabilities of the
+  \eqn{x} whose interval width is \code{<= 2 * d}, and \code{coverage}
+  is the sum of the probabilities of the \eqn{x} whose interval contains
+  \code{Se} (comparison \code{ci_lower <= Se & Se <= ci_upper}). These are
+  finite sums of binomial probabilities: there is no Monte Carlo error, and
+  \code{B} and \code{seed} are ignored (the small-\code{B} warning is not
+  issued, the random number generator is not used, and the RNG state of the
+  session is untouched). \code{median_width}, \code{P75_width} and
+  \code{P90_width} are quantiles of the discrete distribution of the
+  width: the smallest realisable width \eqn{w} such that
+  \eqn{P(\mathrm{width} \le w) \ge p} for \eqn{p = 0.5, 0.75, 0.90}
+  (cumulative probabilities are compared with a tolerance of \code{1e-12}
+  to absorb floating-point summation error). This definition need not
+  agree with \code{stats::quantile()} of a sample. In exact mode
+  \code{n_diseased} must be a single positive integer; a curve over
+  \code{n} is obtained by calling the function in a loop.
+
+  \strong{Degenerate Wald intervals.} At \eqn{x = 0} and \eqn{x = n} the
+  truncated Wald interval has width 0, so it always meets the width
+  target there although it is not informative; when \code{Se} is close to
+  1 (or 0) these two points carry much of the probability and can inflate
+  \code{P_width_target} for the Wald interval. Both modes count them in
+  the same way.
+
+  \strong{Two different quantities.} \code{P_width_target} is the
+  probability that the interval is no wider than the target; it is not the
+  coverage of the interval (the probability that the interval contains
+  \code{Se}). Both are reported, and they are different quantities.
 }
 \examples{
 result <- mc_validate_buderer(Se = 0.85, d = 0.07, B = 1000)
 print(result)
+
+# Exact probabilities (binomial enumeration, no Monte Carlo error)
+exact <- mc_validate_buderer(Se = 0.85, d = 0.07, method = "exact")
+print(exact)
 }
 \references{
 Buderer NMF (1996). Statistical methodology: I. Incorporating the

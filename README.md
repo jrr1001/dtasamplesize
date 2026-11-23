@@ -1,7 +1,7 @@
 # dtasamplesize
 
-Simulation-based sample size estimation for diagnostic test accuracy
-(DTA) studies. Version 0.6.9.
+Sample size methods for diagnostic test accuracy (DTA) studies: exact
+Bayesian assurance and related methods. Version 0.7.0.
 
 Every simulation function takes a `seed`, is exactly reproducible, and
 restores the caller's random-number state on exit, so calling it never
@@ -20,8 +20,19 @@ devtools::install_github("jrr1001/dtasamplesize")
 library(dtasamplesize)
 
 # How often does the classical Buderer sample size deliver its target
-# precision? (Only about 57% of the time.)
-mc_validate_buderer(Se = 0.85, d = 0.07, B = 5000)
+# precision? Exact probability (binomial enumeration, no simulation) that
+# the 95% CI is no wider than 2 * d: 0.5683 for Se = 0.85, d = 0.07.
+mc_validate_buderer(Se = 0.85, d = 0.07, method = "exact")
+
+# Bayesian assurance, exact (no simulation): smallest total N whose joint
+# assurance for Se and Sp reaches 0.80; read N_total and joint_assurance.
+res <- bam_sample_size(prior_se = c(17, 3), delta_se = 0.14, method = "exact")
+res$N_total
+res$joint_assurance
+
+# The same calculation for several prior scenarios (N_total, A(N), A(N - 1)).
+bam_sensitivity(list(vague = list(prior_sp = c(2, 2)),
+                     informative = list(prior_sp = c(18, 2))))
 
 # Sample size to demonstrate positive net benefit. The default design is
 # "cohort" (disease status random, as in a real prospective DTA study);
@@ -33,7 +44,7 @@ ss_net_benefit(pt_range = c(0.10, 0.30), N_range = seq(50, 400, by = 10))
 
 Classical sample size formulas for DTA studies (Buderer 1996,
 Hanley & McNeil 1982) assume ideal conditions that rarely hold in
-practice. `dtasamplesize` provides simulation-based alternatives that
+practice. `dtasamplesize` provides exact and simulation-based alternatives that
 account for parameter uncertainty, imperfect reference standards,
 time-to-event outcomes, and multiple accuracy metrics simultaneously.
 
@@ -41,32 +52,46 @@ time-to-event outcomes, and multiple accuracy metrics simultaneously.
 
 | Function | Purpose |
 |----------|---------|
-| `mc_validate_buderer()` | Validate classical formula via Monte Carlo |
-| `bam_sample_size()` | Bayesian Assurance Method |
-| `joint_sample_size()` | Joint Se + Sp + AUC optimization |
+| `mc_validate_buderer()` | Probability that the classical Buderer sample size reaches its target width, by Monte Carlo (default) or exact enumeration (`method = "exact"`) |
+| `bam_sample_size()` | Bayesian Assurance Method (`method = "exact"`: Beta-Binomial enumeration; separate design and analysis priors via `analysis_prior_se`/`analysis_prior_sp`; `width_type`; `assurance_for`; `priors`) |
+| `bam_prior_from_pilot()` | Power prior with fixed weight `a0` from pilot counts, for `bam_sample_size(priors = )` |
+| `bam_prior_data_conflict()` | Exact prior-data conflict tail probabilities for observed 2x2 counts |
+| `bam_sensitivity()` | Exact sample size (`N_total`, `A_N`, `A_N_minus_1`) over a set of scenarios |
+| `bam_prior_contour()`, `bam_sensitivity_local()` | Local prior sensitivity analysis (Wilson et al. 2022, section 4.2) |
+| `bam_assurance_curve()` | Exact assurance A(N) over a range of total sample sizes |
+| `joint_sample_size()` | Joint Se + Sp search by Monte Carlo, with a deterministic AUC gate |
 | `ss_imperfect_ref()` | Imperfect reference standard correction (**experimental**, see below) |
 | `ss_time_dependent_roc()` | Time-dependent ROC sample size (**experimental**, see below) |
 | `ss_adaptive_prevalence()` | Adaptive prevalence re-estimation (**experimental**, see below) |
 | `ss_net_benefit()` | Net Benefit / Decision Curve Analysis (`design = "cohort"` or `"fixed"`) (**experimental**, see below) |
 | `ss_unified()` | Unified framework combining all methods (**experimental**, see below) |
-| `sensitivity_analysis()` | Recompute sample size across a grid of alternative prior scenarios |
-| `plot_assurance_curve()` | Plot achieved assurance vs. sample size from a unified search (requires ggplot2) |
+| `sensitivity_analysis()` | Recompute `ss_unified()` across a grid of alternative prior scenarios (**experimental**; for the validated method use `bam_sensitivity()`) |
+| `plot_assurance_curve()` | Plot assurance vs. sample size from `bam_assurance_curve()` (exact) or from a unified search (**experimental**) (requires ggplot2) |
 | `plot_inflation_heatmap()` | Plot the imperfect-reference variance inflation heatmap (requires ggplot2) |
 | `plot_method_comparison()` | Plot required sample size by method from a unified search (requires ggplot2) |
 
 ## Validated scope and experimental modules
 
-The validated scope of the package -- the methods checked against the
-dtasamplesize software article's Monte Carlo/exact-mode validation
-evidence (R CMD check, `tests/testthat`, and the confirmatory validation
-pipeline under `validation/`) -- comprises `bam_sample_size(method =
-"exact")` and `joint_sample_size()`, together with the helper functions
-`mc_validate_buderer()`, `buderer_n()`, `wilson_ci()`, and `wald_ci()`.
+The validated scope of the package, as declared in DESCRIPTION, comprises
+`bam_sample_size(method = "exact")` and the other `bam_*` functions
+(`bam_assurance_curve()`, `bam_sensitivity()`, `bam_sensitivity_local()`,
+`bam_prior_contour()`, `bam_prior_from_pilot()` and
+`bam_prior_data_conflict()`), `joint_sample_size()` and
+`mc_validate_buderer(method = "exact")`. The helpers `buderer_n()`,
+`wilson_ci()` and `wald_ci()` lie outside that scope and are checked
+against external software and published values;
+`mc_validate_buderer(method = "monte_carlo")`, the default, is auxiliary.
+
+The Python implementation under `validation/python/` is a separate
+re-implementation written by an LLM-based coding assistant under the authors'
+supervision, not external software; agreement with it can reveal
+implementation errors but cannot exclude a misreading of the specification
+shared by both.
 
 The following five modules are **experimental**: they are exported and
 documented, but are outside that validated scope and have not been
-independently validated against an external reference implementation.
-Do not rely on them for design decisions until validated separately.
+validated against an external reference implementation. Do not rely on
+them for design decisions until validated separately.
 
 - `ss_unified()`
 - `ss_net_benefit()`

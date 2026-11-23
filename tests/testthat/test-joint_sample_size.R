@@ -130,15 +130,15 @@ test_that("design = \"cohort\" gives a LOWER joint probability than \"fixed\"", 
   # prospective cohort, and so overstates the assurance. At this
   # adversarial operating point the gap is large (~0.09) and B = 8000 is
   # far more than enough to resolve it (MCSE ~= 0.004-0.005 per arm).
-  # target_prob = 0 (lote 01b): this test uses N_range = c(650) as a
+  # target_prob = 0 (version 0.6.6): this test uses N_range = c(650) as a
   # single-point Monte Carlo probability calculator, not as a search --
   # it wants back the ACTUAL joint_prob_se_sp computed at N = 650 under
   # each design, not the search's accept/reject decision against the
-  # (irrelevant here) default target_prob = 0.80. Under the M-03 contract
-  # (lote 01b), joint_prob_se_sp is NA whenever target_reached is FALSE
+  # (irrelevant here) default target_prob = 0.80. Under the version 0.6.6
+  # contract, joint_prob_se_sp is NA whenever target_reached is FALSE
   # (see R/joint_sample_size.R), so target_prob = 0 guarantees the single
   # candidate is accepted and its real probability is reported, exactly as
-  # before this lote.
+  # before that version.
   common <- list(Se = 0.70, Sp = 0.80, prev = 0.20, delta_se = 0.08,
                  delta_sp = 0.06, N_range = c(650), B = 8000, seed = 2026,
                  target_prob = 0.001)
@@ -169,7 +169,7 @@ test_that("degenerate cohort replicates count as failures (denominator B)", {
   # probability could sit arbitrarily close to 1 regardless of this bound.
   Se <- 0.85; Sp <- 0.90; prev <- 0.10; N <- 30
   B <- 5000
-  # target_prob = 0.001 (lote 01b): single-point MC probability calculator
+  # target_prob = 0.001 (version 0.6.6): single-point MC probability calculator
   # (see note in the "cohort gives a LOWER joint probability" test above),
   # not a search -- guarantees the single candidate is accepted so that
   # joint_prob_se_sp reports the actual computed value rather than NA.
@@ -220,7 +220,7 @@ test_that("design = \"fixed\": an arm of size 1 is scored on its Wilson width, n
   # deterministic AUC gate at these small expected margins (n_d_exp = 1,
   # n_nd_exp = 3): hanley_mcneil_var(0.90, 1, 3) gives an AUC width of
   # 0.9475, verified separately.
-  # target_prob = 0.001 (lote 01b, res_pass only): single-point MC
+  # target_prob = 0.001 (version 0.6.6, res_pass only): single-point MC
   # probability calculator (see note above test-joint_sample_size.R's
   # "cohort gives a LOWER joint probability" test), not a search -- the
   # default target_prob = 0.80 is irrelevant to what is being tested here
@@ -239,11 +239,11 @@ test_that("design = \"fixed\": an arm of size 1 is scored on its Wilson width, n
   # res_fail: the n = 1 arm ALWAYS fails here, so the true joint
   # probability is exactly 0, which can never cross ANY positive
   # target_prob -- there is no target_prob override that avoids the
-  # non-crossing branch for a genuine probability of 0. Under the M-03
-  # contract (lote 01b), n_total/joint_prob_se_sp are therefore NA
+  # non-crossing branch for a genuine probability of 0. Under the version
+  # 0.6.6 contract, n_total/joint_prob_se_sp are therefore NA
   # (target_reached = FALSE); the actual computed probability (0) is read
   # from max_joint_prob_evaluated instead, which is exactly what used to
-  # be reported as joint_prob_se_sp before this lote.
+  # be reported as joint_prob_se_sp before version 0.6.6.
   target_width_fail <- 2 * 0.39 # 0.78 < 0.7934507 -> the n = 1 arm always FAILS
   expect_warning(
     res_fail <- joint_sample_size(
@@ -288,10 +288,10 @@ test_that("an expected margin of exactly 0 is skipped as a candidate N (n = 0, n
   # same prev gives n_d_exp = 1, which must NOT be skipped now that the
   # threshold is n = 0 (checked below).
   #
-  # NOTE (lote 01b, M-03 / option A): versions <= "lote 01" silently
+  # NOTE (version 0.6.6): earlier versions silently
   # returned n_total <- max(N_range) in this situation and this test used
   # to probe that fallback via res_skipped$n_diseased == 0 (the margin at
-  # N = 2). That fallback is the exact defect this lote removes: n_total
+  # N = 2). That fallback is the defect that version removed: n_total
   # is now NA_integer_ (never max(N_range)) whenever target_reached is
   # FALSE, so n_diseased/n_non_diseased are NA too (there is no "final N"
   # to report margins for). The assertions below now probe the new

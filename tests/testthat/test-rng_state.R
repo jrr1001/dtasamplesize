@@ -295,14 +295,15 @@ test_that("published values reproduce identically under all five RNG generators 
 
   # The test's real purpose is RNGkind-invariance *within this R version*
   # (every kind must agree with every other), not reproducing one fixed
-  # literal captured under R <= 4.5's sampler -- R-devel/4.6.x changed the
-  # RNG stream used by some sampling primitives, which shifts the absolute
-  # figure without breaking cross-kind agreement. Compare every kind to the
-  # first instead of to a hardcoded literal; keep the historical literals
-  # as a documented, version-guarded sanity check.
+  # literal captured under a published R release -- a development build of
+  # R (R-devel, 4.6.0 r90605 of 2026-09-30; see NEWS 0.6.7) was observed to
+  # shift the absolute figure without breaking cross-kind agreement. Compare
+  # every kind to the first instead of to a hardcoded literal; keep the
+  # historical literals as a documented sanity check that is skipped only
+  # on development builds of R (rng_pins_apply()).
   expect_true(all(nb_by_kind == nb_by_kind[1]))
   expect_true(all(mc_by_kind == mc_by_kind[1]))
-  if (getRversion() < "4.6.0") {
+  if (rng_pins_apply()) {
     expect_true(all(nb_by_kind == 240L))
     expect_true(all(mc_by_kind == 0.573))
   }

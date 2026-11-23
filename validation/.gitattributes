@@ -1,0 +1,4 @@
+# Keep every file in validation/ byte-for-byte as stored in the repository:
+# the SHA-256 manifest (HASHES_2026-11-23_v0.7.0.txt) records those bytes, so
+# no line-ending conversion on checkout or archive on any platform.
+* -text

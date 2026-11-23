@@ -14,3 +14,4 @@
 ^\.impeccable$
 ^\.zenodo\.json$
 ^\.git$
+^validation/output$

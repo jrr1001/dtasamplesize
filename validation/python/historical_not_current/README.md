@@ -2,7 +2,7 @@
 
 The files in this folder document the provenance of the Python
 reference-implementation validation but are **not** current evidence for
-the 0.6.8 release. Do not cite them as confirming any current-release
+the 0.7.0 release. Do not cite them as confirming any current-release
 number.
 
 - `HASHES_2026-08-27.txt` -- the original lock-time hash record for
@@ -25,6 +25,12 @@ number.
   sample size. Superseded by the log matching the 18:56Z hash record,
   kept under `validation/python/logs/`.
 
+- `conf_package_38f12a8_v0.6.9.json` and
+  `conf_package_bc943e0_rerun_2026-09-16_v0.6.3.json` -- the `conf_package.json`
+  of commit `38f12a8` (0.6.9) and of commit `bc943e0` (the re-run of 2026-09-16
+  with 0.6.3), extracted byte for byte with `git show`. They are the baselines that
+  `validation/python/compare_confirmatory_baselines.R` compares with the
+  regenerated `conf_package.json`. They are not locked or pre-registered files.
+
 See `validation/python/README.md` for the full narrative and
-`validation/HASHES_2026-10-05_v0.6.8.txt` for this release's current
-manifest.
+`validation/HASHES_2026-11-23_v0.7.0.txt` for the current manifest.

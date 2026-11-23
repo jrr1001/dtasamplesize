@@ -2,13 +2,15 @@
 % Please edit documentation in R/plots.R
 \name{plot_assurance_curve}
 \alias{plot_assurance_curve}
-\title{Plot the Assurance Curve from a Unified Sample Size Search}
+\title{Plot an Assurance Curve}
 \usage{
 plot_assurance_curve(x, title = NULL, ...)
 }
 \arguments{
-\item{x}{An object of class \code{"dtasamplesize"} returned by
-\code{\link{ss_unified}}, called with \code{full_grid = TRUE} so that
+\item{x}{Either an object of class \code{"dta_bam_curve"} returned by
+\code{\link{bam_assurance_curve}} (validated, exact), or an object of
+class \code{"dtasamplesize"} returned by \code{\link{ss_unified}}
+called with \code{full_grid = TRUE} (experimental) so that
 \code{grid_results} covers the whole \code{N_range} rather than
 stopping at the first N that reaches the target.}
 
@@ -23,14 +25,41 @@ A \code{ggplot} object, which can be further customized with
   additional \pkg{ggplot2} layers.
 }
 \description{
-Plots achieved joint assurance against total sample size N, using the
-\code{grid_results} element of an object returned by
-\code{\link{ss_unified}}. A dashed horizontal line marks the target
-assurance, and a dotted vertical line marks the optimal N, labeled with
-its value.
+Plots achieved assurance against total sample size N. Two kinds of object
+are accepted, with different status:
+\describe{
+  \item{\code{"dta_bam_curve"} (validated method)}{The result of
+    \code{\link{bam_assurance_curve}}: the \strong{exact} assurance
+    \eqn{A(N)} of the Bayesian Assurance Method (no simulation), i.e. the
+    same calculation as \code{\link{bam_sample_size}} with
+    \code{method = "exact"}. The plot shows the curve \eqn{A(N)}, a dashed
+    horizontal line at \code{target_assurance} (labelled) and, if the
+    target is reached in the range, a dotted vertical line at the first
+    \code{N} that reaches it, \code{N_first}, labelled with its value. The
+    y axis names the convention used: exact joint or marginal (Se or Sp)
+    assurance, and full-width or lower half-width criterion with its
+    level.}
+  \item{\code{"dtasamplesize"} from \code{ss_unified(full_grid = TRUE)}
+    (experimental)}{The \code{grid_results} of
+    \code{\link{ss_unified}}, a Monte Carlo search that is experimental
+    and outside the validated scope of the package (see
+    \code{\link{ss_unified}}). The plot shows the simulated joint
+    assurance at each \code{N} of the grid, a dashed line at the target and
+    a dotted line at the optimal N.}
+}
+An object returned by \code{\link{bam_sample_size}} is not accepted (it
+does not hold a curve): use \code{\link{bam_assurance_curve}}.
 }
 \examples{
+cv <- bam_assurance_curve(
+  prior_se = c(17, 3), prior_sp = c(2, 2), prior_prev = c(4, 16),
+  N_range = seq(100, 700, by = 25)
+)
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  plot_assurance_curve(cv)
+}
 \donttest{
+# Experimental: Monte Carlo curve from ss_unified()
 if (requireNamespace("ggplot2", quietly = TRUE)) {
   result <- suppressWarnings(ss_unified(
     delta_se = 0.07, delta_sp = 0.05, delta_auc = 0,
@@ -41,5 +70,5 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
 }
 }
 \seealso{
-\code{\link{ss_unified}}
+\code{\link{bam_assurance_curve}}, \code{\link{ss_unified}}
 }

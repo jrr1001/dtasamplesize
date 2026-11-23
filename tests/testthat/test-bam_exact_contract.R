@@ -298,3 +298,31 @@ test_that("print.dtasamplesize() reports a non-crossing BAM result as no solutio
   # under the normal "N_total:" label used by the converged branch.
   expect_false(any(grepl("^\\s*N_total: NA", out)))
 })
+
+## ---------------------------------------------------------------------
+## (v0.7.0) High-precision numerical regressions (tolerance 1e-10
+## on A, exact equality on N), with the new arguments at their default
+## values.
+## ---------------------------------------------------------------------
+
+test_that("regression: P1 gives N = 678, A(678) = 0.8003489948 and A(677) = 0.7996848824 (1e-10)", {
+  res <- suppressWarnings(do.call(bam_sample_size, c(published_args, list(n_range = 20:20))))
+  expect_identical(res$N_total, 678L)
+  expect_lt(abs(res$joint_assurance - 0.8003489948), 1e-10)
+  res677 <- suppressWarnings(do.call(bam_sample_size, c(
+    published_args, list(n_range = 20:20, N_range = 677)
+  )))
+  expect_false(res677$target_reached)
+  expect_lt(abs(res677$max_assurance_evaluated - 0.7996848824), 1e-10)
+})
+
+test_that("regression: P2 gives N = 672 and A(672) = 0.8002692084 (1e-10)", {
+  harmonized_args <- list(
+    prior_se = c(17, 3), prior_sp = c(18, 2), prior_prev = c(4, 16),
+    delta_se = 0.14, delta_sp = 0.10, target_assurance = 0.80,
+    method = "exact"
+  )
+  res <- suppressWarnings(do.call(bam_sample_size, c(harmonized_args, list(n_range = 20:20))))
+  expect_identical(res$N_total, 672L)
+  expect_lt(abs(res$joint_assurance - 0.8002692084), 1e-10)
+})

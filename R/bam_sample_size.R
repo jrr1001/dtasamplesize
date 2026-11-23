@@ -2,16 +2,32 @@
 # Not exported. Used only by bam_sample_size() when method = "exact"; see
 # that function's @details for the closed-form derivation these implement.
 
-# For a single arm governed by a Beta(a, b) prior and a full-width credible
-# interval target of delta, return a vector P of length (n_hi - n_lo + 1)
-# where P[n - n_lo + 1] = P(width <= delta | arm size = n), for n running
-# from n_lo to n_hi, marginalizing over the arm's own success count
-# x ~ BetaBinomial(n, a, b). The posterior credible interval width after x
-# successes in n trials is a deterministic function of (x, n) alone
-# (Beta(a + x, b + n - x)), so this sum is a finite, non-random enumeration
-# -- no simulation involved.
+# Credible-interval criterion width for a vector of posterior Beta(post_a,
+# post_b) distributions. "full_width" (the default and the only criterion
+# before v0.7.0): upper minus lower quantile of the equal-tailed interval.
+# "lower_half_width": posterior median minus the ONE-SIDED lower bound at the
+# same level, i.e. qbeta(0.5) - qbeta(1 - alpha_ci). Since ci_lower_q =
+# (1 - alpha_ci) / 2 exactly (a division by 2 is exact in floating point),
+# 2 * ci_lower_q == 1 - alpha_ci exactly.
+.bam_ci_width <- function(post_a, post_b, ci_lower_q, ci_upper_q,
+                          width_type = "full_width") {
+  if (identical(width_type, "lower_half_width")) {
+    stats::qbeta(0.5, post_a, post_b) - stats::qbeta(2 * ci_lower_q, post_a, post_b)
+  } else {
+    stats::qbeta(ci_upper_q, post_a, post_b) - stats::qbeta(ci_lower_q, post_a, post_b)
+  }
+}
+
+# For a single arm, return a vector P of length (n_hi - n_lo + 1) where
+# P[n - n_lo + 1] = P(width <= delta | arm size = n), marginalizing over the
+# arm's own success count x ~ BetaBinomial(n, a_d, b_d) (the DESIGN prior).
+# The posterior credible interval after x successes in n trials uses the
+# ANALYSIS prior Beta(a, b): Beta(a + x, b + n - x), a deterministic function
+# of (x, n) alone, so the sum is a finite, non-random enumeration. With
+# a_d = a and b_d = b (the default) the design and analysis priors coincide
+# and every floating-point operation is the one used through v0.6.9.
 #
-# Each entry depends only on (n, a, b, delta), never on N, on any OTHER
+# Each entry depends only on (n, priors, delta), never on N, on any OTHER
 # arm size, or on which candidate N is being evaluated -- entries for
 # different n are mutually independent. This is what lets
 # bam_sample_size() extend its exact-mode cache block by block (see
@@ -21,18 +37,20 @@
 # when a block grows is safe and produces byte-identical numbers to
 # recomputing the whole range from scratch.
 .bam_exact_width_prob <- function(n_hi, a, b, delta, ci_lower_q, ci_upper_q,
-                                   n_lo = 0L) {
+                                   n_lo = 0L, a_d = a, b_d = b,
+                                   width_type = "full_width") {
   n_lo <- as.integer(n_lo)
   n_hi <- as.integer(n_hi)
   P <- numeric(n_hi - n_lo + 1L)
-  lbeta_ab <- lbeta(a, b)
+  lbeta_ab <- lbeta(a_d, b_d)
   for (n in n_lo:n_hi) {
     x <- 0:n
     post_a <- a + x
     post_b <- b + n - x
-    width <- stats::qbeta(ci_upper_q, post_a, post_b) -
-      stats::qbeta(ci_lower_q, post_a, post_b)
-    log_pmf <- lchoose(n, x) + lbeta(post_a, post_b) - lbeta_ab
+    width <- .bam_ci_width(post_a, post_b, ci_lower_q, ci_upper_q, width_type)
+    # Beta-Binomial pmf of the count under the DESIGN prior; with a_d = a and
+    # b_d = b this is exactly lbeta(post_a, post_b), as in v0.6.9.
+    log_pmf <- lchoose(n, x) + lbeta(a_d + x, b_d + n - x) - lbeta_ab
     P[n - n_lo + 1L] <- sum(exp(log_pmf)[width <= delta])
   }
   P
@@ -45,32 +63,128 @@
 # case this simply builds 0:new_hi from scratch. Returns the extended cache
 # (length new_hi + 1).
 .bam_exact_extend_cache <- function(old_cache, old_hi, new_hi, a, b, delta,
-                                     ci_lower_q, ci_upper_q) {
+                                     ci_lower_q, ci_upper_q,
+                                     a_d = a, b_d = b,
+                                     width_type = "full_width") {
   if (is.null(old_cache) || old_hi < 0L) {
     return(.bam_exact_width_prob(new_hi, a, b, delta, ci_lower_q, ci_upper_q,
-                                  n_lo = 0L))
+                                  n_lo = 0L, a_d = a_d, b_d = b_d,
+                                  width_type = width_type))
   }
   if (new_hi <= old_hi) {
     return(old_cache[seq_len(new_hi + 1L)])
   }
   new_part <- .bam_exact_width_prob(new_hi, a, b, delta, ci_lower_q,
-                                     ci_upper_q, n_lo = old_hi + 1L)
+                                     ci_upper_q, n_lo = old_hi + 1L,
+                                     a_d = a_d, b_d = b_d,
+                                     width_type = width_type)
   c(old_cache, new_part)
 }
 
-# Exact joint assurance at a single total N: the number of diseased subjects
+# Exact assurance at a single total N: the number of diseased subjects
 # n_d is Beta-Binomial(N, a_p, b_p), and, conditional on the resulting split
 # (n_d, N - n_d), the Se and Sp arms are independent (each depends only on
 # its own true-value prior and its own arm size). P_se and P_sp must already
 # hold P_arm(n) at index n + 1 for every n from 0 to at least N (see
 # .bam_exact_width_prob() above); this function performs no qbeta calls of
 # its own, so evaluating it for many candidate N once the cache exists is
-# cheap (O(N) per candidate).
-.bam_exact_joint_assurance <- function(N, a_p, b_p, P_se, P_sp) {
+# cheap (O(N) per candidate). `assurance_for`: "joint" (default; both arms),
+# "se" (marginal over the Se arm only; P_sp is not used and may be NULL) or
+# "sp" (marginal over the Sp arm only; P_se is not used and may be NULL).
+.bam_exact_joint_assurance <- function(N, a_p, b_p, P_se, P_sp,
+                                        assurance_for = "joint") {
   k <- 0:N
   log_pmf <- lchoose(N, k) + lbeta(a_p + k, b_p + N - k) - lbeta(a_p, b_p)
   p_nd <- exp(log_pmf)
-  sum(p_nd * P_se[k + 1L] * P_sp[N - k + 1L])
+  if (identical(assurance_for, "se")) {
+    sum(p_nd * P_se[k + 1L])
+  } else if (identical(assurance_for, "sp")) {
+    sum(p_nd * P_sp[N - k + 1L])
+  } else {
+    sum(p_nd * P_se[k + 1L] * P_sp[N - k + 1L])
+  }
+}
+
+# Validate an optional analysis prior c(a, b).
+.bam_check_analysis_prior <- function(x, name) {
+  if (is.null(x)) return(invisible(NULL))
+  if (!is.numeric(x) || length(x) != 2L || anyNA(x) || any(!is.finite(x)) ||
+        any(x <= 0)) {
+    stop("`", name, "` must be NULL or a numeric vector c(a, b) with two ",
+         "finite values, both > 0.", call. = FALSE)
+  }
+  invisible(NULL)
+}
+
+# Validate the credible level. A single number in (0, 1); with the one-sided
+# criterion ("lower_half_width") the level must also exceed 0.5, otherwise the
+# one-sided lower bound qbeta(1 - alpha_ci) lies ABOVE the posterior median,
+# the "width" is negative and every width <= delta comparison succeeds
+# trivially.
+.bam_check_alpha_ci <- function(alpha_ci, width_type) {
+  if (!is.numeric(alpha_ci) || length(alpha_ci) != 1L || is.na(alpha_ci) ||
+        alpha_ci <= 0 || alpha_ci >= 1) {
+    stop("`alpha_ci` must be a single number strictly between 0 and 1.",
+         call. = FALSE)
+  }
+  if (identical(width_type, "lower_half_width") && alpha_ci <= 0.5) {
+    stop("With width_type = \"lower_half_width\", `alpha_ci` must be greater ",
+         "than 0.5: the one-sided lower bound qbeta(1 - alpha_ci) has to lie ",
+         "below the posterior median, otherwise the width is negative and the ",
+         "target is met trivially.", call. = FALSE)
+  }
+  invisible(NULL)
+}
+
+# Safeguard shared by bam_sample_size() and bam_assurance_curve(): the
+# EFFECTIVE analysis prior of each arm used by the objective (explicit, taken
+# from a `priors` object, or equal to the design prior) with a prior-only
+# interval (no data) already within its target width lets the prior alone
+# satisfy the criterion. Warns once per such arm.
+.bam_warn_prior_only <- function(prior_se, prior_sp, analysis_prior_se_eff,
+                                 analysis_prior_sp_eff, delta_se, delta_sp,
+                                 ci_lower_q, ci_upper_q, width_type,
+                                 use_se_arm, use_sp_arm) {
+  for (arm in c("se", "sp")) {
+    if (arm == "se" && !use_se_arm) next
+    if (arm == "sp" && !use_sp_arm) next
+    pr <- if (arm == "se") analysis_prior_se_eff else analysis_prior_sp_eff
+    dp <- if (arm == "se") prior_se else prior_sp
+    dl <- if (arm == "se") delta_se else delta_sp
+    w0 <- .bam_ci_width(pr[1], pr[2], ci_lower_q, ci_upper_q, width_type)
+    if (w0 <= dl) {
+      # The wording is decided by the VALUES: the effective analysis prior is
+      # "equal to the design prior" whenever it is numerically identical to
+      # it, however it was supplied (not given, given explicitly, or taken
+      # from a `priors` object).
+      what <- if (identical(as.numeric(pr), as.numeric(dp))) {
+        ", equal to the design prior,"
+      } else {
+        ""
+      }
+      warning(
+        "The analysis prior for ", if (arm == "se") "Se" else "Sp", what,
+        " Beta(", pr[1], ", ", pr[2], ") already has a prior-only interval ",
+        "width of ", sprintf("%.4f", w0), " <= its target delta (",
+        dl, ", ", width_type, "): the width criterion is met before any ",
+        "data are observed, so success is dominated by the analysis prior. ",
+        "Use a weaker or flat analysis prior (analysis_prior_",
+        arm, ") if this is not intended.", call. = FALSE
+      )
+    }
+  }
+  invisible(NULL)
+}
+
+# Human-readable description of the width criterion (used in print()).
+.bam_width_label <- function(width_type, alpha_ci) {
+  lev <- format(100 * alpha_ci, trim = TRUE)
+  if (identical(width_type, "lower_half_width")) {
+    paste0("lower half-width: median minus the one-sided ", lev,
+           "% lower bound")
+  } else {
+    paste0("full width of the equal-tailed ", lev, "% interval")
+  }
 }
 
 #' Bayesian Assurance Method for DTA Sample Size
@@ -80,13 +194,100 @@
 #' their target width, with probability at least \code{target_assurance},
 #' under a single cohort study of size \code{N}.
 #'
-#' @details The parameters \code{delta_se} and \code{delta_sp} are the
-#'   \strong{full width} of the posterior credible interval (not half-width).
-#'   For example, \code{delta_se = 0.14} corresponds to a half-width of 0.07.
-#'   This differs from other functions in this package that use half-width.
+#' @details \strong{Conventions, stated explicitly.} By default
+#'   (\code{width_type = "full_width"}) the parameters \code{delta_se} and
+#'   \code{delta_sp} are the \strong{full width of the equal-tailed, two-sided
+#'   posterior credible interval} at level \code{alpha_ci} (quantiles
+#'   \code{(1 - alpha_ci) / 2} and \code{1 - (1 - alpha_ci) / 2}), not a
+#'   half-width. For example, \code{delta_se = 0.14} corresponds to a
+#'   half-width of 0.07. This differs from other functions in this package that
+#'   use half-width. With \code{width_type = "lower_half_width"} the criterion
+#'   is one-sided: the posterior median minus the \strong{one-sided} lower
+#'   credible bound at level \code{alpha_ci}, \code{qbeta(0.5, ...) -
+#'   qbeta(1 - alpha_ci, ...)}, and \code{delta_se}, \code{delta_sp} are
+#'   interpreted as that quantity (the convention of Williamson et al. 2023).
+#'   In both cases the width is compared with its target exactly
+#'   (\code{width <= delta}, no tolerance): a width equal to \code{delta} up to
+#'   floating-point error is decided by the computed value. The comparison with
+#'   \code{\link{buderer_n}} (\code{buderer_n_se}) uses the half-width
+#'   \code{delta_se / 2} for \code{"full_width"} and \code{delta_se} for
+#'   \code{"lower_half_width"}. The critical value also depends on the
+#'   criterion: with \code{"lower_half_width"} Buderer's formula is evaluated
+#'   at the one-sided level of the criterion, \code{z = qnorm(alpha_ci)}
+#'   (that is, \code{buderer_n(p, delta_se, alpha = 2 * (1 - alpha_ci))}); with
+#'   \code{"full_width"} it uses the 95\% value \code{z = 1.96} whatever
+#'   \code{alpha_ci} is (the behaviour since before version 0.7.0, kept so that
+#'   the result stays identical to 0.6.9).
+#'
+#'   \strong{Design prior and analysis prior.} \code{prior_se},
+#'   \code{prior_sp} and \code{prior_prev} are the \emph{design} priors: they
+#'   generate the true values (and, under \code{method = "exact"}, the
+#'   Beta-Binomial predictive distribution of each arm count). The
+#'   \emph{analysis} priors \code{analysis_prior_se} and
+#'   \code{analysis_prior_sp} define the posterior
+#'   \eqn{\mathrm{Beta}(a_A + x, b_A + n - x)} whose width is compared with the
+#'   target. \code{NULL} (the default) means "same as the design prior", which
+#'   reproduces the results of version 0.6.9 bit for bit. Wilson et al. (2022,
+#'   Section 4.1 and Discussion) note that the analysis may use a weaker or flat
+#'   prior than the one used to generate the data; this is what these
+#'   arguments allow. In exact mode the Beta-Binomial pmf of the count uses the
+#'   design hyperparameters and the interval width uses the analysis
+#'   hyperparameters, i.e. \code{lchoose(n, x) + lbeta(a_D + x, b_D + n - x) -
+#'   lbeta(a_D, b_D)}. \strong{There is no analysis prior for prevalence:}
+#'   \code{prior_prev} acts only in the design (it governs the split of
+#'   \code{N} into diseased and non-diseased subjects). The effective
+#'   analysis priors, an indicator of whether each was given explicitly, and
+#'   their effective sizes \eqn{a + b} are returned and printed. Safeguard: if
+#'   the \emph{effective} analysis prior of an arm used by the objective (given
+#'   explicitly, taken from \code{priors}, or equal to the design prior because
+#'   the argument was \code{NULL}) already has a prior-only interval (no data)
+#'   with width \eqn{\le} its \code{delta}, a warning is issued, because
+#'   success would then be dominated by the prior. The message says that the
+#'   analysis prior is equal to the design prior whenever the two have the
+#'   same values (whether the analysis prior was not given, given explicitly
+#'   or taken from \code{priors}).
+#'   \strong{Caution:}
+#'   if you pass an updated prior by hand as \code{prior_se} and leave
+#'   \code{analysis_prior_se = NULL}, that updated prior also enters the
+#'   analysis; pass the weaker prior as \code{analysis_prior_se} (or use
+#'   \code{priors} with an object whose analysis priors are the base priors)
+#'   to avoid it.
+#'
+#'   \strong{Joint or marginal objective: \code{assurance_for}.} By default
+#'   (\code{"joint"}) both widths must be met in the same study. With
+#'   \code{assurance_for = "se"} the target is the \emph{marginal} Se
+#'   assurance, \eqn{A(N) = \sum_k P(n_d = k) P_{se}(k)}, and with
+#'   \code{"sp"}, \eqn{A(N) = \sum_k P(n_d = k) P_{sp}(N - k)}. The
+#'   empty-arm convention is the same as for the joint objective:
+#'   \eqn{P_{se}(0) = 0} (no diseased subjects counts as a failure) and
+#'   \eqn{P_{sp}(0) = 0}. Under \code{"se"}, \code{prior_sp} and
+#'   \code{delta_sp} play no role in \code{N_total} (they only feed the legacy
+#'   per-arm fields) and need no special values; the same holds for
+#'   \code{prior_se}/\code{delta_se} under \code{"sp"}. Under
+#'   \code{method = "monte_carlo"} a replication succeeds when only the
+#'   requested arm meets its width, with an empty requested arm counted as a
+#'   failure; only the values and counts of the requested arm are simulated
+#'   (the unused arm is not drawn, so the result does not depend on it, not
+#'   even through the random-number stream), and with \code{N_range = NULL}
+#'   the search grid also depends only on that arm (see below). \strong{The
+#'   field \code{joint_assurance} (and the line printed for it) then holds the
+#'   marginal assurance of the requested arm, not a joint assurance}; the
+#'   printed output labels it \dQuote{marginal Se assurance} or
+#'   \dQuote{marginal Sp assurance}.
+#'
+#'   \strong{The main study is always a cohort.} The total \code{N} is fixed
+#'   and the number of diseased subjects is random,
+#'   Beta-Binomial(\code{N}, \code{prior_prev}); there is no case-control
+#'   variant of \code{bam_sample_size()}. A \code{priors} object built by
+#'   \code{\link{bam_prior_from_pilot}} with \code{design = "case_control"}
+#'   (the design of the \emph{pilot}, where the prevalence prior is not
+#'   updated because the group sizes were fixed by the design) is therefore a
+#'   valid input: a case-control pilot followed by a cohort main study is a
+#'   legitimate combination, and no warning is issued.
 #'
 #'   \strong{The headline result (\code{N_total}) is a JOINT assurance under
-#'   cohort design.} At each candidate total \code{N}, every one of the
+#'   cohort design} (a marginal one with \code{assurance_for = "se"} or
+#'   \code{"sp"}). At each candidate total \code{N}, every one of the
 #'   \code{B} Monte Carlo replications draws \code{prev ~ Beta(prior_prev)},
 #'   \code{Se_true ~ Beta(prior_se)} and \code{Sp_true ~ Beta(prior_sp)}, and
 #'   then, because the number of diseased subjects in a fixed-\code{N} cohort
@@ -167,9 +368,11 @@
 #'   0.20, \strong{not} the default \code{prior_prev}, which is
 #'   \code{c(6, 14)}), the exact first \code{N} with joint assurance
 #'   \eqn{\ge} 0.80 is 678, with assurance 0.800349, whereas
-#'   \code{method = "monte_carlo"} with \code{B = 20000} returns 683 because
-#'   of Monte Carlo noise near the crossing point -- see \strong{Anti-noise
-#'   acceptance rule} below).
+#'   \code{method = "monte_carlo"} with \code{B = 20000} returns 683, mainly
+#'   because its acceptance rule requires the one-sided 95\% lower bound of
+#'   the Monte Carlo estimate, not the estimate itself, to reach the target;
+#'   Monte Carlo noise near the crossing point contributes only secondarily
+#'   -- see \strong{Anti-noise acceptance rule} below).
 #'
 #'   \strong{Evaluation is exact with respect to the discrete model above,
 #'   up to floating-point and \code{qbeta} quantile error.} "Exact" here
@@ -222,14 +425,23 @@
 #'   automatic integer scan, a wider \code{N_range} otherwise).
 #'
 #'   \strong{N = 2 vs. N = 1.} The integer scan starts at \code{N = 2}, not
-#'   \code{N = 1}: a total of \code{N = 1} puts every subject on one arm and
+#'   \code{N = 1}. With the joint objective (\code{assurance_for = "joint"}),
+#'   a total of \code{N = 1} puts every subject on one arm and
 #'   none on the other (\code{n_d = 1, n_nd = 0} or vice versa), so its exact
 #'   joint assurance is \strong{always} exactly \code{0} regardless of the
 #'   priors -- the same degenerate-arm override already described above
 #'   forces the zero-size arm's contribution to \code{0} at both \code{k = 0}
 #'   and \code{k = N = 1}. \code{N = 1} is therefore never a useful search
 #'   target and is skipped by construction; it is still evaluated correctly
-#'   (as \code{0}) if a caller explicitly includes it in \code{N_range}. An
+#'   (as \code{0}) if a caller explicitly includes it in \code{N_range}.
+#'   With a marginal objective (\code{assurance_for = "se"} or \code{"sp"})
+#'   the assurance at \code{N = 1}, \eqn{A(1)}, can be positive, because only
+#'   the arm of the quantity concerned has to reach its width; it is not
+#'   evaluated by the automatic scan, which also starts at \code{N = 2}, so
+#'   in an unusual design where \eqn{A(1)} already reaches the target (which
+#'   requires, with \code{assurance_for = "se"}, a prevalence prior whose
+#'   mean is at least the target assurance, and with \code{"sp"}, one whose
+#'   mean is at most 1 minus the target) the function returns \code{N = 2}. An
 #'   arm of size exactly \strong{one} (which first becomes possible at
 #'   \code{N = 2}, when the OTHER arm gets the other one) is, by contrast,
 #'   \strong{not} degenerate: its one-subject posterior is well-defined and
@@ -255,7 +467,14 @@
 #'   since a Monte Carlo search already has its own sampling error to manage
 #'   and gains nothing from the deterministic integer scan used by
 #'   \code{method = "exact"}; \code{search_type} for this case is
-#'   \code{"monte_carlo_auto"}.
+#'   \code{"monte_carlo_auto"}. With a marginal objective
+#'   (\code{assurance_for = "se"} or \code{"sp"}) the grid uses only the
+#'   requested arm: it starts at \code{max(20, n_se)} (Se) or
+#'   \code{max(20, n_sp)} (Sp) and ends at the 90th percentile of
+#'   \code{n_se / prev} (Se) or \code{n_sp / (1 - prev)} (Sp) over the draws
+#'   of \code{prev}, dropping non-finite values. The fields
+#'   \code{N_total_median}, \code{N_total_P75} and \code{N_total_P90} keep
+#'   their definition (legacy heuristic with both arms) in every mode.
 #'
 #'   \strong{Anti-noise acceptance rule (\code{method = "monte_carlo"} only).}
 #'   Because \code{joint_assurance} at each \code{N} is itself a Monte Carlo
@@ -286,12 +505,30 @@
 #'   is the deterministic integer scan described above (never a function of
 #'   \code{n_se}, \code{n_sp}, \code{B} or \code{seed}); under \code{method =
 #'   "monte_carlo"} it remains the legacy heuristic grid
-#'   \code{max(20, n_se, n_sp):ceiling(N_total_P90)}, i.e. from the smallest
-#'   total that could possibly supply both per-arm requirements up to the
+#'   \code{max(20, n_se, n_sp):ceiling(N_total_P90)} (for the joint objective;
+#'   marginal objectives use only the requested arm, see above), i.e. from the
+#'   smallest total that could possibly supply both per-arm requirements up to the
 #'   90th percentile of the legacy prevalence-uncertainty heuristic (see
 #'   \code{N_total_P90} below), which in practice comfortably brackets the
 #'   true joint requirement for that search mode. No existing argument name
 #'   was removed; \code{N_range} is purely additive.
+#'
+#'   \strong{Automatic Monte Carlo grid with high targets.} The automatic
+#'   grid of \code{method = "monte_carlo"} (\code{N_range = NULL}) ends at the
+#'   90th percentile of a heuristic built from the per-arm (marginal)
+#'   requirements \code{n_se} and \code{n_sp}, which are searched at the level
+#'   \code{target_assurance}. The end of the grid therefore grows with the
+#'   target, but the heuristic ignores the joint requirement and the random
+#'   split of \code{N} between the arms. With a high \code{target_assurance}
+#'   (for example 0.99) the grid can end before any \code{N} reaches the
+#'   target, for the joint objective as well as for a marginal one. Then \code{N_total},
+#'   \code{n_total} and \code{joint_assurance} are \code{NA} and
+#'   \code{target_reached} is \code{FALSE}, and the call warns "No N in
+#'   N_range achieved the target ..." (naming the objective, the highest
+#'   assurance seen and the \code{N} where it was seen) and says to expand
+#'   \code{N_range} or increase \code{B}. In that case pass a wider
+#'   \code{N_range}, or use \code{method = "exact"}, whose integer scan does
+#'   not use that grid (it runs up to \code{N_max}).
 #'
 #' @param prior_se Numeric vector \code{c(alpha, beta)} for Beta prior on
 #'   sensitivity. Default \code{c(17, 3)} (E[Se]=0.85, ~20 pseudo-observations).
@@ -313,8 +550,18 @@
 #'   deterministic integer scan described in \code{Details} (independent of
 #'   \code{n_se}, \code{n_sp}, \code{B} and \code{seed}); under \code{method
 #'   = "monte_carlo"} it builds the legacy heuristic grid from \code{n_se},
-#'   \code{n_sp}, and \code{N_total_P90} -- see \code{Details}. When supplied
-#'   explicitly, searched as \code{sort(unique(as.integer(N_range)))}.
+#'   \code{n_sp}, and \code{N_total_P90} -- see \code{Details}. The automatic
+#'   Monte Carlo grid is \code{max(20, n_se, n_sp):ceiling(N_total_P90)} for
+#'   the joint objective; with a marginal objective
+#'   (\code{assurance_for = "se"} or \code{"sp"}) it uses only the requested
+#'   arm: it starts at \code{max(20, n_se)} (Se) or \code{max(20, n_sp)} (Sp)
+#'   and ends at the 90th percentile of \code{n_se / prev} (Se) or
+#'   \code{n_sp / (1 - prev)} (Sp) over the draws of \code{prev}, not at
+#'   \code{N_total_P90}. With a high \code{target_assurance} this automatic
+#'   grid can end before the target is reached (also for the joint
+#'   objective); then \code{N_total} is \code{NA}: pass \code{N_range} or use
+#'   \code{method = "exact"}. When supplied explicitly, searched as
+#'   \code{sort(unique(as.integer(N_range)))}.
 #' @param N_max Integer. Upper ceiling for the automatic integer scan used
 #'   by \code{method = "exact"} when \code{N_range = NULL}. Default
 #'   \code{3000L}, the same practical limit the exact cache already warned
@@ -337,7 +584,13 @@
 #'   headline result has no Monte Carlo error to warn about there. Either
 #'   version is silenced with \code{options(dtasamplesize.warn_small_B =
 #'   FALSE)}.
-#' @param alpha_ci Credible interval level. Default 0.95.
+#' @param alpha_ci Credible interval level (e.g. 0.95): a single number
+#'   strictly between 0 and 1 (otherwise an error). Two-sided equal-tailed
+#'   under \code{width_type = "full_width"}; the one-sided lower bound
+#'   \code{qbeta(1 - alpha_ci, ...)} under \code{"lower_half_width"}, where it
+#'   must also be greater than 0.5 (error otherwise): the one-sided lower bound
+#'   has to lie below the posterior median, or the width is negative and every
+#'   target is met trivially. Default 0.95.
 #' @param seed Random seed. Default 2026. The RNG state of the calling
 #'   session is restored on exit. Affects the legacy per-arm searches and
 #'   heuristics regardless of \code{method}, but has \strong{no effect on
@@ -350,7 +603,34 @@
 #'   form via Beta-Binomial enumeration, with no simulation and no sampling
 #'   error. \code{"monte_carlo"} reproduces the simulation-based search
 #'   (including the anti-noise acceptance rule) unchanged.
-#' @return Object of class \code{"dtasamplesize"} with additional elements:
+#' @param width_type Either \code{"full_width"} (the default) or
+#'   \code{"lower_half_width"}. \code{"full_width"}: \code{delta_se} and
+#'   \code{delta_sp} are the full width of the equal-tailed two-sided
+#'   \code{alpha_ci} credible interval. \code{"lower_half_width"}: they are the
+#'   posterior median minus the one-sided \code{alpha_ci} lower bound. Applies
+#'   to the exact search, the Monte Carlo search and the legacy per-arm
+#'   fields. Widths are compared exactly (\code{width <= delta}).
+#' @param assurance_for Either \code{"joint"} (the default), \code{"se"} or
+#'   \code{"sp"}: whether \code{N_total} targets the joint assurance or the
+#'   marginal assurance of one arm. See \code{Details} for the empty-arm
+#'   convention.
+#' @param analysis_prior_se,analysis_prior_sp \code{NULL} (the default: same as
+#'   the design prior \code{prior_se}, \code{prior_sp}; identical to version
+#'   0.6.9) or a numeric vector \code{c(alpha, beta)}, both > 0, for the Beta
+#'   prior used in the \emph{analysis} (posterior) of each arm. Design priors
+#'   generate the data; analysis priors determine the interval width. There is
+#'   no analysis prior for prevalence. See \code{Details}.
+#' @param priors \code{NULL} (the default) or an object of class
+#'   \code{"dta_bam_priors"} (as returned by \code{bam_prior_from_pilot()}).
+#'   If given, \code{prior_se}, \code{prior_sp}, \code{prior_prev},
+#'   \code{analysis_prior_se} and \code{analysis_prior_sp} are taken from it,
+#'   and passing any of those five arguments explicitly as well is an error.
+#'   Any other non-\code{NULL} value is an error.
+#' @return Object of class \code{"dtasamplesize"} with additional elements.
+#'   With \code{assurance_for = "joint"} (the default) the assurance fields
+#'   hold the \emph{joint} assurance; with \code{"se"} or \code{"sp"},
+#'   \code{N_total}, \code{joint_assurance}, \code{max_assurance_evaluated} and
+#'   \code{assurance_mcse} refer to the \emph{marginal} assurance of that arm.
 #'   \describe{
 #'     \item{n_diseased}{Minimum diseased sample for the \strong{marginal}
 #'       Se assurance (legacy diagnostic field; searched over \code{n_range}).}
@@ -364,7 +644,9 @@
 #'       \code{n_total} held \code{N_total_median}: see \code{Details}.}
 #'     \item{N_total}{The minimum total N whose \strong{joint} assurance
 #'       (Se and Sp both within target width, in the same replication, under
-#'       cohort design) reaches \code{target_assurance}, among the candidate
+#'       cohort design) reaches \code{target_assurance} (with
+#'       \code{assurance_for = "se"} or \code{"sp"}: the minimum total N whose
+#'       \strong{marginal} assurance for that arm reaches it), among the candidate
 #'       N actually searched (see \code{N_range_used}). Under \code{method =
 #'       "monte_carlo"} acceptance is at the 95\% Monte Carlo confidence
 #'       lower bound (the anti-noise rule). \code{NA_integer_} when no
@@ -393,6 +675,9 @@
 #'       \code{NA_integer_} otherwise (an explicit \code{N_range} or
 #'       \code{method = "monte_carlo"} does not use \code{N_max}).}
 #'     \item{joint_assurance}{The joint assurance achieved at \code{N_total}
+#'       (with \code{assurance_for = "se"} or \code{"sp"} this field holds the
+#'       \strong{marginal} assurance of that arm, not a joint assurance; the
+#'       print method labels it accordingly)
 #'       (point estimate, not the lower confidence bound used to accept it
 #'       under \code{method = "monte_carlo"}; under \code{method = "exact"}
 #'       this already \emph{is} the exact probability, with no further bound
@@ -441,21 +726,75 @@
 #'       \code{target_assurance}; use \code{N_total} instead. Retained
 #'       unchanged so that existing code and reports keep working.}
 #'     \item{N_total_P75}{75th percentile of the same legacy heuristic
-#'       distribution. Also used to size the default \code{N_range}.}
+#'       distribution. Reported for information only: it does not set any
+#'       search grid.}
 #'     \item{N_total_P90}{90th percentile of the same legacy heuristic
-#'       distribution. Also used to size the default \code{N_range}.}
-#'     \item{buderer_n_se}{Buderer sample size for comparison.}
+#'       distribution. It sets the upper end of the automatic grid only for
+#'       \code{method = "monte_carlo"}, \code{N_range = NULL} and the joint
+#'       objective (\code{max(20, n_se, n_sp):ceiling(N_total_P90)}). With a
+#'       marginal objective the automatic Monte Carlo grid ends at the 90th
+#'       percentile of the requested arm's own requirement instead, and under
+#'       \code{method = "exact"} it plays no role (the integer scan does not
+#'       use it).}
+#'     \item{buderer_n_se}{Buderer sample size for comparison, computed with
+#'       the design mean of \code{prior_se} and the half-width implied by
+#'       \code{width_type} (\code{delta_se / 2} for \code{"full_width"},
+#'       \code{delta_se} for \code{"lower_half_width"}). The critical value is
+#'       the 95\% one (\code{z = 1.96}) for \code{"full_width"}, whatever
+#'       \code{alpha_ci} is (inherited behaviour), and
+#'       \code{z = qnorm(alpha_ci)} for \code{"lower_half_width"}.}
+#'     \item{alpha_ci, width_type, assurance_for}{The credible level, width
+#'       criterion and assurance objective actually used.}
+#'     \item{analysis_prior_se, analysis_prior_sp}{The \emph{effective}
+#'       analysis priors (the design priors where the argument was
+#'       \code{NULL}).}
+#'     \item{analysis_prior_given}{Named logical vector (\code{se}, \code{sp}):
+#'       whether each analysis prior was given explicitly.}
+#'     \item{analysis_prior_size}{Named numeric vector (\code{se}, \code{sp}):
+#'       effective size \eqn{a + b} of each analysis prior.}
 #'   }
 #' @references
 #' Wilson KJ et al. (2022). Bayesian sample size determination for
 #' diagnostic accuracy studies. \emph{Stat Med} 41:2908-2922.
 #' \doi{10.1002/sim.9393}
+#'
+#' Williamson SF, Williams CJ, Lendrem BC, Wilson KJ (2023). Sample size
+#' determination for point-of-care COVID-19 diagnostic tests: a Bayesian
+#' approach. \emph{Diagn Progn Res} 7:17. \doi{10.1186/s41512-023-00153-1}
+#' (source of the one-sided criterion and of the illustrative example
+#' reproduced with \code{width_type = "lower_half_width"}).
 #' @examples
 #' # B and N_range kept small here for a fast example; see @param B.
 #' result <- suppressWarnings(bam_sample_size(
 #'   B = 500, n_range = 20:500, N_range = seq(100, 700, by = 20)
 #' ))
 #' print(result)
+#'
+#' # Separate design and analysis priors: data generated under the informative
+#' # design prior, interval computed under a flat analysis prior
+#' # (exact mode, lenient targets so the example is fast).
+#' ex <- suppressWarnings(bam_sample_size(
+#'   prior_se = c(17, 3), prior_sp = c(18, 2), prior_prev = c(4, 16),
+#'   delta_se = 0.25, delta_sp = 0.20,
+#'   analysis_prior_se = c(1, 1), analysis_prior_sp = c(1, 1),
+#'   n_range = 20:60, B = 1000
+#' ))
+#' ex$N_total
+#'
+#' # One-sided criterion (median minus one-sided lower bound)
+#' one <- suppressWarnings(bam_sample_size(
+#'   prior_se = c(25, 7), prior_sp = c(30, 2), prior_prev = c(13.56, 122.06),
+#'   width_type = "lower_half_width", delta_se = 0.10, delta_sp = 0.05,
+#'   n_range = 20:60, B = 1000, N_range = 300:330
+#' ))
+#' one$N_total
+#'
+#' # Marginal objective: Se only (the VAP example of Wilson et al. 2022)
+#' vap <- suppressWarnings(bam_sample_size(
+#'   prior_se = c(25.9, 2.1), prior_prev = c(29, 98), delta_se = 0.16,
+#'   assurance_for = "se", n_range = 20:60, B = 1000, N_range = 90:110
+#' ))
+#' vap$N_total
 #' @export
 bam_sample_size <- function(prior_se = c(17, 3),
                             prior_sp = c(2, 2),
@@ -469,8 +808,53 @@ bam_sample_size <- function(prior_se = c(17, 3),
                             seed = 2026,
                             N_range = NULL,
                             N_max = 3000L,
-                            method = c("exact", "monte_carlo")) {
+                            method = c("exact", "monte_carlo"),
+                            width_type = c("full_width", "lower_half_width"),
+                            assurance_for = c("joint", "se", "sp"),
+                            analysis_prior_se = NULL,
+                            analysis_prior_sp = NULL,
+                            priors = NULL) {
   method <- match.arg(method)
+  width_type <- tryCatch(
+    match.arg(width_type),
+    error = function(e) stop(
+      "`width_type` must be one of \"full_width\" or \"lower_half_width\".",
+      call. = FALSE
+    )
+  )
+  assurance_for <- tryCatch(
+    match.arg(assurance_for),
+    error = function(e) stop(
+      "`assurance_for` must be one of \"joint\", \"se\" or \"sp\".",
+      call. = FALSE
+    )
+  )
+
+  # --- optional "dta_bam_priors" object (v0.7.0) --------------------------
+  # Must be resolved BEFORE anything else reads the prior arguments, and
+  # while missing() still reflects what the caller actually passed.
+  if (!is.null(priors)) {
+    if (!inherits(priors, "dta_bam_priors")) {
+      stop("`priors` must be NULL or an object of class \"dta_bam_priors\" ",
+           "(see bam_prior_from_pilot()).", call. = FALSE)
+    }
+    clash <- c(
+      prior_se = !missing(prior_se), prior_sp = !missing(prior_sp),
+      prior_prev = !missing(prior_prev),
+      analysis_prior_se = !missing(analysis_prior_se),
+      analysis_prior_sp = !missing(analysis_prior_sp)
+    )
+    if (any(clash)) {
+      stop("`priors` supplies prior_se, prior_sp, prior_prev, ",
+           "analysis_prior_se and analysis_prior_sp; do not also pass: ",
+           paste(names(clash)[clash], collapse = ", "), ".", call. = FALSE)
+    }
+    prior_se <- priors$prior_se
+    prior_sp <- priors$prior_sp
+    prior_prev <- priors$prior_prev
+    analysis_prior_se <- priors$analysis_prior_se
+    analysis_prior_sp <- priors$analysis_prior_sp
+  }
 
   # --- preserve the caller's RNG state (kind AND seed) ------------------
   # Restoring only .Random.seed's VALUE is not enough: set.seed() called
@@ -493,6 +877,9 @@ bam_sample_size <- function(prior_se = c(17, 3),
   stopifnot(B >= 1)
   stopifnot(is.null(N_range) || (length(N_range) >= 1 && all(N_range > 0)))
   stopifnot(length(N_max) == 1, N_max >= 2)
+  .bam_check_analysis_prior(analysis_prior_se, "analysis_prior_se")
+  .bam_check_analysis_prior(analysis_prior_sp, "analysis_prior_sp")
+  .bam_check_alpha_ci(alpha_ci, width_type)
 
   # Small-B advisory, scoped to what B actually governs under each mode. B
   # always affects the legacy per-arm fields (n_diseased, n_non_diseased,
@@ -524,13 +911,42 @@ bam_sample_size <- function(prior_se = c(17, 3),
     )
   }
 
+  # DESIGN priors (a_*, b_*) generate the true values (and, in exact mode,
+  # the Beta-Binomial predictive of each arm's count); ANALYSIS priors
+  # (aA_*, bA_*) define the posterior Beta(aA + x, bA + n - x) whose width is
+  # compared with delta. NULL analysis priors mean "same as design", which
+  # reproduces v0.6.9 bit for bit. The prevalence prior acts only in the
+  # design (there is no analysis prior for prevalence).
   a_se <- prior_se[1]
   b_se <- prior_se[2]
   a_sp <- prior_sp[1]
   b_sp <- prior_sp[2]
 
+  analysis_given <- c(se = !is.null(analysis_prior_se),
+                      sp = !is.null(analysis_prior_sp))
+  analysis_prior_se_eff <- if (is.null(analysis_prior_se)) prior_se else analysis_prior_se
+  analysis_prior_sp_eff <- if (is.null(analysis_prior_sp)) prior_sp else analysis_prior_sp
+  aA_se <- analysis_prior_se_eff[1]
+  bA_se <- analysis_prior_se_eff[2]
+  aA_sp <- analysis_prior_sp_eff[1]
+  bA_sp <- analysis_prior_sp_eff[2]
+
   ci_lower_q <- (1 - alpha_ci) / 2
   ci_upper_q <- 1 - ci_lower_q
+
+  # Safeguard: the EFFECTIVE analysis prior of each arm used by the objective
+  # (explicit, from `priors`, or equal to the design prior) whose interval,
+  # with NO data, already meets the target width lets the prior alone satisfy
+  # the criterion (success dominated by the prior, not by the data).
+  use_se_arm <- assurance_for != "sp"
+  use_sp_arm <- assurance_for != "se"
+  assurance_label <- switch(assurance_for, joint = "JOINT assurance",
+                            se = "marginal Se assurance",
+                            sp = "marginal Sp assurance")
+  .bam_warn_prior_only(prior_se, prior_sp, analysis_prior_se_eff,
+                       analysis_prior_sp_eff, delta_se, delta_sp,
+                       ci_lower_q, ci_upper_q, width_type,
+                       use_se_arm, use_sp_arm)
 
   # --- Search for n_se (legacy marginal / diagnostic field) ---
   n_se <- NA_integer_
@@ -540,11 +956,10 @@ bam_sample_size <- function(prior_se = c(17, 3),
     set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rejection")
     se_true <- stats::rbeta(B, a_se, b_se)
     x <- stats::rbinom(B, n, se_true)
-    # Posterior: Beta(a_se + x, b_se + n - x)
-    post_a <- a_se + x
-    post_b <- b_se + n - x
-    ci_width <- stats::qbeta(ci_upper_q, post_a, post_b) -
-      stats::qbeta(ci_lower_q, post_a, post_b)
+    # Posterior (ANALYSIS prior): Beta(aA_se + x, bA_se + n - x)
+    post_a <- aA_se + x
+    post_b <- bA_se + n - x
+    ci_width <- .bam_ci_width(post_a, post_b, ci_lower_q, ci_upper_q, width_type)
     assurance <- mean(ci_width <= delta_se)
     if (assurance >= target_assurance) {
       n_se <- as.integer(n)
@@ -554,17 +969,19 @@ bam_sample_size <- function(prior_se = c(17, 3),
   }
 
   if (is.na(n_se)) {
-    warning("No n in n_range achieved target assurance for Se. ",
-            "Consider expanding n_range.")
+    # (not warned when the Se arm plays no role in N_total: assurance_for = "sp")
+    if (use_se_arm) {
+      warning("No n in n_range achieved target assurance for Se. ",
+              "Consider expanding n_range.")
+    }
     n_se <- max(n_range)
     # Compute assurance at max
     set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rejection")
     se_true <- stats::rbeta(B, a_se, b_se)
     x <- stats::rbinom(B, n_se, se_true)
-    post_a <- a_se + x
-    post_b <- b_se + n_se - x
-    ci_width <- stats::qbeta(ci_upper_q, post_a, post_b) -
-      stats::qbeta(ci_lower_q, post_a, post_b)
+    post_a <- aA_se + x
+    post_b <- bA_se + n_se - x
+    ci_width <- .bam_ci_width(post_a, post_b, ci_lower_q, ci_upper_q, width_type)
     assurance_se_achieved <- mean(ci_width <= delta_se)
   }
 
@@ -576,10 +993,9 @@ bam_sample_size <- function(prior_se = c(17, 3),
     set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rejection")
     sp_true <- stats::rbeta(B, a_sp, b_sp)
     x <- stats::rbinom(B, n, sp_true)
-    post_a <- a_sp + x
-    post_b <- b_sp + n - x
-    ci_width <- stats::qbeta(ci_upper_q, post_a, post_b) -
-      stats::qbeta(ci_lower_q, post_a, post_b)
+    post_a <- aA_sp + x
+    post_b <- bA_sp + n - x
+    ci_width <- .bam_ci_width(post_a, post_b, ci_lower_q, ci_upper_q, width_type)
     assurance <- mean(ci_width <= delta_sp)
     if (assurance >= target_assurance) {
       n_sp <- as.integer(n)
@@ -589,16 +1005,18 @@ bam_sample_size <- function(prior_se = c(17, 3),
   }
 
   if (is.na(n_sp)) {
-    warning("No n in n_range achieved target assurance for Sp. ",
-            "Consider expanding n_range.")
+    # (not warned when the Sp arm plays no role in N_total: assurance_for = "se")
+    if (use_sp_arm) {
+      warning("No n in n_range achieved target assurance for Sp. ",
+              "Consider expanding n_range.")
+    }
     n_sp <- max(n_range)
     set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rejection")
     sp_true <- stats::rbeta(B, a_sp, b_sp)
     x <- stats::rbinom(B, n_sp, sp_true)
-    post_a <- a_sp + x
-    post_b <- b_sp + n_sp - x
-    ci_width <- stats::qbeta(ci_upper_q, post_a, post_b) -
-      stats::qbeta(ci_lower_q, post_a, post_b)
+    post_a <- aA_sp + x
+    post_b <- bA_sp + n_sp - x
+    ci_width <- .bam_ci_width(post_a, post_b, ci_lower_q, ci_upper_q, width_type)
     assurance_sp_achieved <- mean(ci_width <= delta_sp)
   }
 
@@ -642,8 +1060,27 @@ bam_sample_size <- function(prior_se = c(17, 3),
     # from the deterministic integer scan used by method = "exact"; see
     # @details).
     if (is.null(N_range)) {
-      N_lo <- max(20L, n_se, n_sp)
-      N_hi <- max(N_lo + 1L, ceiling(N_total_P90))
+      if (assurance_for == "joint") {
+        N_lo <- max(20L, n_se, n_sp)
+        N_hi <- max(N_lo + 1L, ceiling(N_total_P90))
+      } else {
+        # Marginal objective: the grid depends only on the arm that decides
+        # N_total. The unused arm's per-arm requirement must not set the
+        # starting point or the ceiling (it would fix N regardless of the
+        # target; see @details). Same 90th-percentile rule as for the legacy
+        # heuristic, applied to the used arm alone.
+        if (assurance_for == "se") {
+          n_arm <- n_se
+          N_arm_draws <- n_se / prev_draws
+        } else {
+          n_arm <- n_sp
+          N_arm_draws <- n_sp / (1 - prev_draws)
+        }
+        N_arm_draws <- N_arm_draws[is.finite(N_arm_draws)]
+        N_lo <- max(20L, n_arm)
+        N_hi <- max(N_lo + 1L,
+                    ceiling(stats::quantile(N_arm_draws, 0.90, names = FALSE)))
+      }
       N_range_used <- N_lo:N_hi
       search_type <- "monte_carlo_auto"
     } else {
@@ -656,30 +1093,60 @@ bam_sample_size <- function(prior_se = c(17, 3),
     for (N in N_range_used) {
       set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rejection")
       prev_b <- stats::rbeta(B, prior_prev[1], prior_prev[2])
-      se_true_b <- stats::rbeta(B, a_se, b_se)
-      sp_true_b <- stats::rbeta(B, a_sp, b_sp)
 
-      n_d <- stats::rbinom(B, N, prev_b)
-      n_nd <- N - n_d
+      if (assurance_for == "joint") {
+        # (draw order and arithmetic exactly as in v0.6.9)
+        se_true_b <- stats::rbeta(B, a_se, b_se)
+        sp_true_b <- stats::rbeta(B, a_sp, b_sp)
 
-      x_se <- stats::rbinom(B, n_d, se_true_b)
-      x_sp <- stats::rbinom(B, n_nd, sp_true_b)
+        n_d <- stats::rbinom(B, N, prev_b)
+        n_nd <- N - n_d
 
-      post_a_se <- a_se + x_se
-      post_b_se <- b_se + n_d - x_se
-      width_se <- stats::qbeta(ci_upper_q, post_a_se, post_b_se) -
-        stats::qbeta(ci_lower_q, post_a_se, post_b_se)
+        x_se <- stats::rbinom(B, n_d, se_true_b)
+        x_sp <- stats::rbinom(B, n_nd, sp_true_b)
 
-      post_a_sp <- a_sp + x_sp
-      post_b_sp <- b_sp + n_nd - x_sp
-      width_sp <- stats::qbeta(ci_upper_q, post_a_sp, post_b_sp) -
-        stats::qbeta(ci_lower_q, post_a_sp, post_b_sp)
+        post_a_se <- aA_se + x_se
+        post_b_se <- bA_se + n_d - x_se
+        width_se <- .bam_ci_width(post_a_se, post_b_se, ci_lower_q,
+                                  ci_upper_q, width_type)
 
-      success <- (width_se <= delta_se) & (width_sp <= delta_sp)
-      # A degenerate replication (no diseased, or no non-diseased subjects)
-      # always counts as a FAILURE and is never dropped from the denominator.
-      degenerate <- (n_d == 0L) | (n_nd == 0L)
-      success[degenerate] <- FALSE
+        post_a_sp <- aA_sp + x_sp
+        post_b_sp <- bA_sp + n_nd - x_sp
+        width_sp <- .bam_ci_width(post_a_sp, post_b_sp, ci_lower_q,
+                                  ci_upper_q, width_type)
+
+        success <- (width_se <= delta_se) & (width_sp <= delta_sp)
+        # A degenerate replication (no diseased, or no non-diseased
+        # subjects) always counts as a FAILURE and is never dropped from the
+        # denominator.
+        degenerate <- (n_d == 0L) | (n_nd == 0L)
+        success[degenerate] <- FALSE
+      } else if (assurance_for == "se") {
+        # Marginal objective: only the Se arm decides, so only the values and
+        # counts it needs are drawn (drawing the unused arm would only shift
+        # the RNG stream and make the result depend on it). A replication
+        # with an empty Se arm (n_d = 0) is a failure (P_se(0) = 0 convention).
+        se_true_b <- stats::rbeta(B, a_se, b_se)
+        n_d <- stats::rbinom(B, N, prev_b)
+        x_se <- stats::rbinom(B, n_d, se_true_b)
+        post_a_se <- aA_se + x_se
+        post_b_se <- bA_se + n_d - x_se
+        width_se <- .bam_ci_width(post_a_se, post_b_se, ci_lower_q,
+                                  ci_upper_q, width_type)
+        success <- (width_se <= delta_se)
+        success[n_d == 0L] <- FALSE
+      } else {
+        sp_true_b <- stats::rbeta(B, a_sp, b_sp)
+        n_d <- stats::rbinom(B, N, prev_b)
+        n_nd <- N - n_d
+        x_sp <- stats::rbinom(B, n_nd, sp_true_b)
+        post_a_sp <- aA_sp + x_sp
+        post_b_sp <- bA_sp + n_nd - x_sp
+        width_sp <- .bam_ci_width(post_a_sp, post_b_sp, ci_lower_q,
+                                  ci_upper_q, width_type)
+        success <- (width_sp <= delta_sp)
+        success[n_nd == 0L] <- FALSE
+      }
 
       joint_assurance <- mean(success)
       assurance_mcse <- sqrt(joint_assurance * (1 - joint_assurance) / B)
@@ -709,7 +1176,7 @@ bam_sample_size <- function(prior_se = c(17, 3),
       # search actually saw, and N_range covers the fix: expanding it is
       # the only way to search further under this mode.
       warning(
-        "No N in N_range achieved the target JOINT assurance (at the 95% ",
+        "No N in N_range achieved the target ", assurance_label, " (at the 95% ",
         "Monte Carlo confidence lower bound): the highest assurance seen ",
         "was ", sprintf("%.6f", max_assurance_evaluated), " at N = ",
         N_at_max_assurance, ", against target_assurance = ",
@@ -752,24 +1219,33 @@ bam_sample_size <- function(prior_se = c(17, 3),
         # Extend (not rebuild) the per-arm caches: only arm sizes
         # (cache_hi + 1):block_cap are newly computed; see
         # .bam_exact_extend_cache().
-        P_se_exact <- .bam_exact_extend_cache(
-          P_se_exact, cache_hi, block_cap, a_se, b_se, delta_se,
-          ci_lower_q, ci_upper_q
-        )
-        P_sp_exact <- .bam_exact_extend_cache(
-          P_sp_exact, cache_hi, block_cap, a_sp, b_sp, delta_sp,
-          ci_lower_q, ci_upper_q
-        )
+        # (Only the arm(s) the objective uses are cached: under
+        # assurance_for = "se" the Sp cache is never built, and vice versa.)
+        if (use_se_arm) {
+          P_se_exact <- .bam_exact_extend_cache(
+            P_se_exact, cache_hi, block_cap, aA_se, bA_se, delta_se,
+            ci_lower_q, ci_upper_q, a_d = a_se, b_d = b_se,
+            width_type = width_type
+          )
+        }
+        if (use_sp_arm) {
+          P_sp_exact <- .bam_exact_extend_cache(
+            P_sp_exact, cache_hi, block_cap, aA_sp, bA_sp, delta_sp,
+            ci_lower_q, ci_upper_q, a_d = a_sp, b_d = b_sp,
+            width_type = width_type
+          )
+        }
         cache_hi <- block_cap
         # Degenerate arm-size-0 override (see the long comment below, kept
         # with the final non-auto branch); idempotent, so reapplying it on
         # every block extension is harmless.
-        P_se_exact[1] <- 0
-        P_sp_exact[1] <- 0
+        if (use_se_arm) P_se_exact[1] <- 0
+        if (use_sp_arm) P_sp_exact[1] <- 0
 
         for (N in start_N:block_cap) {
           joint_assurance <- .bam_exact_joint_assurance(
-            N, prior_prev[1], prior_prev[2], P_se_exact, P_sp_exact
+            N, prior_prev[1], prior_prev[2], P_se_exact, P_sp_exact,
+            assurance_for = assurance_for
           )
           if (is.na(max_assurance_evaluated) || joint_assurance > max_assurance_evaluated) {
             max_assurance_evaluated <- joint_assurance
@@ -794,7 +1270,7 @@ bam_sample_size <- function(prior_se = c(17, 3),
       if (!target_reached) {
         warning(
           "No integer N in 2:", N_max, " (N_max) achieved the target ",
-          "JOINT assurance under the exact calculation: the highest ",
+          assurance_label, " under the exact calculation: the highest ",
           "assurance seen was ", sprintf("%.6f", max_assurance_evaluated),
           " at N = ", N_at_max_assurance, ", against target_assurance = ",
           target_assurance, ". N_total, n_total and joint_assurance are NA ",
@@ -824,12 +1300,21 @@ bam_sample_size <- function(prior_se = c(17, 3),
 
       # Cached once per arm, up to N_max_exact, and reused across every
       # candidate N below -- P_se(k) / P_sp(m) depend only on arm size.
-      P_se_exact <- .bam_exact_width_prob(
-        N_max_exact, a_se, b_se, delta_se, ci_lower_q, ci_upper_q
-      )
-      P_sp_exact <- .bam_exact_width_prob(
-        N_max_exact, a_sp, b_sp, delta_sp, ci_lower_q, ci_upper_q
-      )
+      # Only the arm(s) the objective uses (assurance_for) are cached.
+      P_se_exact <- NULL
+      P_sp_exact <- NULL
+      if (use_se_arm) {
+        P_se_exact <- .bam_exact_width_prob(
+          N_max_exact, aA_se, bA_se, delta_se, ci_lower_q, ci_upper_q,
+          a_d = a_se, b_d = b_se, width_type = width_type
+        )
+      }
+      if (use_sp_arm) {
+        P_sp_exact <- .bam_exact_width_prob(
+          N_max_exact, aA_sp, bA_sp, delta_sp, ci_lower_q, ci_upper_q,
+          a_d = a_sp, b_d = b_sp, width_type = width_type
+        )
+      }
 
       # A degenerate replication (n_d = 0 or n_nd = 0) is always a FAILURE,
       # never a success -- the same convention already enforced under
@@ -845,12 +1330,13 @@ bam_sample_size <- function(prior_se = c(17, 3),
       # data), which is not 0 in general and can even be 1 for tight
       # informative priors -- wrongly crediting an arm that received no
       # subjects at all.
-      P_se_exact[1] <- 0
-      P_sp_exact[1] <- 0
+      if (use_se_arm) P_se_exact[1] <- 0
+      if (use_sp_arm) P_sp_exact[1] <- 0
 
       for (N in N_range_used) {
         joint_assurance <- .bam_exact_joint_assurance(
-          N, prior_prev[1], prior_prev[2], P_se_exact, P_sp_exact
+          N, prior_prev[1], prior_prev[2], P_se_exact, P_sp_exact,
+          assurance_for = assurance_for
         )
         if (is.na(max_assurance_evaluated) || joint_assurance > max_assurance_evaluated) {
           max_assurance_evaluated <- joint_assurance
@@ -870,7 +1356,7 @@ bam_sample_size <- function(prior_se = c(17, 3),
 
       if (!target_reached) {
         warning(
-          "No N in N_range achieved the target JOINT assurance under the ",
+          "No N in N_range achieved the target ", assurance_label, " under the ",
           "exact calculation: the highest assurance seen was ",
           sprintf("%.6f", max_assurance_evaluated), " at N = ",
           N_at_max_assurance, ", against target_assurance = ",
@@ -884,7 +1370,18 @@ bam_sample_size <- function(prior_se = c(17, 3),
   }
 
   # --- Buderer comparison ---
-  buderer_n_se <- buderer_n(a_se / (a_se + b_se), delta_se / 2)
+  # delta_se is a FULL width under width_type = "full_width" (Buderer takes
+  # the half-width delta_se / 2, at the 95% z whatever alpha_ci is: inherited
+  # behaviour, kept so that results stay identical to v0.6.9). Under
+  # "lower_half_width" delta_se is already a half-width-type quantity (median
+  # minus the ONE-sided bound at level alpha_ci), so Buderer takes delta_se
+  # itself with the matching one-sided z = qnorm(alpha_ci), i.e. a two-sided
+  # level alpha = 2 * (1 - alpha_ci).
+  buderer_n_se <- if (width_type == "lower_half_width") {
+    buderer_n(a_se / (a_se + b_se), delta_se, alpha = 2 * (1 - alpha_ci))
+  } else {
+    buderer_n(a_se / (a_se + b_se), delta_se / 2)
+  }
 
   structure(
     list(
@@ -915,6 +1412,14 @@ bam_sample_size <- function(prior_se = c(17, 3),
       delta_sp = delta_sp,
       target_assurance = target_assurance,
       B = B,
+      alpha_ci = alpha_ci,
+      width_type = width_type,
+      assurance_for = assurance_for,
+      analysis_prior_se = analysis_prior_se_eff,
+      analysis_prior_sp = analysis_prior_sp_eff,
+      analysis_prior_given = analysis_given,
+      analysis_prior_size = c(se = sum(analysis_prior_se_eff),
+                              sp = sum(analysis_prior_sp_eff)),
       call = match.call()
     ),
     class = "dtasamplesize"

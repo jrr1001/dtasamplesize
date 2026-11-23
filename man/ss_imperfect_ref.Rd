@@ -208,7 +208,7 @@ identified from the observed cell probabilities
   {p_{00} + p_{10} - (1-Se_{ref})}}
 Its sampling variance is obtained by the delta method applied to the
 cell-count multinomial (\code{N * Var(theta_hat) = g' (diag(p) - p p') g}
-for the appropriate gradient \code{g}); this matches an independent
+for the appropriate gradient \code{g}); this matches a separate
 Fisher-information derivation and Monte Carlo simulation to within
 Monte Carlo error. \eqn{Se_{app} = p_{11}/(p_{11}+p_{01})} and
 \eqn{P(R+) = p_{11}+p_{01}} follow directly from the same model.

@@ -43,7 +43,8 @@
 #'   \code{n_total = 580} with \code{joint_prob_se_sp = 0.8041}, but a finer,
 #'   integer-step search over the same neighbourhood crosses the target
 #'   \code{target_prob = 0.80} as early as \code{N = 578}-\code{579}
-#'   (verified independently; see the package's audit trail). \code{580} is
+#'   (checked by the package authors with an exact enumeration in
+#'   \code{validation/comparator_calls.R}). \code{580} is
 #'   correctly described as "the first point of the step-10 grid reaching
 #'   the target", \strong{not} as "the minimum sample size". \code{search_type
 #'   = "grid_first_candidate"} and \code{N_range_used} in the return value

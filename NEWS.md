@@ -1,3 +1,293 @@
+# dtasamplesize 0.7.0
+
+Feature release. It adds arguments to `bam_sample_size()`, new `bam_*`
+functions for the Bayesian assurance method, an exact mode for
+`mc_validate_buderer()` and new validation scripts, and corrects three
+statements in earlier entries of this file (see "Corrections to earlier
+entries" below). With every new argument at its default value, the numeric
+results of the existing functions are identical to 0.6.9 (see
+"Compatibility with 0.6.9").
+
+## New arguments of `bam_sample_size()`
+
+All defaults reproduce 0.6.9.
+
+* `analysis_prior_se`, `analysis_prior_sp`: Beta priors used in the
+  *analysis* (posterior) of each arm, separate from the *design* priors
+  `prior_se` and `prior_sp` that generate the data. `NULL` (the default)
+  means the analysis prior equals the design prior, as in 0.6.9. There is no
+  analysis prior for prevalence. The effective analysis priors are returned
+  (`analysis_prior_se`, `analysis_prior_sp`, `analysis_prior_given`,
+  `analysis_prior_size`) and named in the printed output.
+* `width_type = c("full_width", "lower_half_width")`: the width criterion.
+  `"full_width"` (the default) is the full width of the equal-tailed
+  two-sided `alpha_ci` credible interval, as before. `"lower_half_width"` is
+  a one-sided criterion: the posterior median minus the one-sided `alpha_ci`
+  lower bound. `delta_se` and `delta_sp` are read accordingly. Widths are
+  compared exactly (`width <= delta`). `buderer_n_se` uses the half-width
+  implied by the criterion and, with `"lower_half_width"`, the one-sided
+  critical value `qnorm(alpha_ci)` (with `"full_width"` it keeps the 95%
+  value 1.96 whatever `alpha_ci` is, as in 0.6.9).
+* `assurance_for = c("joint", "se", "sp")`: whether `N_total` targets the
+  joint assurance (the default) or the marginal assurance of one arm. The
+  empty-arm convention is stated in `?bam_sample_size`.
+* `priors`: an object returned by `bam_prior_from_pilot()`. It supplies
+  `prior_se`, `prior_sp`, `prior_prev`, `analysis_prior_se` and
+  `analysis_prior_sp`; passing any of those five arguments as well is an
+  error.
+
+## Checks, warnings and the marginal objective (user-visible details)
+
+* `alpha_ci` is validated in `bam_sample_size()` and `bam_assurance_curve()`:
+  it must be a single number strictly between 0 and 1, and with
+  `width_type = "lower_half_width"` it must be greater than 0.5 (otherwise the
+  one-sided lower bound lies above the posterior median and the width is
+  negative). These are errors for inputs that were invalid or meaningless.
+* The warning that a prior-only interval already meets the target width now
+  refers to the *effective* analysis prior of each arm used by the objective,
+  however it was supplied: explicitly, through `priors`, or equal to the
+  design prior (the message then says so). It adds warnings in cases that
+  were silent before, including some calls with default analysis priors; it
+  changes no number.
+* `assurance_for = "se"` or `"sp"` with `method = "monte_carlo"`: the
+  automatic search grid (`N_range = NULL`) now starts and ends according to
+  the requested arm only (it started at the larger of the two per-arm
+  requirements, so the unused arm could fix `N_total`), and only the values
+  and counts of the requested arm are simulated, so the result no longer
+  depends on the unused arm, not even through the random-number stream. The
+  per-arm search warning "No n in n_range achieved target assurance" is no
+  longer issued for the arm that is not used. The joint objective (the
+  default) is unchanged. With the marginal objective the field
+  `joint_assurance` holds the marginal assurance of the requested arm; the
+  documentation says so and the printed output labels it "marginal Se
+  assurance" or "marginal Sp assurance". The printed output also says "same
+  as design" for an analysis prior whose values equal the design prior,
+  however it was given.
+* `bam_sensitivity()` rejects `N_range` among the arguments passed through
+  `...` (an error), as `bam_sensitivity_local()` already did: every scenario
+  scans all integers from 2 and `A(N - 1)` is evaluated separately.
+* `bam_prior_contour()` checks the distance reached at every point. With a
+  very concentrated prior and a very small `epsilon` the distance is lost to
+  rounding (it can be 0), and a warning now says so (relative tolerance
+  1e-6; `attr(, "imprecise")` flags the points). `bam_sensitivity_local()`
+  leaves those directions, and the directions without a root, out of the
+  minima and maxima, and reports how many in `summary` (`n_dir_no_root`,
+  `n_dir_imprecise`) and in the printed output.
+* The precision check of `bam_prior_contour()` no longer depends on how the
+  rounding happens to fall. Besides recomputing the distance, it estimates
+  the rounding error of the distance at every point
+  (`4 * eps * ((4 + |lbeta(am, bm)|) + (4 + |lbeta(a, b)|) / 2 +
+  (4 + |lbeta(a0, b0)|) / 2)`, relative to the distance; the constant 4 in
+  each term is an absolute floor, because `lbeta()` has an absolute error of a
+  few eps for small arguments even when its value is near 0) and flags the
+  point when that estimate exceeds 1e-6. The estimate is returned in the new
+  attribute `attr(, "precision_bound")` (one value per direction); it is a
+  deterministic function of the prior, `epsilon` and the direction. It is a
+  conservative estimate, not a guarantee: against a reference without
+  cancellation (12 priors, 5 values of `epsilon`, 72 directions) the ratio of
+  the actual error to the bound did not exceed 0.50. The contour points
+  themselves are unchanged. The recomputation alone depended on how the
+  rounding happened to fall: some points of low precision were accepted
+  without a warning.
+* `bam_sensitivity()` and `bam_sensitivity_local()` emit a single warning
+  when the analysis prior of a used arm already meets its target width with no
+  data (the warning of `bam_sample_size()`), instead of one per internal call
+  (the companion calls at `N - 1` and `n_ref` repeated it). The warning names
+  the scenarios affected (`bam_sensitivity()`) or gives the number of contour
+  points affected and whether the base prior is (`bam_sensitivity_local()`),
+  identically with `parallel = TRUE` and `parallel = FALSE`. The example of
+  `?bam_sensitivity` uses narrower targets (smaller deltas) so that it emits
+  none. The warning is emitted before the error of a failing scenario (or
+  contour point), so it is not lost when another one fails.
+* The prior-only warning says that the analysis prior is "equal to the design
+  prior" by comparing the values, not by whether the argument was given.
+* The printed output of `bam_sample_size()` with a marginal objective and the
+  target not reached names the marginal assurance ("marginal Se assurance are
+  NA") and labels `max_assurance_evaluated` as marginal; the joint output is
+  unchanged. The line of discarded directions of `bam_sensitivity_local()`
+  reads "(0 without a root, 1 with insufficient numerical precision)".
+* Documentation of `bam_sample_size()`: `N_range` and `N_total_P75` and
+  `N_total_P90` now describe the automatic Monte Carlo grid correctly (the
+  marginal exception; `N_total_P75` sets no grid), and a new paragraph says
+  that with high targets the automatic Monte Carlo grid can end before the
+  target is reached (also for the joint objective), then `N_total` is `NA`
+  with a warning; pass `N_range` or use `method = "exact"`.
+* The documentation of `bam_prior_from_pilot()` and `bam_sample_size()` states
+  that `design` is the sampling design of the *pilot* and that the main study
+  of `bam_sample_size()` is always a cohort, so a case-control pilot with a
+  cohort main study is a valid combination.
+
+## New functions
+
+* `bam_prior_from_pilot()` updates Beta priors for Se, Sp and (in a cohort
+  design) prevalence with the counts of a previous stage, using a power
+  prior with a fixed weight `a0` (section 4.1 of Wilson et al. 2022; `a0 = 1`
+  gives the Beta-Binomial update). It returns a `"dta_bam_priors"` object
+  holding design and analysis priors, to be passed as `priors`.
+* `bam_prior_data_conflict()` computes exact tail probabilities of the
+  Beta-Binomial prior predictive distribution of observed 2x2 counts (number
+  of diseased, true positives among the diseased, true negatives among the
+  non-diseased). No simulation is used.
+* `bam_sensitivity()` runs `bam_sample_size(method = "exact")` over a list
+  or data frame of scenarios and returns one row per scenario with
+  `N_total`, the assurance `A_N` at that N and the assurance `A_N_minus_1`
+  one subject earlier.
+* `bam_prior_contour()` returns the points of the contour of Beta priors at
+  a given distance from an initial prior, and `bam_sensitivity_local()` uses
+  it for the local prior sensitivity analysis of Wilson et al. (2022,
+  section 4.2) with the exact method.
+* `bam_assurance_curve()` computes the exact assurance A(N) over a range of
+  total sample sizes, with the same conventions and arguments as
+  `bam_sample_size(method = "exact")`. It returns a `"dta_bam_curve"` object.
+  `plot_assurance_curve()` accepts it (validated, exact). It still accepts
+  the output of `ss_unified(full_grid = TRUE)`, which remains experimental,
+  and it does not accept the output of `bam_sample_size()`.
+* `sensitivity_analysis()` is unchanged but its documentation now states
+  that it operates on the experimental `ss_unified()`; for the validated
+  method use `bam_sensitivity()`.
+
+## `mc_validate_buderer(method = "exact")`
+
+New argument `method = c("monte_carlo", "exact")`. The default,
+`"monte_carlo"`, is identical to 0.6.9. `"exact"` enumerates the binomial
+distribution of the number of true positives, so `P_width_target` (the
+probability that the interval is no wider than `2 * d`) and `coverage` carry
+no Monte Carlo error; `B` and `seed` are ignored. For `Se = 0.85`,
+`d = 0.07` (Buderer n = 100), the exact `P_width_target` is 0.5683 for both
+the Wald and the Wilson interval, and the exact coverage is 0.9330 (Wald)
+and 0.9332 (Wilson). The Monte Carlo value 0.573 reported with `B = 4000`
+in earlier validation material is an estimate of the 0.5683. The width
+probability and the coverage are different quantities and are not to be
+compared with each other.
+
+## Compatibility with 0.6.9
+
+With the new arguments at their defaults, the results of `bam_sample_size()`
+(both methods) and `mc_validate_buderer()` are identical to those of 0.6.9.
+This was checked field by field, excluding `call`, in separate R processes
+with `validation/compat_v069_check.R` (a battery of 17 `bam_sample_size()`
+calls, including three in Monte Carlo mode, and six calls of
+`mc_validate_buderer()` in Monte Carlo mode); fields that exist only in
+0.7.0 (such as `method_type`) are not compared. The only differences with
+default arguments are additional warnings (see above), which do not change any
+number. `bam_sample_size()` results gain the fields listed above and
+the printed header now names the width criterion, the assurance objective and
+the analysis priors.
+
+## Validation scripts
+
+* New in `validation/`: `compat_v069_check.R` (the identity check above),
+  `width_attainment_exact.R` (exact probability that the confidence-interval
+  width reaches its target under four sizing rules; it replaces the Monte
+  Carlo sweep), `mc_validate_buderer_exact_vs_reference.R` (compares
+  `mc_validate_buderer(method = "exact")` with that script's curve),
+  `negative_control_halfwidth.R` (which misreading of the target width
+  reproduces the assurance of about 0.0032 at N = 678), `edge_case_empty_arm.R`
+  (the empty-arm convention of the exact joint assurance) and
+  `comparator_calls.R` (calls to external comparator packages).
+* Also new in `validation/`: `minimal_session.R` (the minimal session printed
+  in the article), `compare_wilson2022.R` and `compare_williamson2023.R`
+  (comparisons with the worked examples and the web application of the
+  Bayesian-assurance articles), `exact_vs_mc_resolution.R` (exact evaluation
+  against the Monte Carlo search), `bridge_frequentist_bayesian.R` (a bridge
+  between the frequentist joint-width sample size and the Bayesian assurance),
+  `success_set_shortcut.R` (the success-set rule as programmed by Wilson et
+  al. against full enumeration), `applied_example.R` and
+  `applied_example_snippet.R` (the applied example and its short batch
+  fragment), `operating_characteristics.R` and `misspecified_priors.R` (exact
+  operating characteristics at fixed true values, with misspecified priors
+  and the prior-data conflict check), `oc_montecarlo_crosscheck.R` (a Monte
+  Carlo cross-check of the previous two), `fixed_prevalence_control.R` (sample
+  size with the prevalence fixed at 0.20), `make_manuscript_tables_R1.R` and
+  `make_figure3_applied.R` (tables and Figure 3 of the revised article),
+  and in `validation/python/`: `sep_priors_check.py` and
+  `ref_bam_sep_priors.py` (the Python reference with separate design and
+  analysis priors), `wilson2022_rule_enumeration.py` (witness cases of the
+  success-set rule) and `compare_confirmatory_baselines.R` (the confirmatory
+  results against the earlier runs).
+* `validation/rng_invariance.R` and `validation/exact_invariance.R` now
+  require dtasamplesize 0.7.0 or later. The default `Rscript` path in
+  `validation/python/run_all.sh` and `run_all.ps1` is R 4.6.2.
+* `validation/README.md` and `validation/python/README.md` no longer call
+  the Python checks independent, and the latter no longer cites the line
+  "ALL CONFIRMATORY RESULTS UNCHANGED ACROSS THE REBUILD" as evidence (see
+  below).
+
+## Tests
+
+* Tests that pin exact Monte Carlo figures (for example 0.8041, 0.573 and
+  240) now skip those pinned values only on development builds of R
+  (`R.version$status` not empty), through the helper `rng_pins_apply()` in
+  `tests/testthat/helper-rng_pins.R`. Before, the exact values were checked
+  only when `getRversion() < "4.6.0"`, so on every R >= 4.6.0, including the
+  4.6.2 release, only the tolerance checks ran.
+* New and extended test files cover the analysis priors, the width criterion
+  and marginal objective, `bam_prior_from_pilot()`,
+  `bam_prior_data_conflict()`, `bam_sensitivity()` and its companions,
+  `bam_assurance_curve()` and the exact mode of `mc_validate_buderer()`.
+
+## Documentation
+
+* `DESCRIPTION`, `README.md` and the vignette `introduction` are updated, and
+  a new vignette, `planning_workflow`, gives the complete workflow from pilot
+  data. The vignette `introduction` now
+  uses `bam_sample_size(method = "exact")` and shows `N_total` and
+  `joint_assurance`, uses `bam_sensitivity()` for the sensitivity analysis
+  and labels `sensitivity_analysis()` as experimental, and gives the exact
+  0.5683 in place of "about 57%".
+* Documentation (revision of the release, no change in behaviour):
+  the help of `bam_prior_data_conflict()` states that `design`, if not given,
+  is taken from the `priors` object (the design of the pilot), so that the
+  data of a study planned with `bam_sample_size()` (a cohort) need
+  `design = "cohort"`; the help of `bam_sample_size()` attributes the 683 of
+  the Monte Carlo mode mainly to its acceptance rule (lower one-sided 95%
+  bound of the estimate) and states that with a marginal objective the
+  assurance at N = 1 can be positive and is not evaluated; the message and
+  the help of `bam_assurance_curve()` no longer say that N = 1 always has
+  assurance 0 (that holds for the joint objective); `DESCRIPTION` and
+  `README.md` describe `joint_sample_size()` as a Monte Carlo search for Se
+  and Sp with a deterministic AUC gate; and `README.md` and the vignette
+  declare the validated scope as `DESCRIPTION` does.
+* The package title is now 'Exact Bayesian Assurance Sample Sizes for
+  Diagnostic Accuracy'; the central method is an exact finite sum, not a
+  simulation.
+
+## Corrections to earlier entries
+
+* **The Python checks are not independent.** Entries 0.6.4 ("an independent
+  Python reference implementation ... independently written
+  implementation") and 0.6.8 ("not been independently validated against an
+  external reference implementation") use the word "independent" in a way
+  that overstates what the Python checks are. `ref_bam.py` and the
+  confirmatory scripts in `validation/python/` were written by an LLM-based
+  coding assistant under the authors' supervision, working only from the help
+  page of `bam_sample_size()` and `NAMESPACE`, without reading `R/`
+  (`validation/python/README.md`, "Provenance"). They are a separate,
+  same-team re-implementation, and both implementations were built with LLM
+  assistance from the same model family. Agreement with them can reveal
+  implementation errors; it cannot exclude a misreading of the specification
+  shared by both, and it is not agreement with external software. The
+  numerical-integration check in `validation/cross_validation.R` is likewise
+  a check by the same team.
+* **The RNG-stream change was observed on R-devel only.** Entry 0.6.7 states
+  that "R-devel/R >= 4.6.0" changed the RNG stream consumed by some sampling
+  primitives, and the tests were guarded with `getRversion() < "4.6.0"`. The
+  change was observed on R-devel (R 4.6.0 r90605, 2026-09-30). It is not
+  reproduced on R 4.6.2, the only 4.6 release tested, which reproduces
+  0.573, 0.9380 and 0.8041. The change should not be attributed to R 4.6.x
+  as a series. The version guard of the tests was narrowed accordingly (see
+  "Tests").
+* **"ALL CONFIRMATORY RESULTS UNCHANGED ACROSS THE REBUILD: TRUE".** In the
+  `validation/python/` pipeline, `conf_R_07_reverify_version.R` compares the
+  output regenerated by `conf_R_01_package.R` with `conf_package.json`,
+  which the same pipeline has just rewritten with the same package build. The
+  line therefore compares a regenerated output with itself. What the
+  validation material does establish is that three package builds (0.6.2,
+  0.6.3 and 0.6.9) give identical `N_total` and assurance in scenarios
+  C01-C11 of the locked grid; see `validation/python/README.md`.
+* **Internal working files.** Earlier entries cite internal working files that are
+  not distributed with the package.
+
 # dtasamplesize 0.6.9
 
 Maintenance release. No change to computational code, the public API, or
@@ -21,6 +311,8 @@ software article -- which covers `bam_sample_size(method = "exact")` and
 `joint_sample_size()`, plus the helpers `mc_validate_buderer()`,
 `buderer_n()`, `wilson_ci()` and `wald_ci()` -- and have not been
 independently validated against an external reference implementation.
+*(Note added in 0.7.0: the Python checks of the validated scope are also
+not external; see "Corrections to earlier entries" in the 0.7.0 entry.)*
 Each of the five now carries an explicit "Experimental: outside the
 validated scope..." label at the top of its `@details`/documentation
 (`R/ss_unified.R`, `R/ss_net_benefit.R`, `R/ss_imperfect_ref.R`,
@@ -118,7 +410,10 @@ tests (`bam_sample_size(method = "exact")`'s finite sum,
 `joint_sample_size()`'s grid/AUC-gate structure, `nb_assurance_ceiling()`'s
 closed-form quadrature) are unaffected and were left untouched -- they do
 not depend on R's RNG at all. No published figure changes on the R series
-it was computed on.
+it was computed on. *(Note added in 0.7.0: the
+attribution of the change to "R-devel/R >= 4.6.0" is not supported; it was
+observed on R-devel only and does not reproduce on R 4.6.2. See "Corrections
+to earlier entries" in the 0.7.0 entry.)*
 
 **Non-crossing contract extended to `ss_time_dependent_roc()`.** Applies
 the same non-crossing rule introduced for `bam_sample_size()`/
@@ -450,7 +745,9 @@ changes: every quantity reported in the manuscript and reproduced by
 * New `validation/python/` directory: an independent Python reference
   implementation, a locked confirmatory grid, and recorded hashes and logs
   used to cross-check the R package's results against a second,
-  independently written implementation.
+  independently written implementation. *(Note added in 0.7.0: these
+  checks are same-team, LLM-assisted and not independent; see "Corrections
+  to earlier entries" in the 0.7.0 entry.)*
 
 ## Compatibility
 

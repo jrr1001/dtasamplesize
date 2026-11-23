@@ -79,7 +79,7 @@
 #' new default, \eqn{n = 448} nodes per dimension, about 4 orders of
 #' magnitude less computation than the old default), this reproduces
 #' 0.879606 to all six published decimals for \code{pt_range = c(0.15,
-#' 0.40)}, and reproduces five further independently-verified ceilings
+#' 0.40)}, and reproduces five further separately verified ceilings
 #' (0.969, 0.956, 0.695, 0.753 and a structural 0 for \code{pt_range}
 #' \code{c(0.20, 0.30)}, \code{c(0.15, 0.25)}, \code{c(0.10, 0.40)},
 #' \code{c(0.10, 0.30)} and \code{c(0.05, 0.50)} respectively) to three

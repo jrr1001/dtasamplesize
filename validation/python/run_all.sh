@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Run the full development + confirmatory validation pipeline for the
-# independent Python reference implementation of dtasamplesize::bam_sample_size
+# separate Python reference implementation of dtasamplesize::bam_sample_size
 # (method = "exact") against the installed R package.
 #
 # Always cd's into its own directory first, so it can be invoked from anywhere.
@@ -16,11 +16,11 @@ set -u
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 unset LC_ALL LC_CTYPE LANG
-RSCRIPT="${RSCRIPT:-/c/Program Files/R/R-4.5.2/bin/Rscript.exe}"
+RSCRIPT="${RSCRIPT:-/c/Program Files/R/R-4.6.2/bin/Rscript.exe}"
 PYTHON="${PYTHON:-python}"
-# Use a privately installed dtasamplesize (0.6.9) rather than the system
+# Use a privately installed dtasamplesize (0.7.0 or later) rather than the system
 # library when R_LIBS_PRIVATE is set by the caller, e.g.:
-#   R_LIBS_PRIVATE="/d/.../audit_outputs/surgical_2026-10-05/lib" ./run_all.sh
+#   R_LIBS_PRIVATE="/path/to/private/lib" ./run_all.sh
 if [ -n "${R_LIBS_PRIVATE:-}" ]; then
   export R_LIBS="${R_LIBS_PRIVATE}"
 fi
@@ -65,6 +65,9 @@ run_step PY conf_PY_06_monotone_in_N.py
 run_step R  conf_R_07_reverify_version.R # reads conf_package.json
 run_step PY conf_PY_08_degeneracy_bite.py # reads conf_package.json
 run_step PY conf_PY_09_published_mc.py
+
+# -- comparison of the regenerated conf_package.json with the two earlier files kept in the history --
+run_step R  compare_confirmatory_baselines.R
 
 echo
 echo "=== ALL SCRIPTS COMPLETED SUCCESSFULLY ==="

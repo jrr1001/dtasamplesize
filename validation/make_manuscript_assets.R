@@ -3,39 +3,48 @@
 # This script regenerates every figure and every data-derived table used in
 # the accompanying article, from the installed package and nothing else: no
 # number here is copied by hand from a previous run. Figures are written as
-# a vector PDF (BMC's preferred format for line art) and a 600 dpi TIFF, to
-# submission-BMC-MRM/figures/. Tables are written as CSV to
-# R-package/manuscript_assets/. Re-running this script regenerates all of it
-# byte-for-byte, because every quantity is either a closed-form calculation
-# or a Monte Carlo simulation under a fixed seed.
+# a vector PDF (BMC's preferred format for line art) and a 600 dpi TIFF;
+# tables are written as CSV. EVERYTHING is written to ONE output directory:
+# the first command-line argument or, if none is given, validation/output/
+# inside the package tree (created if it does not exist). The script never
+# derives a path from folders above the package, so it cannot write into
+# the manuscript folders. Re-running it regenerates all of it, because
+# every quantity is either a closed-form / exact calculation or a Monte
+# Carlo simulation under a fixed seed.
 #
-# SCOPE (article now reduced to two figures and four tables). The article
-# describes only bam_sample_size(), mc_validate_buderer() and
-# joint_sample_size(); ss_unified(), the AUC gate inside it, ss_net_benefit(),
-# ss_imperfect_ref(), ss_adaptive_prevalence() and ss_time_dependent_roc()
-# remain in the package but are no longer described in this article, and this
-# script no longer builds figures or tables for them. This script writes
-# Figure 1 (unchanged), Figure 2 (the joint-assurance-vs-N curve, new in this
-# revision), Table 1 (the three estimators described in the article), Table 3
-# (the feature matrix, read from table3_feature_matrix_source.csv) and
-# Table 4 (the three surviving methods compared under common assumptions).
-# Table 2 (cross-validation of core formulas) is written separately by
-# cross_validation.R, not by this script -- see validation/README.md.
+# SCOPE. The article describes bam_sample_size(),
+# bam_assurance_curve(), mc_validate_buderer() and joint_sample_size();
+# ss_unified(), the AUC gate inside it, ss_net_benefit(), ss_imperfect_ref(),
+# ss_adaptive_prevalence() and ss_time_dependent_roc() remain in the package
+# but are not described in the article, and this script builds nothing for
+# them. It writes:
+#   Figure 1 (R1): EXACT curve of P(full CI width <= 0.14) against the
+#     number of diseased participants n (Se = 0.85, d = 0.07, n = 40..200),
+#     Wald (truncated) and Wilson, from mc_validate_buderer(method =
+#     "exact") evaluated n by n. It replaces the earlier Monte Carlo figure.
+#   Figure 2 (R1): EXACT joint assurance A(N) of the worked example, from
+#     bam_assurance_curve().
+#   Table 1 (the estimators described in the article), the feature
+#   matrix of v0.6.9 (Table 4 of v0.6.9, read from table3_feature_matrix_source.csv; the R1 matrix is Table S3.3e of Additional file 3, built by make_manuscript_tables_R1.R) and the comparison of the three
+#   methods under common assumptions (table4_method_comparison.csv; Table 2 of v0.6.9 and of the R1, the R1 version being built by make_manuscript_tables_R1.R).
+# The cross-validation table (Table 3 of v0.6.9; Table S2.5 of Additional file 2 in the R1) is written separately by
+# cross_validation.R -- see validation/README.md.
 #
-# Run after installing the package, e.g. from the package root:
-#   Rscript validation/make_manuscript_assets.R
-# (the script locates the repository layout from its own path, so it does
-# not depend on the current working directory).
+# ANCHOR CHECKS. Both figures are guarded by anchor checks (values quoted
+# by the article). If any fails, the script stops before drawing: it never
+# adjusts an anchor.
+#
+# Usage, from the package root (installed package, any working directory):
+#   Rscript validation/make_manuscript_assets.R [output_dir]
+# Default output_dir: validation/output/ (inside the package tree).
 
 suppressMessages(library(dtasamplesize))
 options(width = 120, dtasamplesize.warn_small_B = FALSE)
 
 ## ---------------------------------------------------------------------
-## Locate the repository layout from this script's own path, so the
-## script works regardless of the caller's working directory. Falls back
-## to a couple of common invocation patterns (running from the package
-## root, or from inside validation/) if --file= is not available (e.g.
-## when the script is sourced interactively).
+## Locate the package tree from this script's own path (Rscript --file=),
+## or from the working directory when sourced. The output directory is the
+## first command-line argument; the default lives INSIDE the package tree.
 ## ---------------------------------------------------------------------
 locate_script_dir <- function() {
   args <- commandArgs(trailingOnly = FALSE)
@@ -47,25 +56,39 @@ locate_script_dir <- function() {
   if (dir.exists("validation")) return(normalizePath(file.path(getwd(), "validation")))
   stop(
     "Cannot determine the location of make_manuscript_assets.R. Run it via\n",
-    "  Rscript validation/make_manuscript_assets.R\n",
+    "  Rscript validation/make_manuscript_assets.R [output_dir]\n",
     "from the dtasamplesize package root, or from inside validation/.",
     call. = FALSE
   )
 }
 
-script_dir      <- locate_script_dir()                 # .../dtasamplesize/validation
-pkg_root        <- dirname(script_dir)                 # .../dtasamplesize
-r_package_root  <- dirname(pkg_root)                    # .../R-package
-repo_root       <- dirname(r_package_root)               # repository root
+script_dir <- locate_script_dir()                  # .../dtasamplesize/validation
+pkg_root   <- dirname(script_dir)                  # .../dtasamplesize
+cli_args   <- commandArgs(trailingOnly = TRUE)
+out_dir    <- if (length(cli_args) >= 1 && nzchar(cli_args[1])) cli_args[1] else
+  file.path(script_dir, "output")
+dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+out_dir    <- normalizePath(out_dir, winslash = "/")
+figures_dir <- out_dir   # figures and tables share the one output directory
+assets_dir  <- out_dir
 
-figures_dir <- file.path(repo_root, "submission-BMC-MRM", "figures")
-assets_dir  <- file.path(r_package_root, "manuscript_assets")
-dir.create(figures_dir, showWarnings = FALSE, recursive = TRUE)
-dir.create(assets_dir, showWarnings = FALSE, recursive = TRUE)
+cat("R version:          ", R.version.string, "\n")
+cat("dtasamplesize:      ", as.character(utils::packageVersion("dtasamplesize")), "\n")
+cat("Output directory:   ", out_dir, "\n\n")
 
-cat("Package version:", as.character(utils::packageVersion("dtasamplesize")), "\n")
-cat("Figures ->", figures_dir, "\n")
-cat("Tables   ->", assets_dir, "\n\n")
+## Anchor bookkeeping: an anchor that fails stops the script at once; the
+## passed anchors are listed in the summary line printed at the end.
+anchor_log <- character(0)
+check_anchor <- function(name, pass, detail) {
+  cat(sprintf("ANCHOR %-34s %s  (%s)\n", name,
+              if (isTRUE(pass)) "PASS" else "FAIL", detail))
+  if (!isTRUE(pass)) {
+    stop("Anchor check failed: ", name, " (", detail, "). Refusing to ",
+         "continue: the anchor is not adjusted.", call. = FALSE)
+  }
+  anchor_log[[length(anchor_log) + 1L]] <<- paste0(name, "=PASS")
+  invisible(TRUE)
+}
 
 ## ---------------------------------------------------------------------
 ## Figure geometry (H-08): 170 mm output width, keeping the 7:5 (w:h)
@@ -148,7 +171,7 @@ run_checked <- function(label, expr) {
 ## a moderately informative Se prior, a prevalence prior centred at 0.20,
 ## and the half-width precision targets Se +/- 0.07 and Sp +/- 0.05 at 80%
 ## assurance. PRIOR_SP is the HARMONIZED, informative specificity prior
-## (Beta(18, 2), mean 0.90) used only in Table 4, where it is compared
+## (Beta(18, 2), mean 0.90) used only in the comparison of methods (table4_method_comparison.csv), where it is compared
 ## against the classical and Monte Carlo methods under matched point
 ## assumptions (Se = 0.85, Sp = 0.90, prevalence = 0.20); it is NOT the
 ## package's own default Sp prior. Figure 2 instead uses the package's
@@ -157,10 +180,10 @@ run_checked <- function(label, expr) {
 ## under the vague default vs. N = 672 under the harmonized informative
 ## prior).
 PRIOR_SE   <- c(17, 3)
-PRIOR_SP   <- c(18, 2)                 # harmonized (informative), Table 4 only
+PRIOR_SP   <- c(18, 2)                 # harmonized (informative), method comparison only
 PRIOR_PREV <- c(4, 16)                 # Beta(4, 16): mean 0.20
 DELTA_SE   <- 0.07                     # half-width, as used by the classical
-DELTA_SP   <- 0.05                     # and Monte Carlo methods in Table 4
+DELTA_SP   <- 0.05                     # and Monte Carlo methods in the method comparison
 TARGET_ASSURANCE <- 0.80
 B_MAIN     <- 20000
 SEED       <- 2026
@@ -170,131 +193,122 @@ E_SP   <- PRIOR_SP[1]   / sum(PRIOR_SP)     # 0.90 (harmonized prior mean)
 E_PREV <- PRIOR_PREV[1] / sum(PRIOR_PREV)   # 0.20
 
 ## ===========================================================================
-## FIGURE 1 -- Assurance of the classical Buderer sample size
+## FIGURE 1 -- EXACT assurance of the classical Buderer sample size
 ## ===========================================================================
-## Unchanged from the previous release: the probability that the realised
-## 95% CI width for Se is within the target, as a function of the number
-## of diseased subjects, showing that the Buderer n itself clears the
-## target width in only a slim majority of studies.
-ns <- seq(40, 320, by = 10)
-assur_fig1 <- sapply(ns, function(n) {
-  mc_validate_buderer(Se = 0.85, d = 0.07, n_diseased = n, B = 4000,
-                      ci_method = "wald", seed = SEED)$results$P_width_target[1]
-})
-n_bud_fig1 <- buderer_n(0.85, 0.07)
-n_80_fig1  <- ns[which(assur_fig1 >= 0.80)[1]]
+## R1 version (replaces the Monte Carlo figure): P(full CI width <= 2 d =
+## 0.14) for the sensitivity interval as a function of the number of
+## diseased participants n, for Se = 0.85 and d = 0.07, n = 40..200, computed
+## EXACTLY (binomial enumeration, no simulation) with
+## mc_validate_buderer(method = "exact") evaluated for each n. Two interval
+## types: Wald truncated to [0, 1] and Wilson score; both two-sided 95%.
+## The curve is NOT monotone (sawtooth, from the discreteness of x/n): it
+## is plotted as computed, without smoothing.
+FIG1_SE <- 0.85; FIG1_D <- 0.07
+ns_fig1 <- 40:200
+exact_p <- function(n) {
+  r <- mc_validate_buderer(Se = FIG1_SE, d = FIG1_D, n_diseased = n,
+                           ci_method = "both", method = "exact")$results
+  stats::setNames(r$P_width_target, r$ci_method)[c("wald", "wilson")]
+}
+P1 <- t(vapply(ns_fig1, exact_p, numeric(2)))
+colnames(P1) <- c("wald", "wilson")
+p_wald_fig1   <- P1[, "wald"]
+p_wilson_fig1 <- P1[, "wilson"]
+n_bud_fig1 <- buderer_n(FIG1_SE, FIG1_D)
 
+first_ge <- function(p, thr = 0.80) ns_fig1[which(p >= thr)[1]]
+# smallest n such that P(n') >= thr for every n' from n up to 200
+stay_ge <- function(p, thr = 0.80) {
+  below <- which(p < thr)
+  if (!length(below)) ns_fig1[1] else ns_fig1[max(below) + 1L]
+}
+first_wald   <- first_ge(p_wald_fig1);   first_wilson <- first_ge(p_wilson_fig1)
+stay_wald    <- stay_ge(p_wald_fig1);    stay_wilson  <- stay_ge(p_wilson_fig1)
+p100_wald    <- p_wald_fig1[ns_fig1 == 100]
+p100_wilson  <- p_wilson_fig1[ns_fig1 == 100]
+
+check_anchor("F1 Buderer n = 100", n_bud_fig1 == 100,
+             sprintf("buderer_n = %d", n_bud_fig1))
+check_anchor("F1 P(100), Wald = 0.5683", isTRUE(round(p100_wald, 4) == 0.5683),
+             sprintf("%.10f", p100_wald))
+check_anchor("F1 P(100), Wilson = 0.5683", isTRUE(round(p100_wilson, 4) == 0.5683),
+             sprintf("%.10f", p100_wilson))
+check_anchor("F1 first n P>=0.80, Wald = 114", isTRUE(first_wald == 114L),
+             sprintf("first n = %s", first_wald))
+check_anchor("F1 first n P>=0.80, Wilson = 114", isTRUE(first_wilson == 114L),
+             sprintf("first n = %s", first_wilson))
+check_anchor("F1 stays >=0.80 to 200, Wald = 117", isTRUE(stay_wald == 117L),
+             sprintf("n = %s", stay_wald))
+check_anchor("F1 stays >=0.80 to 200, Wilson = 114", isTRUE(stay_wilson == 114L),
+             sprintf("n = %s", stay_wilson))
+
+fig1_data <- data.frame(n_diseased = ns_fig1, P_wald = p_wald_fig1,
+                        P_wilson = p_wilson_fig1)
+write.csv(fig1_data, file.path(out_dir, "figure1_exact_curve.csv"),
+          row.names = FALSE)
+
+COL_WALD <- "#1f4e79"; COL_WILSON <- "#d9822b"
 draw_fig1 <- function() {
   par(mar = c(4.3, 4.6, 1.2, 1))
-  plot(ns, assur_fig1, type = "l", lwd = 2, col = "#1f4e79",
-       xlab = "Number of diseased subjects (n)",
-       ylab = "P(CI width <= target)", ylim = c(0, 1), las = 1)
+  plot(ns_fig1, p_wald_fig1, type = "l", lwd = 2, col = COL_WALD,
+       xlab = "Number of diseased participants (n)",
+       ylab = "P(full CI width \u2264 0.14)", ylim = c(0, 1), las = 1)
+  lines(ns_fig1, p_wilson_fig1, lwd = 2, col = COL_WILSON, lty = 5)
   abline(h = 0.80, lty = 3, col = "grey40")
   abline(v = n_bud_fig1, lty = 2, col = "#c00000")
-  points(n_bud_fig1, assur_fig1[ns == n_bud_fig1], pch = 19, col = "#c00000")
-  text(n_bud_fig1 - 4, 0.36,
-       sprintf("Buderer n=%d\nassurance=%.2f", n_bud_fig1, assur_fig1[ns == n_bud_fig1]),
-       col = "#c00000", cex = 0.78, pos = 2)
-  if (!is.na(n_80_fig1)) {
-    abline(v = n_80_fig1, lty = 2, col = "#2e7d32")
-    text(n_80_fig1 + 6, 0.72, sprintf("n=%d for\n0.80 assurance", n_80_fig1),
-         col = "#2e7d32", cex = 0.78, pos = 4)
-  }
+  points(n_bud_fig1, p100_wald, pch = 19, col = "#c00000")
+  text(n_bud_fig1 + 3, 0.25,
+       sprintf("Buderer n=%d\nP=%.4f", n_bud_fig1, p100_wald),
+       col = "#c00000", cex = 0.78, pos = 4)
   legend("bottomright", bty = "n", cex = 0.8,
-         legend = c("Assurance curve", "0.80 target", "Buderer n", "n for 0.80"),
-         col = c("#1f4e79", "grey40", "#c00000", "#2e7d32"),
-         lty = c(1, 3, 2, 2), lwd = c(2, 1, 1, 1))
+         legend = c("Wald (truncated), exact", "Wilson, exact",
+                    "0.80 target", "Buderer n"),
+         col = c(COL_WALD, COL_WILSON, "grey40", "#c00000"),
+         lty = c(1, 5, 3, 2), lwd = c(2, 2, 1, 1))
 }
 emit("Figure_1", draw_fig1, FIG_WIDTH_IN, FIG_HEIGHT_IN)
-cat(sprintf("Figure 1: Buderer n=%d -> assurance %.4f; n for 0.80 assurance = %s\n",
-            n_bud_fig1, assur_fig1[ns == n_bud_fig1], n_80_fig1))
+cat(sprintf(paste0("Figure 1: Buderer n=%d -> P=%.4f (Wald), %.4f (Wilson); ",
+                   "first n with P>=0.80: %d (Wald), %d (Wilson); smallest n ",
+                   "with P>=0.80 up to 200: %d (Wald), %d (Wilson)\n"),
+            n_bud_fig1, p100_wald, p100_wilson, first_wald, first_wilson,
+            stay_wald, stay_wilson))
 
 ## ===========================================================================
-## FIGURE 2 -- Joint assurance for sensitivity and specificity as a
-##             function of total sample size N (exact Beta-Binomial)
+## FIGURE 2 -- EXACT joint assurance A(N) of the worked example
 ## ===========================================================================
-## NEW in this revision. REPLACES the previous release's imperfect-reference
-## multiplier heat map (Figure 2), the net-benefit-by-threshold plot
-## (Figure 3) and the nested-sequence bar chart (Figure 4) -- none of ss_
-## unified(), ss_net_benefit(), ss_imperfect_ref() and the AUC gate is
-## described by the article any more (see the SCOPE note at the top of this
-## file). This is the single figure the article's Results and Figure 2
-## legend refer to: bam_sample_size(method = "exact")'s joint assurance for
-## Se and Sp, as a function of the total sample size N, under the article's
-## worked-example priors -- Se ~ Beta(17, 3) and Sp ~ Beta(2, 2) (vague; the
-## package defaults; see PRIOR_SP_VAGUE below, deliberately NOT the
-## harmonized informative Sp prior used in Table 4), with prevalence ~
-## Beta(4, 16) (NOT the package default prior_prev, which is c(6, 14)) --
-## and full-width targets delta_se = 0.14, delta_sp = 0.10 (2x the half-widths used
-## elsewhere in this script for the classical/Monte Carlo comparators),
-## crossing the 0.80 target at N = 678 (article Results: "the required
-## total sample size is N = 678, at which the joint assurance is
-## 0.8003489948 ... at N = 677 the assurance is 0.7996848824").
-##
-## The curve is built by calling the SAME internal exact-calculation
-## helpers that bam_sample_size(method = "exact") itself calls
-## (.bam_exact_width_prob() / .bam_exact_joint_assurance(); see
-## ?bam_sample_size, @details, for the closed-form Beta-Binomial derivation
-## these implement) rather than calling the exported bam_sample_size()
-## once per candidate N: that search function stops at the FIRST N whose
-## assurance reaches target_assurance, so it cannot supply the points
-## beyond the crossing needed to draw a curve. Calling the internal helpers
-## directly evaluates the identical formula at every N, with no early stop,
-## and builds the O(N^2) per-arm qbeta cache once for the whole curve
-## rather than once per point -- the same caching bam_sample_size() itself
-## relies on to stay fast.
-PRIOR_SP_VAGUE <- c(2, 2)   # bam_sample_size()'s own default prior_sp
-ALPHA_CI_FIG2  <- 0.95      # bam_sample_size()'s own default alpha_ci
-
-N_grid_fig2 <- seq(350, 850, by = 1)
-N_max_fig2  <- max(N_grid_fig2)
-ci_lower_q_fig2 <- (1 - ALPHA_CI_FIG2) / 2
-ci_upper_q_fig2 <- 1 - ci_lower_q_fig2
-
-P_se_fig2 <- dtasamplesize:::.bam_exact_width_prob(
-  N_max_fig2, PRIOR_SE[1], PRIOR_SE[2], 2 * DELTA_SE,
-  ci_lower_q_fig2, ci_upper_q_fig2)
-P_sp_fig2 <- dtasamplesize:::.bam_exact_width_prob(
-  N_max_fig2, PRIOR_SP_VAGUE[1], PRIOR_SP_VAGUE[2], 2 * DELTA_SP,
-  ci_lower_q_fig2, ci_upper_q_fig2)
-## Degenerate-arm convention (n_d = 0 or n_nd = 0 always counts as a
-## failure): the same convention bam_sample_size() enforces internally,
-## both under method = "exact" and method = "monte_carlo" -- see
-## ?bam_sample_size, @details.
-P_se_fig2[1] <- 0
-P_sp_fig2[1] <- 0
-
-assur_fig2 <- vapply(N_grid_fig2, function(N) {
-  dtasamplesize:::.bam_exact_joint_assurance(
-    N, PRIOR_PREV[1], PRIOR_PREV[2], P_se_fig2, P_sp_fig2)
-}, numeric(1))
-
-n_cross_fig2 <- N_grid_fig2[which(assur_fig2 >= TARGET_ASSURANCE)[1]]
+## Se ~ Beta(17, 3), Sp ~ Beta(2, 2) (the package's own vague default, NOT
+## the harmonized Beta(18, 2) of the method comparison), prevalence ~ Beta(4, 16) (NOT the
+## package default c(6, 14), so it is passed explicitly), total CI widths
+## 0.14 (Se) and 0.10 (Sp), level 0.95, target assurance 0.80. The curve is
+## computed with bam_assurance_curve(), the exported function that gives
+## A(N) at every N with the same calculation as bam_sample_size(method =
+## "exact") and no early stop.
+PRIOR_SP_VAGUE <- c(2, 2)   # bam_sample_size() default prior_sp
+curve_fig2 <- bam_assurance_curve(
+  prior_se = PRIOR_SE, prior_sp = PRIOR_SP_VAGUE, prior_prev = PRIOR_PREV,
+  delta_se = 2 * DELTA_SE, delta_sp = 2 * DELTA_SP,
+  target_assurance = TARGET_ASSURANCE, N_range = 300:900)
+N_grid_fig2   <- curve_fig2$curve$N
+assur_fig2    <- curve_fig2$curve$assurance
+n_cross_fig2  <- curve_fig2$N_first
 assur_at_cross_fig2 <- assur_fig2[N_grid_fig2 == n_cross_fig2]
 assur_at_prev_fig2  <- assur_fig2[N_grid_fig2 == (n_cross_fig2 - 1L)]
 
-## Anchor check, same pattern as the rest of this script (see Figure 1's
-## companion check in reproduce_manuscript.R): refuse to draw the figure if
-## the published crossing does not reproduce, rather than silently plotting
-## a curve nobody checked. The comparison values carry full precision
-## because they are computed exactly, with no Monte Carlo error to round
-## away.
-if (!isTRUE(all.equal(n_cross_fig2, 678L)) ||
-    !isTRUE(all.equal(assur_at_cross_fig2, 0.8003489948, tolerance = 1e-8)) ||
-    !isTRUE(all.equal(assur_at_prev_fig2, 0.7996848824, tolerance = 1e-8))) {
-  stop(sprintf(
-    paste("Figure 2 anchor check failed: crossing at N = %s (assurance",
-          "%.10f), N-1 assurance %.10f; expected crossing at N = 678,",
-          "assurance 0.8003489948 at N = 678 and 0.7996848824 at N = 677.",
-          "Refusing to draw a figure whose verified crossing does not",
-          "reproduce."),
-    n_cross_fig2, assur_at_cross_fig2, assur_at_prev_fig2
-  ), call. = FALSE)
-}
+check_anchor("F2 N_first = 678", isTRUE(n_cross_fig2 == 678L),
+             sprintf("N_first = %s", n_cross_fig2))
+check_anchor("F2 A(678) = 0.8003489948",
+             isTRUE(abs(assur_at_cross_fig2 - 0.8003489948) < 1e-10),
+             sprintf("%.10f", assur_at_cross_fig2))
+check_anchor("F2 A(677) = 0.7996848824",
+             isTRUE(abs(assur_at_prev_fig2 - 0.7996848824) < 1e-10),
+             sprintf("%.10f", assur_at_prev_fig2))
+
+write.csv(curve_fig2$curve, file.path(out_dir, "figure2_exact_curve.csv"),
+          row.names = FALSE)
 
 draw_fig2 <- function() {
   par(mar = c(4.3, 4.6, 1.2, 1))
-  plot(N_grid_fig2, assur_fig2, type = "l", lwd = 2, col = "#1f4e79",
+  plot(N_grid_fig2, assur_fig2, type = "l", lwd = 2, col = COL_WALD,
        xlab = "Total sample size (N)",
        ylab = "Joint assurance for Se and Sp", ylim = c(0, 1), las = 1)
   abline(h = TARGET_ASSURANCE, lty = 3, col = "grey40")
@@ -303,10 +317,10 @@ draw_fig2 <- function() {
   text(n_cross_fig2 + 14, 0.28,
        sprintf("N=%d\nassurance=%.4f", n_cross_fig2, assur_at_cross_fig2),
        col = "#c00000", cex = 0.78, pos = 4)
-  legend("bottomright", bty = "n", cex = 0.8,
+  legend("topleft", bty = "n", cex = 0.8,
          legend = c("Exact joint assurance", "0.80 target",
-                    sprintf("N=%d (selected)", n_cross_fig2)),
-         col = c("#1f4e79", "grey40", "#c00000"),
+                    sprintf("N=%d (first N reaching 0.80)", n_cross_fig2)),
+         col = c(COL_WALD, "grey40", "#c00000"),
          lty = c(1, 3, 2), lwd = c(2, 1, 1))
 }
 emit("Figure_2", draw_fig2, FIG_WIDTH_IN, FIG_HEIGHT_IN)
@@ -322,7 +336,7 @@ cat(sprintf(
 ## three methods the article still describes (Buderer classical, BAM exact
 ## mode with harmonized priors, and joint_sample_size()) remain. The
 ## imperfect-reference and unified-framework rows are removed along with
-## Figures 3-4 above (see the SCOPE note at the top of this file). Each
+## the v0.6.9 Figures 3-4 above (see the SCOPE note at the top of this file). Each
 ## method contributes the N it actually produces under the article's common
 ## assumptions (Se = 0.85, Sp = 0.90, prevalence = 0.20; for the Bayesian
 ## method, the harmonized prior means Se ~ Beta(17, 3), Sp ~ Beta(18, 2),
@@ -340,7 +354,7 @@ h_buderer <- list(N = N_buderer, assurance = NA_real_,
 ## Method 2: BAM, exact joint Beta-Binomial search, full-width deltas,
 ## HARMONIZED (informative) Sp prior -- see the shared-parameters note
 ## above for why this differs from Figure 2's vague default.
-bam_res <- run_checked("Table 4: BAM (exact, harmonized priors)",
+bam_res <- run_checked("Method comparison: BAM (exact, harmonized priors)",
   bam_sample_size(prior_se = PRIOR_SE, prior_sp = PRIOR_SP, prior_prev = PRIOR_PREV,
                    delta_se = 2 * DELTA_SE, delta_sp = 2 * DELTA_SP,
                    target_assurance = TARGET_ASSURANCE, method = "exact",
@@ -355,7 +369,7 @@ h_bam <- list(N = bam_res$N_total, assurance = bam_res$joint_assurance,
 ## internally (see ?joint_sample_size, @details), but the article no
 ## longer describes that gate, and it is not part of the joint_prob_se_sp
 ## estimand compared here (see the "notes" column below).
-joint_res <- run_checked("Table 4: joint Se/Sp (joint_sample_size)",
+joint_res <- run_checked("Method comparison: joint Se/Sp (joint_sample_size)",
   joint_sample_size(Se = E_SE, Sp = E_SP, delta_se = DELTA_SE, delta_sp = DELTA_SP,
                      prev = E_PREV, design = "cohort",
                      target_prob = TARGET_ASSURANCE, B = B_MAIN, seed = SEED))
@@ -390,7 +404,7 @@ table4 <- data.frame(
   stringsAsFactors = FALSE
 )
 write.csv(table4, file.path(assets_dir, "table4_method_comparison.csv"), row.names = FALSE)
-cat("\nTable 4 (method comparison):\n")
+cat("\nMethod comparison (table4_method_comparison.csv; Table 2 of v0.6.9 and of the R1, the R1 version being built by make_manuscript_tables_R1.R):\n")
 print(table4[, c("method", "N", "assurance_achieved")], row.names = FALSE)
 
 ## A stale copy of the previous (five-method) version of this table may be
@@ -475,21 +489,21 @@ table3 <- read.csv(table3_source_path, stringsAsFactors = FALSE, check.names = F
 expected_cols <- c("Capability", "presize", "pROC", "MKpower", "epiR",
                     "MKmisc", "SampleSizeDiagnostics", "dtasamplesize")
 if (ncol(table3) != length(expected_cols)) {
-  stop("Table 3 source has ", ncol(table3), " columns, expected ",
+  stop("Feature-matrix source has ", ncol(table3), " columns, expected ",
        length(expected_cols), " (", paste(expected_cols, collapse = ", "),
        "). This usually means a data row in ", table3_source_path,
        " has an unescaped comma inside an unquoted field, which shifts",
        " read.csv()'s column count.", call. = FALSE)
 }
 if (!identical(colnames(table3)[1], "Capability")) {
-  stop("Table 3 source: first column is named '", colnames(table3)[1],
+  stop("Feature-matrix source: first column is named '", colnames(table3)[1],
        "', not 'Capability'. read.csv() likely promoted the Capability",
        " column to row names because a data row in ", table3_source_path,
        " parsed to more fields than the header -- check for an unquoted",
        " comma inside a cell.", call. = FALSE)
 }
 if (!identical(rownames(table3), as.character(seq_len(nrow(table3))))) {
-  stop("Table 3 source: row.names(table3) are not the default 1..",
+  stop("Feature-matrix source: row.names(table3) are not the default 1..",
        nrow(table3), " -- read.csv() promoted a data column to row names,",
        " which means some row in ", table3_source_path, " has more fields",
        " than the header. Check every row for an unescaped comma inside",
@@ -497,7 +511,7 @@ if (!identical(rownames(table3), as.character(seq_len(nrow(table3))))) {
 }
 if (any(is.na(table3)) || any(table3 == "")) {
   bad <- which(is.na(table3) | table3 == "", arr.ind = TRUE)
-  stop("Table 3 source has ", nrow(bad), " empty/NA cell(s) after parsing ",
+  stop("Feature-matrix source has ", nrow(bad), " empty/NA cell(s) after parsing ",
        "(row, col): ", paste(sprintf("(%d,%d)", bad[, 1], bad[, 2]),
        collapse = "; "), ". A well-formed matrix should have no empty",
        " cells -- this is the signature of a row that parsed to the wrong",
@@ -542,12 +556,12 @@ provenance <- data.frame(
   stringsAsFactors = FALSE
 )
 write.csv(provenance, file.path(assets_dir, "table3_provenance.csv"), row.names = FALSE)
-cat("Table 3: ", nrow(table3), " capability rows x ", ncol(table3) - 1,
+cat("Feature matrix (table3_feature_matrix.csv; Table 4 of v0.6.9, Table S3.3e of Additional file 3 in the R1): ", nrow(table3), " capability rows x ", ncol(table3) - 1,
     " comparator packages; provenance written for ", nrow(provenance), " packages\n", sep = "")
 
 ## ---------------------------------------------------------------------
-cat("\nFiles written to", figures_dir, ":\n")
-cat(sort(list.files(figures_dir, pattern = "^Figure_")), sep = "\n")
-cat("\nFiles written to", assets_dir, ":\n")
-cat(sort(list.files(assets_dir)), sep = "\n")
+cat("\nFiles written to", out_dir, ":\n")
+cat(sort(list.files(out_dir)), sep = "\n")
+cat("\nSUMMARY: ", length(anchor_log), " anchors, all PASS: ",
+    paste(anchor_log, collapse = "; "), "\n", sep = "")
 cat("\n=== make_manuscript_assets.R done ===\n")

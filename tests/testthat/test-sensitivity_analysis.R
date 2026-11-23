@@ -96,3 +96,19 @@ test_that("sensitivity_analysis requires named scenarios and unique names", {
     "unique"
   )
 })
+
+# --- (v0.7.0) documentation of the experimental status ----------------------
+
+test_that("sensitivity_analysis() and plot_assurance_curve() Rd state the scope", {
+  skip_on_cran()
+  rd_dir <- file.path(testthat::test_path("..", ".."), "man")
+  skip_if_not(dir.exists(rd_dir))
+  sa <- paste(readLines(file.path(rd_dir, "sensitivity_analysis.Rd")), collapse = "\n")
+  expect_match(sa, "experimental", ignore.case = TRUE)
+  expect_match(sa, "bam_sensitivity", fixed = TRUE)
+  expect_match(sa, "bam_sensitivity_local", fixed = TRUE)
+  pl <- paste(readLines(file.path(rd_dir, "plot_assurance_curve.Rd")), collapse = "\n")
+  expect_match(pl, "dta_bam_curve", fixed = TRUE)
+  expect_match(pl, "bam_assurance_curve", fixed = TRUE)
+  expect_match(pl, "experimental", ignore.case = TRUE)
+})

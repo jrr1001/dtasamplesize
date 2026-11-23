@@ -284,14 +284,14 @@ test_that("ss_imperfect_ref's mc_validation is unaffected by the caller's normal
   }, numeric(1))
 
   expect_equal(unname(se_by_gen), rep(unname(se_by_gen[1]), length(se_by_gen)))
-  # Published-manuscript figure (R <= 4.5 sampler): within +/- 3 MCSE at
-  # B = 6000, robust to the RNG-stream change on R-devel/4.6.x (see NEWS
-  # 0.6.7); exact rounded check kept as a guarded
-  # sanity check on R < 4.6.0.
+  # Published-manuscript figure: within +/- 3 MCSE at B = 6000, which also
+  # holds on the development build of R (R-devel, 4.6.0 r90605 of
+  # 2026-09-30; see NEWS 0.6.7) where a change was observed; the exact
+  # rounded check is skipped only on development builds (rng_pins_apply()).
   p_hat <- unname(se_by_gen[1])
   mcse <- sqrt(p_hat * (1 - p_hat) / 6000)
   expect_lt(abs(p_hat - 0.764), 3 * mcse)
-  if (getRversion() < "4.6.0") {
+  if (rng_pins_apply()) {
     expect_equal(unname(round(se_by_gen[1], 3)), 0.764)
   }
 })

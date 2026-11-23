@@ -6,22 +6,32 @@
 #' @export
 print.dtasamplesize <- function(x, ...) {
   cat("\n", x$method, "\n\n")
+  .print_bam_conventions(x)
   if (!is.null(x$status) && x$status != "converged") {
     cat("  status:", x$status,
         "-- NO N SATISFIES target_assurance; N_total/n_diseased are NA.\n")
     cat("  (see the warning issued by this call for diagnostic detail)\n")
   }
-  # Is this a joint_sample_size() object? (R/joint_sample_size.R, v0.6.6,
-  # lote 01b): identified by its unique search_type value, since method is
+  # Is this a joint_sample_size() object? (R/joint_sample_size.R, since v0.6.6):
+  # identified by its unique search_type value, since method is
   # a free-text header shared by every "dtasamplesize" object.
   is_joint <- !is.null(x$search_type) &&
     identical(x$search_type, "grid_first_candidate")
 
-  # bam_sample_size() (M-01 contract, v0.6.6) and joint_sample_size() (lote
-  # 01b, same contract): target_reached = FALSE means no candidate N
-  # reached the target probability, so N_total/n_total/joint_assurance (or
+  # bam_sample_size() and joint_sample_size() (same contract, since v0.6.6):
+  # target_reached = FALSE means no candidate N reached the target
+  # probability, so N_total/n_total/joint_assurance (or
   # joint_prob_se_sp) are NA and must never be printed as if they were a
   # recommended design -- print the diagnostic fields instead.
+  # With assurance_for = "se"/"sp" the field `joint_assurance` holds the
+  # MARGINAL assurance of that arm: label it as such (joint mode: unchanged).
+  ja_label <- switch(
+    if (is.null(x$assurance_for)) "joint" else x$assurance_for,
+    se = "marginal Se assurance",
+    sp = "marginal Sp assurance",
+    "joint_assurance"
+  )
+  marginal <- !identical(ja_label, "joint_assurance")
   if (!is.null(x$target_reached) && !isTRUE(x$target_reached)) {
     if (is_joint) {
       cat("  Target NOT reached -- no sample size returned.\n")
@@ -29,11 +39,12 @@ print.dtasamplesize <- function(x, ...) {
           "this call)\n")
     } else {
       cat("  Target assurance NOT reached -- no sample size returned.\n")
-      cat("  (N_total / n_total / joint_assurance are NA; see the warning",
+      cat("  (N_total / n_total /", paste0(ja_label, " are NA; see the warning"),
           "issued by this call)\n")
     }
     if (!is.null(x$max_assurance_evaluated))
-      cat("  max_assurance_evaluated:", x$max_assurance_evaluated, "\n")
+      cat(if (marginal) paste0("  max_assurance_evaluated (", ja_label, "):")
+          else "  max_assurance_evaluated:", x$max_assurance_evaluated, "\n")
     if (!is.null(x$N_at_max_assurance))
       cat("  N_at_max_assurance:", x$N_at_max_assurance, "\n")
     if (!is.null(x$max_joint_prob_evaluated))
@@ -57,8 +68,9 @@ print.dtasamplesize <- function(x, ...) {
   if (!is.null(x$n_non_diseased))
     cat("  n_non_diseased:", x$n_non_diseased, "\n")
   cat("  N_total:", x$n_total, "\n")
-  if (!is.null(x$joint_assurance))
-    cat("  joint_assurance:", x$joint_assurance, "\n")
+  if (!is.null(x$joint_assurance)) {
+    cat(paste0("  ", ja_label, ":"), x$joint_assurance, "\n")
+  }
   if (is_joint) {
     if (!is.null(x$joint_prob_se_sp))
       cat("  joint_prob_se_sp:", x$joint_prob_se_sp, "\n")
@@ -90,4 +102,46 @@ print.dtasamplesize <- function(x, ...) {
     print(x$results)
   }
   invisible(x)
+}
+
+# Conventions of a bam_sample_size() result (v0.7.0): width criterion, level,
+# assurance objective and the analysis priors. Silent for every other
+# "dtasamplesize" object (they have no `width_type` field).
+.print_bam_conventions <- function(x) {
+  if (is.null(x$width_type)) return(invisible(NULL))
+  fmt_beta <- function(p) paste0("Beta(", format(p[1]), ", ", format(p[2]), ")")
+  cat("  width criterion: ", .bam_width_label(x$width_type, x$alpha_ci),
+      "; delta_se, delta_sp compared exactly (width <= delta)\n", sep = "")
+  obj <- switch(
+    if (is.null(x$assurance_for)) "joint" else x$assurance_for,
+    joint = "joint (Se and Sp widths both met in the same study)",
+    se = "marginal Se (only the Se width decides; prior_sp and delta_sp are not used for N_total)",
+    sp = "marginal Sp (only the Sp width decides; prior_se and delta_se are not used for N_total)"
+  )
+  cat("  assurance objective: ", obj, "\n", sep = "")
+  if (!is.null(x$analysis_prior_se)) {
+    # Compare VALUES, not the "given" flag: an analysis prior that was passed
+    # explicitly (or comes from a `priors` object with use_in = "both") but
+    # equals the design prior is "same as design".
+    same <- vapply(c("se", "sp"), function(arm) {
+      identical(as.numeric(x[[paste0("analysis_prior_", arm)]]),
+                as.numeric(x[[paste0("prior_", arm)]]))
+    }, logical(1))
+    if (!all(same)) {
+      cat("  analysis priors differ from the design priors:\n")
+      for (arm in c("se", "sp")) {
+        ap <- x[[paste0("analysis_prior_", arm)]]
+        dp <- x[[paste0("prior_", arm)]]
+        cat("    ", toupper(substring(arm, 1, 1)), substring(arm, 2),
+            ": analysis prior ", fmt_beta(ap), " (a + b = ", format(sum(ap)),
+            ") vs design ", fmt_beta(dp), " (a + b = ", format(sum(dp)),
+            ")", if (same[[arm]]) " [same as design]", "\n", sep = "")
+      }
+    } else {
+      cat("  analysis priors: same as design priors (Se a + b = ",
+          format(sum(x$analysis_prior_se)), ", Sp a + b = ",
+          format(sum(x$analysis_prior_sp)), ")\n", sep = "")
+    }
+  }
+  invisible(NULL)
 }

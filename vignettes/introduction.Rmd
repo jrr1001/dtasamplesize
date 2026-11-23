@@ -9,48 +9,85 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+# B is kept small in this vignette for a fast build. Under method = "exact"
+# it affects only the legacy per-arm fields of bam_sample_size(), so the
+# small-B warning is silenced here; use B >= 1000 if you rely on those fields.
+options(dtasamplesize.warn_small_B = FALSE)
 ```
 
 ## Why classical formulas are insufficient
 
 The Buderer (1996) formula is the most widely used method for computing
-sample sizes in diagnostic accuracy studies. However, Monte Carlo
-simulation reveals it achieves the target precision only about 57% of
-the time:
+sample sizes in diagnostic accuracy studies. It is built so that the
+confidence interval for sensitivity has a planned half-width `d`, but the
+width of the interval observed in a given study is random. With
+`method = "exact"`, `mc_validate_buderer()` enumerates the binomial
+distribution of the number of true positives at the Buderer sample size and
+returns the exact probability that the interval is no wider than planned,
+with no Monte Carlo error:
 
 ```{r buderer-validation}
 library(dtasamplesize)
-result <- mc_validate_buderer(Se = 0.85, d = 0.07, B = 500, seed = 2026)
+result <- mc_validate_buderer(Se = 0.85, d = 0.07, method = "exact")
 result$results[, c("ci_method", "P_width_target", "coverage")]
 ```
 
 With Se = 0.85 and desired half-width d = 0.07, Buderer yields
-n = `r result$n_diseased` diseased subjects. Yet the probability that
-the CI width actually falls within the target is only ~57%, far below
-the 95% one might expect.
+n = `r result$n_diseased` diseased subjects. The exact probability that the
+full CI width is at most the target 2d = 0.14 is
+`r sprintf("%.4f", result$results$P_width_target[1])` for the Wald interval
+and `r sprintf("%.4f", result$results$P_width_target[2])` for the Wilson
+interval (`P_width_target`). The `coverage` column is a different quantity,
+the probability that the interval contains the true sensitivity, and should
+not be read against the width probability. The default
+`method = "monte_carlo"` estimates the same probabilities by simulation
+with `B` replications.
 
 ## Bayesian Assurance Method
 
 The BAM (Wilson et al. 2022) incorporates prior information and searches
-for the sample size achieving a specified assurance probability:
-
-The search grid `n_range` must be wide enough to actually contain the answer
-for **both** arms. With the vague default `prior_sp = c(2, 2)` and
-`delta_sp = 0.10`, the specificity arm needs about 370 non-diseased subjects,
-so a grid that stops at 200 would silently fall back to its own upper limit
-(with a warning) and understate the total N.
+for the sample size achieving a specified assurance probability: the
+probability, over the prior predictive distribution of the data, that the
+posterior credible intervals for sensitivity and specificity both meet their
+target widths in the same study. With `method = "exact"` (the default and the
+validated route) the joint assurance A(N) is computed by Beta-Binomial
+enumeration, without simulation. `N_total` is the smallest total sample size
+whose joint assurance reaches `target_assurance` (0.80 by default) and
+`joint_assurance` is A(`N_total`); neither depends on `B` or `seed`. Here
+`delta_se` and `delta_sp` are full widths of the equal-tailed 95% credible
+interval (`width_type = "full_width"`) and the objective is joint
+(`assurance_for = "joint"`).
 
 ```{r bam}
 bam_result <- bam_sample_size(
   prior_se = c(17, 3), delta_se = 0.14,
-  B = 500, seed = 2026, n_range = 20:600
+  method = "exact", B = 500, seed = 2026
 )
-cat("BAM n_diseased:", bam_result$n_diseased, "\n")
-cat("BAM n_non_diseased:", bam_result$n_non_diseased, "\n")
-cat("Assurance Se:", round(bam_result$assurance_se, 3), "\n")
+cat("BAM N_total (exact):", bam_result$N_total, "\n")
+cat("Joint assurance at N_total:", round(bam_result$joint_assurance, 4), "\n")
 ```
 
-## Joint optimization of Se, Sp, and AUC
+The other fields of the result (`n_diseased`, `n_non_diseased`, the marginal
+assurances `assurance_se` and `assurance_sp`, and `N_total_median`) are
+legacy per-arm diagnostics computed by simulation, which is where `B`,
+`seed` and `n_range` act; they are kept for compatibility, and
+`N_total_median` is a deprecated heuristic that does not guarantee the target
+joint assurance.
+
+`bam_assurance_curve()` returns the exact assurance A(N) over a grid of total
+sample sizes, and `plot_assurance_curve()` draws it. The grid below uses a
+step of 5, so `N_first` is the first grid value that reaches the target
+(`r bam_result$N_total` is the smallest integer N):
+
+```{r bam-curve, eval = requireNamespace("ggplot2", quietly = TRUE), fig.width = 6, fig.height = 4}
+bam_curve <- bam_assurance_curve(
+  prior_se = c(17, 3), delta_se = 0.14,
+  N_range = seq(400, 700, by = 5)
+)
+plot_assurance_curve(bam_curve)
+```
+
+## Joint sample size for Se and Sp, with an AUC gate
 
 In practice, investigators need adequate precision for sensitivity,
 specificity, and AUC simultaneously. The joint approach searches `N_range`
@@ -81,10 +118,10 @@ cat("Joint N:", joint_result$n_total,
 **Experimental.** `ss_imperfect_ref()`, `ss_unified()`, and the other
 modules illustrated from here on (`ss_net_benefit()`,
 `ss_adaptive_prevalence()`, `ss_time_dependent_roc()`) are outside the
-validated scope of the dtasamplesize software article, which covers
-`bam_sample_size(method = "exact")` and `joint_sample_size()` (plus the
-helpers `mc_validate_buderer()`, `buderer_n()`, `wilson_ci()`, and
-`wald_ci()`). They are shown here for illustration only; do not rely on
+validated scope declared in DESCRIPTION, which covers the `bam_*()`
+functions, `joint_sample_size()` and `mc_validate_buderer(method = "exact")`;
+the helpers `buderer_n()`, `wilson_ci()` and `wald_ci()` lie outside it.
+They are shown here for illustration only; do not rely on
 them for design decisions until validated separately. See the README's
 "Validated scope and experimental modules" section and each function's
 `?help` page.
@@ -130,16 +167,16 @@ reference row below reuses `imp_result` from above and reports its
 *apparent*-estimand N (the exact closed form, and `ss_imperfect_ref()`'s
 default); the larger corrected-estimand N is not repeated here. Note that
 "Imperfect ref" is the experimental `ss_imperfect_ref()` module (see
-above); only "Buderer", "BAM", and "Joint" fall inside the validated
-scope.
+above); only "BAM" and "Joint" fall inside the validated scope; "Buderer"
+uses the helper `buderer_n()`, which lies outside it.
 
 ```{r comparison}
 comparison <- data.frame(
-  Method = c("Buderer (classical)", "BAM (Bayesian)",
-             "Joint (Se+Sp+AUC)", "Imperfect ref (apparent, exact)"),
+  Method = c("Buderer (classical)", "BAM (Bayesian, exact joint)",
+             "Joint (Se+Sp, AUC gate)", "Imperfect ref (apparent, exact)"),
   N = c(
     ceiling(buderer_n(0.85, 0.07) / 0.30),
-    bam_result$N_total_median,
+    bam_result$N_total,
     joint_result$n_total,
     imp_result$N_adjusted_loss
   )
@@ -152,16 +189,51 @@ uncertainty into a single simulation. See `?ss_unified` for details.
 
 ## Sensitivity analysis across prior scenarios
 
-The prior beliefs about Se and Sp that go into `ss_unified()` are rarely known
-with certainty at the design stage. `sensitivity_analysis()` runs
-`ss_unified()` once per named scenario and collects the results into a single
-table, replacing a hand-written loop over scenarios. Below, an optimistic, a
-neutral, and a pessimistic scenario vary only in how confident (and how high)
-the assumed Se and Sp are; the disease-prevalence prior is held fixed so that
-the comparison isolates the effect of the accuracy assumptions.
+The prior beliefs about Se and Sp are rarely known with certainty at the
+design stage. `bam_sensitivity()` runs `bam_sample_size(method = "exact")`
+once per scenario and returns one row per scenario with the smallest total
+sample size `N_total` that meets the target, the assurance `A_N` reached
+there and the assurance `A_N_minus_1` one subject earlier. Below, an
+optimistic, a neutral and a pessimistic scenario vary only in how confident
+(and how high) the assumed Se and Sp are; the prevalence prior is held fixed
+so that the comparison isolates the effect of the accuracy assumptions.
 
 ```{r sensitivity}
 scenarios <- list(
+  optimistic = list(prior_se = c(18, 2), prior_sp = c(19, 1)),
+  neutral = list(prior_se = c(17, 3), prior_sp = c(2, 2)),
+  pessimistic = list(prior_se = c(14, 6), prior_sp = c(16, 4))
+)
+sens_exact <- bam_sensitivity(scenarios, prior_prev = c(5, 15))
+sens_exact[, c("scenario", "N_total", "A_N", "A_N_minus_1")]
+```
+
+Reading the table: `A_N` is at or above the 0.80 target and `A_N_minus_1` is
+below it, which is what makes `N_total` the smallest sample size meeting the
+target in each scenario. The pessimistic scenario, which assumes lower and
+less certain Se and Sp, needs the largest sample size
+(`r sens_exact$N_total[sens_exact$scenario == "pessimistic"]`) and the
+optimistic scenario the smallest
+(`r sens_exact$N_total[sens_exact$scenario == "optimistic"]`). What the table
+adds is the *size* of that gap, which is the information a protocol needs
+when the expected accuracy is a guess rather than a certainty: it shows how
+much the required sample size would grow if the study turns out to be in
+the harder regime, rather than reporting a single N that is silent about that
+risk. `bam_sensitivity_local()` and `bam_prior_contour()` implement the local
+prior sensitivity analysis of Wilson et al. (2022, section 4.2) for the same
+exact method; see their help pages.
+
+### Experimental: `sensitivity_analysis()` and `ss_unified()` plots
+
+**Experimental.** `sensitivity_analysis()` runs the experimental
+`ss_unified()` (a Monte Carlo search) once per scenario. It is outside the
+validated scope and is shown for illustration only; for the validated
+method use `bam_sensitivity()` above. B and N_range are kept small here for a
+fast vignette build; see `?sensitivity_analysis` and the `B` argument of
+`ss_unified()` for guidance on the B recommended for a final analysis.
+
+```{r sensitivity-experimental}
+scenarios_unified <- list(
   optimistic = list(prior_se = c(18, 2), prior_sp = c(19, 1),
                      prior_prev = c(5, 15)),
   neutral = list(prior_se = c(17, 3), prior_sp = c(2, 2),
@@ -170,41 +242,24 @@ scenarios <- list(
                       prior_prev = c(5, 15))
 )
 
-# B and N_range are kept small here for a fast vignette build; see
-# ?sensitivity_analysis and the 'B' argument of ss_unified() for guidance
-# on the B recommended for a final analysis.
 sens_result <- suppressWarnings(sensitivity_analysis(
-  scenarios,
+  scenarios_unified,
   delta_se = 0.07, delta_sp = 0.05, delta_auc = 0,
   N_range = seq(300, 1200, by = 100), B = 300, seed = 2026
 ))
 sens_result
 ```
 
-Reading the table: `N_total` is the loss-adjusted total sample size the
-unified framework recommends for that scenario, and `joint_assurance` is the
-probability actually achieved at that N (at or above the 0.80 target).
-`N_buderer` is the classical Buderer total for the same scenario, included so
-the gap between the assurance-based and classical requirements can be seen
-at a glance for each set of assumptions.
+Here `N_total` is the loss-adjusted total sample size the unified framework
+recommends for that scenario, `joint_assurance` is the simulated probability
+at that N, and `N_buderer` is the classical Buderer total for the same
+scenario. These are Monte Carlo figures from an experimental module and are
+not comparable with the exact values above.
 
-The pattern is the one intuition predicts: the pessimistic scenario, which
-assumes lower and less certain Se and Sp, needs the largest sample size,
-while the optimistic scenario needs the smallest. What the table adds is the
-*size* of that gap -- here several hundred subjects between the two extremes
--- which is exactly the information a protocol needs when the "expected"
-accuracy is a guess rather than a certainty: it shows how much the required
-sample size would grow if the study turns out to be in the harder-to-detect
-regime, rather than reporting a single N that is silent about that risk.
-
-The package's own plotting functions can visualize a single scenario's
-`ss_unified()` output directly, rather than hand-rolling a ggplot2 call
-against the raw data frame; like the other modules shown from here on, they
-are experimental and outside the validated scope. For the neutral scenario,
-`plot_assurance_curve()` needs `full_grid = TRUE` so that `grid_results`
-covers the whole `N_range` rather than stopping at the first N reaching the
-target, and `plot_method_comparison()` reads the same object's `comparison`
-element -- both are produced by one `ss_unified()` call:
+`plot_assurance_curve()` also accepts the output of
+`ss_unified(full_grid = TRUE)`, and `plot_method_comparison()` reads the
+`comparison` element of the same object. Both are experimental when applied
+to `ss_unified()` output:
 
 ```{r sensitivity-plots, eval = requireNamespace("ggplot2", quietly = TRUE), fig.width = 6, fig.height = 4}
 neutral_result <- suppressWarnings(ss_unified(

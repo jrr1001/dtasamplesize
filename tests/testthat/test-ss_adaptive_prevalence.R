@@ -156,7 +156,7 @@ test_that("stage-1 diseased subjects (D_stage1) are folded into the analysed sam
 })
 
 test_that("the fraction_stage1 -> 1 edge case (N_final close to n_stage1) does not error", {
-  # Cuidá el caso borde: when the stage-1 pilot is nearly as large as
+  # Edge case: when the stage-1 pilot is nearly as large as
   # N_initial, the re-estimated N_final can equal n_stage1, so the stage-2
   # top-up (N_final - n_stage1) must be clamped at 0 rather than going
   # negative.

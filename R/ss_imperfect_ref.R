@@ -15,7 +15,7 @@
 #   Sp_hat = (Se_ref*p00 - (1-Se_ref)*p01) / (p00 + p10 - (1-Se_ref))
 # (both reduce to the naive proportion when Se_ref = Sp_ref = 1). These
 # functions are not exported; they exist only to build the sample-size
-# formulas below, and are validated against an independent from-scratch
+# formulas below, and are checked against a separate from-scratch
 # Monte Carlo / Fisher-information derivation (see package NEWS / tests).
 
 irs_cell_probs <- function(Se, Sp, prev, Se_ref, Sp_ref) {
@@ -120,7 +120,7 @@ irs_apparent <- function(Se, Sp, prev, Se_ref, Sp_ref) {
 #'   {p_{00} + p_{10} - (1-Se_{ref})}}
 #' Its sampling variance is obtained by the delta method applied to the
 #' cell-count multinomial (\code{N * Var(theta_hat) = g' (diag(p) - p p') g}
-#' for the appropriate gradient \code{g}); this matches an independent
+#' for the appropriate gradient \code{g}); this matches a separate
 #' Fisher-information derivation and Monte Carlo simulation to within
 #' Monte Carlo error. \eqn{Se_{app} = p_{11}/(p_{11}+p_{01})} and
 #' \eqn{P(R+) = p_{11}+p_{01}} follow directly from the same model.

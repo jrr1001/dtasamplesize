@@ -2,7 +2,7 @@
 % Please edit documentation in R/sensitivity_analysis.R
 \name{sensitivity_analysis}
 \alias{sensitivity_analysis}
-\title{Sample Size Sensitivity Analysis Over Prior Scenarios}
+\title{Sample Size Sensitivity Analysis Over Prior Scenarios (Experimental)}
 \usage{
 sensitivity_analysis(scenarios, ..., verbose = FALSE)
 }
@@ -43,14 +43,40 @@ A data frame with one row per scenario, in the order supplied,
   }
 }
 \description{
-Runs \code{\link{ss_unified}} once for each of a set of
+\strong{Experimental; outside the validated scope of the
+  package.} Runs \code{\link{ss_unified}} once for each of a set of
   prior scenarios (e.g. optimistic/pessimistic assumptions about Se, Sp,
   and prevalence) and collects the resulting sample sizes into a single
   data frame. Replaces the hand-written \code{lapply()} loop over
   scenarios that this kind of comparison otherwise requires.
 }
 \details{
-Sensitivity Analysis Across Prior Scenarios
+Sensitivity Analysis Across Prior Scenarios (Experimental)
+
+\strong{What it works on.} This function calls
+  \code{\link{ss_unified}}, a Monte Carlo search that is experimental and
+  outside the validated scope of the package (see the package
+  \code{DESCRIPTION} and \code{\link{ss_unified}}). It does \strong{not}
+  use \code{\link{bam_sample_size}}, and none of the validated
+  conventions of that function (exact calculation, design and analysis
+  priors, \code{width_type}, \code{assurance_for}, \code{priors} object)
+  apply here. Its results carry the Monte Carlo error of
+  \code{ss_unified()} and have not been validated against an independent
+  implementation.
+
+  \strong{What it accepts.} \code{scenarios}: a named list of lists with
+  \code{prior_se}, \code{prior_sp} and \code{prior_prev}, or a data frame
+  with the shape columns listed below. Anything in \code{...} is passed
+  unchanged to \code{ss_unified()} (so only the arguments of
+  \code{ss_unified()} are accepted there; \code{prior_se},
+  \code{prior_sp} and \code{prior_prev} are an error in \code{...}). It
+  does not accept a \code{"dta_bam_priors"} object, and it returns a plain
+  data frame, not an object of class \code{"dtasamplesize"}.
+
+  \strong{For the validated method} (exact Bayesian assurance), use
+  \code{\link{bam_sensitivity}} (new in version 0.7.0) and
+  \code{\link{bam_sensitivity_local}}, which are built on
+  \code{bam_sample_size()}.
 }
 \examples{
 \donttest{
@@ -68,5 +94,7 @@ suppressWarnings(sensitivity_analysis(
 }
 }
 \seealso{
-\code{\link{ss_unified}}
+\code{\link{ss_unified}}; for the validated method see
+  \code{\link{bam_sensitivity}} and \code{\link{bam_sensitivity_local}}, and
+  \code{\link{bam_sample_size}}.
 }

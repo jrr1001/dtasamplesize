@@ -196,17 +196,25 @@ test_that("BAM treats a degenerate replication (n_d = 0 or n_nd = 0) as a failur
   # actually cares about (joint_assurance forced to exactly 0 by the
   # degenerate-replication override at N = 1) lives in
   # max_assurance_evaluated / N_at_max_assurance instead.
+  # (since the m2 correction the tight priors, which already meet delta with
+  # no data, also give one warning per arm about the effective analysis prior)
   expect_warning(
-    result <- bam_sample_size(
-      prior_se = c(1000, 100), prior_sp = c(1000, 100),
-      delta_se = 0.14, delta_sp = 0.14,
-      target_assurance = 0.80,
-      prior_prev = c(10, 10),
-      n_range = 5:10,
-      N_range = 1,
-      B = 2000, seed = 2026, method = "monte_carlo"
+    expect_warning(
+      expect_warning(
+        result <- bam_sample_size(
+          prior_se = c(1000, 100), prior_sp = c(1000, 100),
+          delta_se = 0.14, delta_sp = 0.14,
+          target_assurance = 0.80,
+          prior_prev = c(10, 10),
+          n_range = 5:10,
+          N_range = 1,
+          B = 2000, seed = 2026, method = "monte_carlo"
+        ),
+        "No N in N_range achieved the target JOINT assurance"
+      ),
+      "analysis prior for Se"
     ),
-    "No N in N_range achieved the target JOINT assurance"
+    "analysis prior for Sp"
   )
   expect_false(result$target_reached)
   expect_identical(result$N_total, NA_integer_)

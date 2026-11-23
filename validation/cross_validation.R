@@ -2,9 +2,11 @@
 # ---------------------------------------------------------
 # Verifies the numerical machinery against INDEPENDENT references:
 # Hmisc, base prop.test, numerical integration, and Monte Carlo. Also
-# writes Table 2 of the manuscript ("Cross-validation of core formulas
-# against independent references") to
-# R-package/manuscript_assets/table2_crossvalidation.csv, built from the
+# writes the cross-validation table (Table 3 of v0.6.9; Table S2.5 of Additional file 2 in the R1; "Cross-validation of core formulas
+# against independent references") to table2_crossvalidation.csv in the
+# output directory (first command-line argument; default validation/output/
+# inside the package tree, created if needed; the script writes nowhere
+# else). The CSV is built from the
 # values this script computes below rather than typed in by hand: each
 # row's "result" text is derived from the same variables the printed
 # report uses, and if a computed value does not match what the
@@ -12,7 +14,7 @@
 # being forced to agree.
 #
 # SCOPE (article now reduced to a single joint estimand; see the SCOPE
-# note in reproduce_manuscript.R). Table 2 in the article has four rows:
+# note in reproduce_manuscript.R). The table has four rows (Table 3 of v0.6.9, Table S2.5 of Additional file 2 in the R1):
 # Wilson CI, Wald CI, buderer_n, and the Beta posterior interval width
 # (checks V1, V2, V3, V7 below; V7 checks the WIDTH of the Beta posterior
 # credible interval for a binomial proportion -- the conjugate update of a
@@ -27,7 +29,8 @@
 # print PASS/**CHECK** to the console -- but they are deliberately NOT
 # added to table2_rows, so they do not appear in the published CSV.
 #
-# Run after installing the package:  R -f validation/cross_validation.R
+# Run after installing the package:
+#   Rscript validation/cross_validation.R [output_dir]
 # Required reference package: Hmisc. pROC is listed as an optional
 # reference package but is not called by any check below, so it is
 # loaded only if available.
@@ -40,9 +43,10 @@ ok <- function(x) if (isTRUE(x)) "PASS" else "**CHECK**"
 sep <- function(t) cat("\n========== ", t, " ==========\n")
 
 ## ---------------------------------------------------------------------
-## Locate R-package/manuscript_assets from this script's own path (same
-## approach as make_manuscript_assets.R), so the CSV lands in the right
-## place regardless of the caller's working directory.
+## Locate the package tree from this script's own path (same approach as
+## make_manuscript_assets.R). The output directory is the first command-line
+## argument; the default, validation/output/, lives inside the package tree.
+## Nothing is ever written to folders above the package.
 ## ---------------------------------------------------------------------
 locate_script_dir <- function() {
   args <- commandArgs(trailingOnly = FALSE)
@@ -54,23 +58,27 @@ locate_script_dir <- function() {
   if (dir.exists("validation")) return(normalizePath(file.path(getwd(), "validation")))
   stop(
     "Cannot determine the location of cross_validation.R. Run it via\n",
-    "  Rscript validation/cross_validation.R\n",
+    "  Rscript validation/cross_validation.R [output_dir]\n",
     "from the dtasamplesize package root, or from inside validation/.",
     call. = FALSE
   )
 }
-script_dir     <- locate_script_dir()          # .../dtasamplesize/validation
-pkg_root       <- dirname(script_dir)          # .../dtasamplesize
-r_package_root <- dirname(pkg_root)            # .../R-package
-assets_dir     <- file.path(r_package_root, "manuscript_assets")
-dir.create(assets_dir, showWarnings = FALSE, recursive = TRUE)
+script_dir <- locate_script_dir()          # .../dtasamplesize/validation
+cli_args   <- commandArgs(trailingOnly = TRUE)
+out_dir    <- if (length(cli_args) >= 1 && nzchar(cli_args[1])) cli_args[1] else
+  file.path(script_dir, "output")
+dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+out_dir    <- normalizePath(out_dir, winslash = "/")
+cat("R version:          ", R.version.string, "\n")
+cat("dtasamplesize:      ", as.character(utils::packageVersion("dtasamplesize")), "\n")
+cat("Output directory:   ", out_dir, "\n")
 
-## Provenance, recorded once and stamped on every Table 2 row below.
+## Provenance, recorded once and stamped on every row of table2_crossvalidation.csv below.
 pkg_version  <- as.character(utils::packageVersion("dtasamplesize"))
 Hmisc_version <- as.character(utils::packageVersion("Hmisc"))
 pROC_version  <- if (have_pROC) as.character(utils::packageVersion("pROC")) else NA_character_
 
-## Accumulates one row per Table 2 entry. Each block below that reproduces
+## Accumulates one row per table2_crossvalidation.csv entry. Each block below that reproduces
 ## a manuscript row appends to this list with add_row(); the CSV is built
 ## from the accumulated data frame at the very end. None of these values
 ## are typed by hand -- each is either read directly from the printed
@@ -107,8 +115,8 @@ for (cs in cases) {
 cat("Note: at x=19/n=20 the package matches base prop.test (canonical Wilson);\n",
     "Hmisc differs at that boundary.\n")
 
-## -- capture for Table 2 (recomputes the same comparison against
-## prop.test used above; Table 2 cites prop.test, not Hmisc, as the
+## -- capture for table2_crossvalidation.csv (recomputes the same comparison against
+## prop.test used above; that table cites prop.test, not Hmisc, as the
 ## reference for this row) --
 v1_diffs <- sapply(cases, function(cs) {
   x <- cs[1]; n <- cs[2]
@@ -139,7 +147,7 @@ for (cs in wald_cases) {
       ok(all(abs(c(mine["lower"]-hm[2], mine["upper"]-hm[3])) < 1e-6))))
 }
 
-## -- capture for Table 2 --
+## -- capture for table2_crossvalidation.csv --
 v2_diffs <- sapply(wald_cases, function(cs) {
   x <- cs[1]; n <- cs[2]
   mine <- wald_ci(x, n)
@@ -162,7 +170,7 @@ sep("V3. buderer_n")
 cat("Se=0.85,d=0.07 ->", buderer_n(0.85,0.07), ok(buderer_n(0.85,0.07)==100), "\n")
 cat("Se=0.90,d=0.05 ->", buderer_n(0.90,0.05), ok(buderer_n(0.90,0.05)==139), "\n")
 
-## -- capture for Table 2 --
+## -- capture for table2_crossvalidation.csv --
 v3_a <- buderer_n(0.85, 0.07); v3_b <- buderer_n(0.90, 0.05)
 v3_pass <- (v3_a == 100) && (v3_b == 139)
 add_row(
@@ -210,7 +218,7 @@ cat("Note: Hanley-McNeil (1982) assumes a negative-exponential score model;\n",
     "the small deviation from binormal MC (larger when groups are imbalanced)\n",
     "is the expected, conservative behaviour of the approximation.\n")
 
-## -- NOT added to Table 2: the Hanley-McNeil AUC variance backs the AUC
+## -- NOT added to table2_crossvalidation.csv: the Hanley-McNeil AUC variance backs the AUC
 ## gate inside ss_unified(), which the article no longer describes (see
 ## SCOPE note at the top of this file). Computed here only as an internal
 ## check that the formula still tracks its Monte Carlo reference; kept as
@@ -236,7 +244,7 @@ nb_vickers <- (TP - w*FP)/N                                # Vickers 2006 def
 cat(sprintf("package=%.6f  Vickers=%.6f  %s\n", nb_pkgform, nb_vickers,
     ok(abs(nb_pkgform - nb_vickers) < 1e-9)))
 
-## -- NOT added to Table 2: ss_net_benefit() is no longer described in
+## -- NOT added to table2_crossvalidation.csv: ss_net_benefit() is no longer described in
 ## the article (see SCOPE note at the top of this file). Computed here
 ## only as an internal check that the package's net-benefit algebra still
 ## matches the Vickers definition; no add_row() call. --
@@ -286,7 +294,7 @@ cat("Note: row 1 is the manuscript's headline configuration (Se=0.85, Sp=0.90, p
     "at R=400000, where the SD estimator's own sampling noise (~0.11%) is fine enough\n",
     "to resolve that claim (see comment above nb_se_cohort()).\n")
 
-## -- NOT added to Table 2: ss_net_benefit() is no longer described in
+## -- NOT added to table2_crossvalidation.csv: ss_net_benefit() is no longer described in
 ## the article (see SCOPE note at the top of this file). Computed here
 ## only as an internal check that the analytic cohort-variance formula
 ## still tracks its Monte Carlo reference; no add_row() call. --
@@ -312,7 +320,7 @@ lo <- g[which.min(abs(cdf-0.025))]; hi <- g[which.min(abs(cdf-0.975))]
 cat(sprintf("conjugate width=%.5f  numerical width=%.5f  %s\n",
     cw, hi-lo, ok(abs(cw-(hi-lo)) < 2e-3)))
 
-## -- capture for Table 2 --
+## -- capture for table2_crossvalidation.csv --
 v7_diff <- abs(cw - (hi - lo))
 v7_code_tol <- 2e-3                 # the tolerance actually used by ok() above
 v7_claimed_tol <- 1e-3              # the tolerance named in the manuscript's Result cell
@@ -378,7 +386,7 @@ app_theo <- (prev*Se*Se_ref + (1-prev)*(1-Sp)*(1-Sp_ref)) /
 cat(sprintf("apparent Se: MC=%.4f  closed-form=%.4f  %s\n", app_emp, app_theo,
     ok(abs(app_emp-app_theo) < 0.01)))
 
-## -- NOT added to Table 2: ss_imperfect_ref() is no longer described in
+## -- NOT added to table2_crossvalidation.csv: ss_imperfect_ref() is no longer described in
 ## the article (see SCOPE note at the top of this file). Computed here
 ## only as an internal check that the VIF and the apparent-sensitivity
 ## closed form still match their independent references; no add_row()
@@ -387,12 +395,25 @@ v8_diff <- abs(vif_pkg - vif_rg)
 v8_pass <- v8_diff < 1e-9
 
 ## ---------------------------------------------------------------------
-## Write Table 2 ("Cross-validation of core formulas against independent
+## Write table2_crossvalidation.csv ("Cross-validation of core formulas against independent
 ## references") from the rows accumulated above.
 ## ---------------------------------------------------------------------
 table2 <- do.call(rbind, table2_rows)
-write.csv(table2, file.path(assets_dir, "table2_crossvalidation.csv"), row.names = FALSE)
-cat(sprintf("\nTable 2 written to %s (%d rows, all pass = %s)\n",
-    file.path(assets_dir, "table2_crossvalidation.csv"), nrow(table2), all(table2$pass)))
+write.csv(table2, file.path(out_dir, "table2_crossvalidation.csv"), row.names = FALSE)
+cat(sprintf("\ntable2_crossvalidation.csv written to %s (%d rows, all pass = %s)\n",
+    file.path(out_dir, "table2_crossvalidation.csv"), nrow(table2), all(table2$pass)))
+
+## ---- Summary: one line with the result of every check ----
+internal <- c(`V4 Hanley-McNeil (balanced)` = v4_pass,
+              `V5 net-benefit identity` = v5_pass,
+              `V6 net-benefit variance` = v6_pass,
+              `V8 imperfect-ref VIF` = v8_pass)
+lab <- function(x) if (isTRUE(x)) "PASS" else "**CHECK**"
+cat("SUMMARY (table2_crossvalidation.csv rows): ",
+    paste0(table2$quantity, "=", vapply(table2$pass, lab, character(1)),
+           collapse = "; "), "\n", sep = "")
+cat("SUMMARY (internal checks, not in table2_crossvalidation.csv): ",
+    paste0(names(internal), "=", vapply(internal, lab, character(1)),
+           collapse = "; "), "\n", sep = "")
 
 cat("\n=== cross_validation done ===\n")

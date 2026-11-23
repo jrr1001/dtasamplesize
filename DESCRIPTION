@@ -1,15 +1,20 @@
 Package: dtasamplesize
 Type: Package
-Title: Simulation-Based Sample Size Estimation for Diagnostic Accuracy Studies
-Version: 0.6.9
+Title: Exact Bayesian Assurance Sample Sizes for Diagnostic Accuracy
+Version: 0.7.0
 Authors@R:
     person("Jes\u00fas D.", "Rojas", role = c("aut", "cre"),
            email = "jrojasrivero@gmail.com",
            comment = c(ORCID = "0000-0003-0912-490X"))
-Description: Provides simulation-based (Monte Carlo) methods for sample size
-    estimation in diagnostic test accuracy (DTA) studies. Implements Bayesian
-    assurance (Wilson et al. 2022 <doi:10.1002/sim.9393>), joint optimization
-    of sensitivity, specificity, and AUC, adjustment for imperfect reference
+Description: Provides sample size methods for diagnostic test accuracy (DTA)
+    studies: exact calculations where possible and Monte Carlo
+    simulation otherwise. Implements Bayesian assurance (Wilson et al. 2022
+    <doi:10.1002/sim.9393>), computed exactly by Beta-Binomial enumeration
+    (no simulation) or, optionally, by Monte Carlo, with separate design and
+    analysis priors, power priors from pilot data, an exact assurance curve
+    and prior sensitivity analyses; joint sample size for sensitivity and
+    specificity by Monte Carlo, with a deterministic AUC gate; adjustment for
+    imperfect reference
     standards via an exactly-identified misclassification correction (with
     a closed form for the apparent sensitivity/specificity and a delta-
     method variance for the bias-corrected sensitivity/specificity; see also
@@ -20,15 +25,18 @@ Description: Provides simulation-based (Monte Carlo) methods for sample size
     <doi:10.1177/0962280220913588>), sample size for time-dependent ROC
     curves, and sample size for net benefit (decision curve analysis).
     Addresses limitations of classical formulas (Buderer 1996
-    <doi:10.1111/j.1553-2712.1996.tb03538.x>) demonstrated via Monte Carlo
-    validation. Includes a unified framework that integrates all approaches.
-    The validated scope is bam_sample_size(method = "exact") and
-    joint_sample_size(); ss_unified(), ss_net_benefit(), ss_imperfect_ref(),
-    ss_adaptive_prevalence() and ss_time_dependent_roc() are experimental
-    and outside that validated scope.
+    <doi:10.1111/j.1553-2712.1996.tb03538.x>), whose achieved precision is
+    evaluated by exact binomial enumeration or by Monte Carlo simulation.
+    Includes a unified framework that integrates all approaches.
+    The validated scope is the bam_*() functions (bam_sample_size(method =
+    "exact"), bam_assurance_curve(), bam_sensitivity(),
+    bam_sensitivity_local(), bam_prior_contour(), bam_prior_from_pilot() and
+    bam_prior_data_conflict()), joint_sample_size() and
+    mc_validate_buderer(method = "exact"); ss_unified(), ss_net_benefit(),
+    ss_imperfect_ref(), ss_adaptive_prevalence() and ss_time_dependent_roc()
+    are experimental and outside that validated scope.
 License: MIT + file LICENSE
 Encoding: UTF-8
-RoxygenNote: 7.3.3
 Depends: R (>= 4.1.0)
 Imports: stats, parallel
 Suggests:
@@ -43,3 +51,4 @@ Config/testthat/edition: 3
 VignetteBuilder: knitr
 URL: https://github.com/jrr1001/dtasamplesize
 BugReports: https://github.com/jrr1001/dtasamplesize/issues
+Config/roxygen2/version: 8.1.1

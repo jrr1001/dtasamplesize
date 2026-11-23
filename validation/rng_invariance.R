@@ -68,11 +68,12 @@
 library(dtasamplesize)
 options(width = 110, digits = 10)
 
-if (utils::packageVersion("dtasamplesize") != "0.6.9") {
+if (utils::packageVersion("dtasamplesize") < "0.7.0") {
   stop("dtasamplesize ", utils::packageVersion("dtasamplesize"), " is installed, ",
-       "but this script checks the published numbers exactly, computed ",
-       "under 0.6.6 and unchanged through the current 0.6.9 release ",
-       "(documentation/tooling-only releases; see NEWS.md).",
+       "but this script requires 0.7.0 or later. It checks numbers computed ",
+       "under 0.6.6 and unchanged through 0.6.9 (documentation/tooling-only ",
+       "releases); 0.7.0 returns identical results for the default arguments ",
+       "(see NEWS.md).",
        call. = FALSE)
 }
 

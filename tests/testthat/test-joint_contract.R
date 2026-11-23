@@ -1,19 +1,17 @@
 # Contract tests for joint_sample_size() under the "Option A" decision
-# (lote 01b, M-03): keep the step-10 default grid and its published figure
+# (version 0.6.6): keep the step-10 default grid and its published figure
 # (n_total = 580, joint_prob_se_sp = 0.8041) unchanged, reinterpret 580 as
 # "the first candidate of the step-10 grid reaching the target" (never
 # "smallest"), and give explicit non-crossing output (NA, never
 # max(N_range)) plus exposed grid/B/seed/MCSE/AUC-gate diagnostics. See
-# DECISION_JOINT_SAMPLE_SIZE.md (Option A) and NEWS.md (0.6.6) for the full
-# rationale; this file pins the resulting contract.
+# NEWS.md (0.6.6) for the full rationale; this file pins the resulting contract.
 
 # --- the published-case call: the figure quoted in the manuscript (Table 4)
 # is reproduced from Se/Sp/prev/delta_se/delta_sp at their package DEFAULTS
 # together with the B/seed actually used for that figure (B = 20000, seed =
 # 2026 -- the function's own B default is 5000, see ?joint_sample_size).
-# This is the "default call" referred to throughout the lote 01b audit
-# trail (DECISION_JOINT_SAMPLE_SIZE.md, tools/L01_analisis_joint.R block
-# (a)): defaults for every argument EXCEPT B/seed, which are pinned to the
+# This is the "default call" of the version 0.6.6
+# contract: defaults for every argument EXCEPT B/seed, which are pinned to the
 # manuscript's declared values. -------------------------------------------
 
 test_that("the published-case call reaches n_total = 580 with joint_prob_se_sp = 0.8041", {
@@ -22,11 +20,11 @@ test_that("the published-case call reaches n_total = 580 with joint_prob_se_sp =
   expect_true(result$target_reached)
   # n_total = 580 is stable across R RNG streams (same grid, same AUC gate,
   # same first-crossing candidate); the Monte Carlo *probability* at that N
-  # is NOT bit-identical across R versions (R-devel/4.6.x changed the RNG
-  # stream used by this sampling loop relative to R 4.5.x -- see NEWS
-  # 0.6.7). We pin n_total exactly, and check
-  # joint_prob_se_sp against its own reported MCSE rather than against the
-  # single value observed under R 4.5.x.
+  # was observed to differ on a development build of R (R-devel, 4.6.0
+  # r90605 of 2026-09-30; see NEWS 0.6.7). We pin n_total exactly, and check
+  # joint_prob_se_sp against its own reported MCSE; the exact figure is pinned
+  # only where rng_pins_apply() is TRUE (published R releases; it reproduces
+  # on R 4.6.2).
   expect_equal(result$n_total, 580L)
   expect_equal(result$joint_prob, result$joint_prob_se_sp) # deprecated alias
 
@@ -36,13 +34,13 @@ test_that("the published-case call reaches n_total = 580 with joint_prob_se_sp =
   mcse_from_p <- sqrt(result$joint_prob_se_sp * (1 - result$joint_prob_se_sp) / 20000)
   expect_equal(result$joint_prob_mcse, mcse_from_p, tolerance = 1e-9)
 
-  # Published-figure value (R 4.5.x RNG stream): within +/- 3 MCSE of the
-  # value reported in the manuscript/NEWS, robust to the RNG-stream change
-  # observed on R-devel (>= 4.6.0).
+  # Published-figure value: within +/- 3 MCSE of the value reported in the
+  # manuscript/NEWS, which also holds on the development build of R where
+  # the exact figure changed.
   expect_lt(abs(result$joint_prob_se_sp - 0.8041), 3 * mcse_from_p)
-  if (getRversion() < "4.6.0") {
-    # Exact published figure, reproducible deterministically on R < 4.6.0
-    # (the RNG stream used by this Monte Carlo loop is unchanged there).
+  if (rng_pins_apply()) {
+    # Exact published figure; skipped only on development builds of R
+    # (R.version$status non-empty), where a change was observed.
     expect_equal(result$joint_prob_se_sp, 0.8041, tolerance = 1e-4)
     expect_equal(result$joint_prob_mcse, 0.002806, tolerance = 1e-3)
   }
@@ -137,8 +135,8 @@ test_that("AUC-gate-blocked candidates are distinguishable from probability-0 ca
   expect_true(all(tbl$auc_pass %in% c(TRUE, FALSE, NA)))
   expect_equal(result$auc_gate$first_N_auc_pass, 350L)
   # Candidates at or above 350 (the full grid step-10 point of 350 upward)
-  # all pass the AUC gate near the crossing region (confirmed independently
-  # in DECISION_JOINT_SAMPLE_SIZE.md, Section 2(3): 570-590 all pass).
+  # all pass the AUC gate near the crossing region (confirmed independently:
+  # 570-590 all pass).
   row_580 <- tbl[tbl$N == 580, ]
   expect_true(isTRUE(row_580$auc_pass))
 })
@@ -170,7 +168,7 @@ test_that("print() of a successful result never says \"smallest\" and shows B/se
 
 # --- RNG state: joint_sample_size() must not disturb the caller's RNG -----
 # stream even when it takes the non-crossing branch (the branch most
-# recently touched by this lote) --------------------------------------------
+# recently touched in version 0.6.6) --------------------------------------------
 
 test_that("the caller's RNG stream is unaffected even when target_reached is FALSE", {
   set.seed(20260714)

@@ -1,4 +1,4 @@
-# G04 -- exact-mode invariance to B, seed and N_range
+# exact_invariance.R -- exact-mode invariance to B, seed and N_range
 # --------------------------------------------------------------------------
 # bam_sample_size(method = "exact") computes its headline N_total and
 # joint_assurance from a closed-form Beta-Binomial enumeration
@@ -8,14 +8,13 @@
 # IDENTICAL no matter what B or seed the caller passes (B/seed only affect
 # legacy per-arm diagnostic fields that are not part of the headline
 # result), and no matter whether N_range is left NULL (automatic integer
-# scan) or supplied explicitly as a range that contains the crossing. This
-# is the G04 gate in CORRECCION_02_COMPUERTAS_VERIFICACION.md section 7.
+# scan) or supplied explicitly as a range that contains the crossing.
 #
 # Two published cases are checked:
 #   - "678" / vague Sp prior (Figure 2 worked example): prior_se=c(17,3),
 #     prior_sp=c(2,2), prior_prev=c(4,16), delta_se=0.14, delta_sp=0.10,
 #     target_assurance=0.80 -> N_total=678, joint_assurance=0.8003489948.
-#   - "672" / harmonized Sp prior (Table 4): prior_se=c(17,3),
+#   - "672" / harmonized Sp prior (method comparison: Table 2 of v0.6.9 and of the R1): prior_se=c(17,3),
 #     prior_sp=c(18,2), prior_prev=c(4,16), delta_se=0.14, delta_sp=0.10,
 #     target_assurance=0.80 -> N_total=672, joint_assurance=0.8002692084.
 # (Both verbatim from validation/reproduce_manuscript.R sections 2 and 3.)
@@ -36,10 +35,10 @@
 # line, e.g.
 #   Rscript validation/exact_invariance.R --version-check=off
 # This does not weaken the normal guard; it only lets the script run
-# against a non-0.6.6 installation so G04 can show the check actually
+# against a non-0.6.6 installation so the script can show the check actually
 # detects the pre-0.6.6 defect rather than passing vacuously everywhere.
 #
-# Run from the package root (against the 0.6.9 private library):
+# Run from the package root (against a private library with dtasamplesize >= 0.7.0):
 #   Rscript validation/exact_invariance.R 2>&1 | tee validation/logs/exact_invariance.log
 # Run against the 0.6.5 library (expected to FAIL; log kept separately):
 #   R_LIBS=<path to lib065> Rscript validation/exact_invariance.R --version-check=off \
@@ -52,10 +51,10 @@ args <- commandArgs(trailingOnly = TRUE)
 version_check_off <- any(grepl("^--version-check=off$", args))
 
 installed_version <- utils::packageVersion("dtasamplesize")
-if (!version_check_off && installed_version != "0.6.9") {
+if (!version_check_off && installed_version < "0.7.0") {
   stop("dtasamplesize ", installed_version, " is installed, but this script ",
-       "checks the exact-mode invariance contract introduced in 0.6.6 ",
-       "(unchanged through the current 0.6.9 release). Pass ",
+       "requires 0.7.0 or later. It checks the exact-mode invariance ",
+       "contract introduced in 0.6.6 (unchanged through 0.7.0). Pass ",
        "--version-check=off to run anyway (e.g. to demonstrate the gate ",
        "FAILS against an earlier version).", call. = FALSE)
 }
@@ -212,11 +211,11 @@ if (!no_crossing_pass) {
 ## ---- Verdict ----
 sep("Verdict")
 if (all_pass) {
-  cat("RESULTADO G04: PASS\n")
+  cat("RESULT G04: PASS\n")
 } else {
   cat("Failures:\n")
   for (m in mismatch_msgs) cat("  - ", m, "\n", sep = "")
-  cat("RESULTADO G04: FAIL\n")
+  cat("RESULT G04: FAIL\n")
 }
 
 if (!all_pass) quit(status = 1, save = "no")

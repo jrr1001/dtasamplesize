@@ -1,5 +1,5 @@
 # Run the full development + confirmatory validation pipeline for the
-# independent Python reference implementation of dtasamplesize::bam_sample_size
+# separate Python reference implementation of dtasamplesize::bam_sample_size
 # (method = "exact") against the installed R package.
 #
 # Always cd's into its own directory first, so it can be invoked from anywhere.
@@ -17,11 +17,11 @@ Remove-Item Env:\LC_ALL -ErrorAction SilentlyContinue
 Remove-Item Env:\LC_CTYPE -ErrorAction SilentlyContinue
 Remove-Item Env:\LANG -ErrorAction SilentlyContinue
 
-$RSCRIPT = if ($env:RSCRIPT) { $env:RSCRIPT } else { "C:/Program Files/R/R-4.5.2/bin/Rscript.exe" }
+$RSCRIPT = if ($env:RSCRIPT) { $env:RSCRIPT } else { "C:/Program Files/R/R-4.6.2/bin/Rscript.exe" }
 $PYTHON  = if ($env:PYTHON) { $env:PYTHON } else { "python" }
-# Use a privately installed dtasamplesize (0.6.9) rather than the system
+# Use a privately installed dtasamplesize (0.7.0 or later) rather than the system
 # library when R_LIBS_PRIVATE is set by the caller, e.g.:
-#   $env:R_LIBS_PRIVATE = "D:/.../audit_outputs/surgical_2026-10-05/lib"; .\run_all.ps1
+#   $env:R_LIBS_PRIVATE = "C:/path/to/private/lib"; .\run_all.ps1
 if ($env:R_LIBS_PRIVATE) {
     $env:R_LIBS = $env:R_LIBS_PRIVATE
 }
@@ -34,7 +34,7 @@ function Run-Step {
         [string]$Script
     )
     $log = "logs/$Script.log"
-    Write-Host "=== [$(Get-Date -AsUTC -Format o)] START $Script ($Kind) ==="
+    Write-Host "=== [$((Get-Date).ToUniversalTime().ToString("o"))] START $Script ($Kind) ==="
     if ($Kind -eq "R") {
         & $RSCRIPT $Script *> $log
     } else {
@@ -47,7 +47,7 @@ function Run-Step {
         Write-Host "=== stopping run_all.ps1: $Script failed, downstream scripts not run ==="
         exit $status
     }
-    Write-Host "=== [$(Get-Date -AsUTC -Format o)] OK    $Script ==="
+    Write-Host "=== [$((Get-Date).ToUniversalTime().ToString("o"))] OK    $Script ==="
 }
 
 Write-Host "Python: $(& $PYTHON --version 2>&1)"
@@ -69,6 +69,9 @@ Run-Step -Kind PY -Script "conf_PY_06_monotone_in_N.py"
 Run-Step -Kind R  -Script "conf_R_07_reverify_version.R"   # reads conf_package.json
 Run-Step -Kind PY -Script "conf_PY_08_degeneracy_bite.py"  # reads conf_package.json
 Run-Step -Kind PY -Script "conf_PY_09_published_mc.py"
+
+# -- comparison of the regenerated conf_package.json with the two earlier files kept in the history --
+Run-Step -Kind R  -Script "compare_confirmatory_baselines.R"
 
 Write-Host ""
 Write-Host "=== ALL SCRIPTS COMPLETED SUCCESSFULLY ==="

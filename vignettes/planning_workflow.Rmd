@@ -1,0 +1,279 @@
+---
+title: "Planning a diagnostic accuracy study from a pilot: a worked example"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Planning a diagnostic accuracy study from a pilot: a worked example}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+# B and n_range only affect the legacy per-arm Monte Carlo fields of
+# bam_sample_size(); the exact result does not depend on them.
+options(dtasamplesize.warn_small_B = FALSE)
+```
+
+This vignette follows the planning of a validation study of a rapid antigen
+test from a published pilot, with the exact Bayesian assurance method of
+`bam_sample_size()` (Wilson et al. 2022; Williamson et al. 2023). Every count
+comes from two published articles; nothing here is simulated. The complete
+analysis, with finer grids, the local Hellinger sensitivity and all the
+tables, is in `validation/applied_example.R` of the source repository
+(output: log, CSV tables and figure).
+
+## The data
+
+* **Pilot** (Albert et al. 2021, *Clin Microbiol Infect* 27:472.e7-e10,
+  [doi:10.1016/j.cmi.2020.11.004](https://doi.org/10.1016/j.cmi.2020.11.004)):
+  Panbio COVID-19 Ag rapid test against RT-PCR in 412 symptomatic patients of
+  primary care centres in Valencia, Spain. Counts: TP = 43, FN = 11, FP = 0,
+  TN = 358 (single-gate cohort; prevalence 54/412 = 13.1%). FP = 0 is
+  derived from the printed totals.
+* **Validation study** (Bulilete et al. 2021, *J Infect* 82:391-398,
+  [doi:10.1016/j.jinf.2021.02.014](https://doi.org/10.1016/j.jinf.2021.02.014)):
+  the same test in 1362 analysed adults in primary care in Mallorca. Counts:
+  TP = 100, FN = 40, FP = 2, TN = 1220. The authors planned 927 participants
+  with a frequentist calculation (prevalence 15%, error 5%, sensitivity 90%)
+  and enrolled 1369.
+
+```{r data}
+pilot <- list(tp = 43, fn = 11, tn = 358, fp = 0)
+valid <- list(tp = 100, fn = 40, tn = 1220, fp = 2)
+library(dtasamplesize)
+```
+
+We plan the validation study as if it had not been done yet, and use its
+counts only at the end, for the post-study conflict check. The study sizes
+are always *total* sample sizes (diseased plus non-diseased).
+
+## Initial prior and its compatibility with the pilot
+
+The base case uses a flat Beta(1, 1) initial prior for sensitivity (Se),
+specificity (Sp) and prevalence. **The compatibility check between the
+initial prior and the pilot is not informative with a flat prior**: with
+Beta(1, 1) the prior predictive distribution is uniform and the smallest
+attainable tail probability is 1/(n + 1), so only extreme results can be
+flagged, and a flag only says that the count is extreme, not that it
+contradicts a flat prior, which predicts nothing specific. The function
+says so:
+
+```{r flat-check}
+invisible(tryCatch(
+  bam_prior_data_conflict(tp = 43, fn = 11, tn = 358, fp = 0,
+                          prior_se = c(1, 1), prior_sp = c(1, 1)),
+  warning = function(w) cat("Warning:", conditionMessage(w), "\n")))
+```
+
+The check is useful when the initial prior is informative. As a secondary
+illustration, take an initial prior centred on the manufacturer's claims
+quoted by Bulilete et al. (Se 93.3%, Sp 99.4%) with an **illustrative
+effective size of 10 observations per arm** (an assumption of this example,
+not a published value):
+
+```{r manuf-check}
+m_se <- c(0.933, 0.067) * 10
+m_sp <- c(0.994, 0.006) * 10
+chk <- bam_prior_data_conflict(tp = 43, fn = 11, tn = 358, fp = 0,
+                               prior_se = m_se, prior_sp = m_sp)
+as.data.frame(chk)[, c("quantity", "x_obs", "n", "p_lower", "p_upper",
+                       "p_two_sided", "flag_two_sided")]
+```
+
+The observed sensitivity of the pilot (43 of 54) falls in the lower tail of
+what that initial prior predicts (lower-tail probability
+`r sprintf("%.3f", as.data.frame(chk)$p_lower[1])`): it is not flagged at the
+0.05 threshold, but it is close, and a more concentrated initial prior (an
+effective size of 20 gives 0.049) would flag it. Specificity (358 of 358) is
+fully compatible. This is the kind of reading the check supports: review the
+initial prior (or the claim behind it). **What this check does not tell us**: it says nothing about how much weight
+the pilot should receive in the design prior (the heterogeneity between the
+pilot and the future study is not observed when planning), and a conflict
+does not say which source is wrong. It is a review of the *initial* prior,
+nothing more. The rest of the vignette uses the flat initial prior.
+
+## Design and analysis priors from the pilot
+
+`bam_prior_from_pilot()` updates the Beta priors with the pilot counts using
+a power prior with a fixed weight `a0` in (0, 1]. The choice of `a0` rests on
+the similarity of the populations, not on the conflict check. Here the
+pilot enrolled only symptomatic patients, including children, whereas the
+validation study enrolled adults only and more than half were close contacts
+(many asymptomatic, with lower sensitivity). Same test, sample type,
+operators, reference test and country, in contiguous periods: the populations
+are partly similar, so we take `a0 = 0.5` as the base value and explore
+0.25 and 1 below.
+
+The *analysis* prior is the one used to compute the posterior interval once the
+new study's data are in. With `use_in = "design"` the updated prior is used only to
+generate the data and the analysis starts from the flat base prior (the
+new study is analysed without borrowing the pilot; this is the principal choice
+here). With `use_in = "both"` the updated prior is also the analysis prior.
+
+```{r priors}
+pri <- function(a0, use_in) do.call(bam_prior_from_pilot, c(pilot, list(
+  base_prior_se = c(1, 1), base_prior_sp = c(1, 1), base_prior_prev = c(1, 1),
+  a0 = a0, use_in = use_in)))
+p_des  <- pri(0.5, "design")
+p_both <- pri(0.5, "both")
+p_des
+```
+
+## Exact sample size
+
+The width targets are those used by Williamson et al. (2023) in their
+illustrative example, from the MHRA target product profile: lower one-sided
+semi-widths of 0.10 for Se and 0.05 for Sp (posterior median minus the
+one-sided 95% lower bound, `width_type = "lower_half_width"`), joint
+objective, assurance 0.80. `bam_sensitivity()` evaluates a list of
+scenarios exactly (no simulation) and returns one row per scenario with
+the smallest total `N_total`, `A_N` and `A_N_minus_1`. We add a two-sided
+alternative (95% equal-tailed interval, full widths 0.20 and 0.10, that is
+twice the one-sided semi-widths: a convention, not an equivalence) and the
+`use_in = "both"` variant.
+
+```{r sizes}
+two <- list(width_type = "full_width", delta_se = 0.20, delta_sp = 0.10)
+scen <- list(
+  design_onesided_joint = list(priors = p_des),
+  both_onesided_joint   = list(priors = p_both),
+  design_twosided_joint = c(list(priors = p_des), two),
+  a0_0.25 = list(priors = pri(0.25, "design")),
+  a0_1    = list(priors = pri(1, "design")))
+tab <- withCallingHandlers(
+  bam_sensitivity(scen, delta_se = 0.10, delta_sp = 0.05,
+    width_type = "lower_half_width", alpha_ci = 0.95, target_assurance = 0.80),
+  warning = function(w) {
+    cat("Warning:", conditionMessage(w), "\n\n")
+    invokeRestart("muffleWarning")
+  })
+tab[, c("scenario", "N_total", "A_N", "A_N_minus_1")]
+```
+
+```{r sizes-values, include = FALSE}
+n_main <- tab$N_total[tab$scenario == "design_onesided_joint"]
+n_both <- tab$N_total[tab$scenario == "both_onesided_joint"]
+```
+
+The principal scenario recommends `r n_main` participants, to be compared with
+the 927 planned (frequentist) and the 1369 enrolled by Bulilete et al. With
+`use_in = "both"` the recommendation falls to `r n_both`, but this is because
+the updated Sp prior (concentrated near 1 after FP = 0) already meets the Sp
+width before any data are observed, so the Sp criterion stops constraining N
+and success depends on the prior. `bam_sensitivity()` warns about it (the warning
+is printed above the table). This is why `use_in = "design"` is
+the principal choice. Marginal objectives (for example `assurance_for = "se"`)
+and the full tables are in `validation/applied_example.R`.
+
+## Sensitivity
+
+The rows `a0_0.25` and `a0_1` above are the sensitivity to the pilot weight.
+Other sensitivities (width targets, assurance target, prior of prevalence, for
+example one centred on the 15% assumed by Bulilete et al.) are one more
+scenario each in the same list. The local sensitivity to the *initial* prior
+by Hellinger distance, `bam_sensitivity_local()`, perturbs the initial prior
+along a contour of fixed distance `epsilon`, re-applies the pilot and reports
+the range of the assurance and of N; it is slow, so it is not evaluated in
+this vignette:
+
+```{r hellinger, eval = FALSE}
+bam_sensitivity_local(
+  base_prior_se = c(1, 1), base_prior_sp = c(1, 1), base_prior_prev = c(1, 1),
+  which = "se", epsilon = 0.01, n_phi = 24, pilot = pilot, a0 = 0.5,
+  use_in = "design", n_ref = n_main,
+  delta_se = 0.10, delta_sp = 0.05, width_type = "lower_half_width")
+```
+
+The exact assurance curve of the principal scenario shows how the target is
+reached (the figure of `validation/applied_example.R` adds the curves for
+other values of `a0` and for `use_in = "both"`):
+
+```{r curve, fig.width = 6, fig.height = 4}
+Nr <- seq(50, 1000, by = 10)
+cv <- bam_assurance_curve(priors = p_des, N_range = c(Nr, n_main),
+  delta_se = 0.10, delta_sp = 0.05, width_type = "lower_half_width")
+plot(cv$curve$N, cv$curve$assurance, type = "l", lwd = 2, las = 1,
+     ylim = c(0, 1), xlab = "Total sample size N", ylab = "Exact assurance A(N)")
+abline(h = 0.80, col = "grey50", lty = 5)
+abline(v = 927, col = "grey30", lty = 3)
+points(n_main, tab$A_N[1], pch = 19)
+```
+
+The dotted vertical marks the 927 participants planned by Bulilete et al.
+(1369 were enrolled, beyond the range drawn) and the dashed horizontal line
+the target.
+
+## Frequentist complement with fixed values
+
+Buderer's formula needs point values. The pilot gives Se = 43/54 and
+prevalence 54/412, but its Sp is 1 (FP = 0) and the formula degenerates, so we
+fix a plausible declared value: the lower limit of the two-sided 95% Wilson
+interval of the pilot Sp (358 of 358). This is a choice of the example.
+
+```{r buderer}
+se <- 43 / 54; prev <- 54 / 412
+sp <- unname(wilson_ci(358, 358, alpha = 0.05)["lower"])
+nd <- buderer_n(se, 0.10, alpha = 0.10)   # one-sided 95%: z = qnorm(0.95)
+nn <- buderer_n(sp, 0.05, alpha = 0.10)
+c(Sp_fixed = sp, n_diseased = nd, n_non_diseased = nn,
+  N_total = max(ceiling(nd / prev), ceiling(nn / (1 - prev))))
+```
+
+This number ignores the uncertainty about Se, Sp and prevalence and the
+probability that the realised interval meets the target, so it is not the
+same question as the assurance: it is a reference point, not a competitor.
+The 927 of Bulilete et al. is reproduced with Buderer's formula for the Se
+arm and their declared inputs (`ceiling(buderer_n(0.90, 0.05) / 0.15)`),
+without claiming that this was the formula they used.
+
+## Post-study conflict check with the validation data
+
+Once the study is done, `bam_prior_data_conflict()` compares its counts with
+the prior predictive distributions: the number of diseased (prevalence
+prior), true positives among the diseased (Se prior) and true negatives
+among the non-diseased (Sp prior). For Se and Sp it returns two references:
+the predictive of the **analysis prior** (the inferential reference: does the
+prior used to analyse the data agree with them?) and that of the **design
+prior** (calibration of the assurance: were the data generated as the
+planning assumed?). The prevalence row refers to the design prior, because
+there is no analysis prior for prevalence.
+
+```{r post-conflict}
+post <- bam_prior_data_conflict(tp = 100, fn = 40, tn = 1220, fp = 2,
+                                priors = p_des)
+as.data.frame(post)[, c("quantity", "reference", "x_obs", "n", "p_lower",
+                        "p_upper", "p_two_sided", "flag_two_sided")]
+```
+
+With `use_in = "design"` the analysis prior is flat, so the rows against
+the analysis prior are weak checks (the flat-prior warning applies: with
+Beta(1, 1) the predictive is uniform and only extreme results are flagged;
+here the specificity row, 1220 of 1222 against a uniform predictive, is
+flagged in its upper tail, which reflects the flatness of the prior rather
+than a difference between the pilot and the validation study). The rows against the **design prior** are the
+calibration of the assurance: none is flagged. The observed sensitivity
+(100/140, 71.4%) is lower than the pilot's (79.6%), but it lies within what
+the design prior predicted (lower-tail probability about 0.23 at `a0` = 0.5),
+and the prevalence (140 of 1362, 10.3%) is also compatible with the design
+prior (lower tail about 0.10). So the planning assumptions were not
+contradicted by the new data. As with the planning check, a conflict (or its
+absence) does not say which source is at fault, and the check is not used to
+choose `a0`. With `use_in = "both"` the analysis and design priors coincide
+and a single row per quantity is returned.
+
+## References
+
+* Albert E, et al. Field evaluation of a rapid antigen test (Panbio COVID-19 Ag
+  Rapid Test Device) for COVID-19 diagnosis in primary healthcare centres.
+  *Clin Microbiol Infect* 2021;27:472.e7-e10.
+  [doi:10.1016/j.cmi.2020.11.004](https://doi.org/10.1016/j.cmi.2020.11.004)
+* Bulilete O, et al. Panbio rapid antigen test for SARS-CoV-2 has acceptable
+  accuracy in symptomatic patients in primary health care. *J Infect*
+  2021;82:391-398.
+  [doi:10.1016/j.jinf.2021.02.014](https://doi.org/10.1016/j.jinf.2021.02.014)
+* Wilson KJ, et al. Bayesian sample size determination for diagnostic accuracy
+  studies. *Stat Med* 2022;41:2908-2922.
+  [doi:10.1002/sim.9393](https://doi.org/10.1002/sim.9393)
+* Williamson SF, et al. Sample size determination for point-of-care COVID-19
+  diagnostic tests: a Bayesian approach. *Diagn Progn Res* 2023;7:17.
+  [doi:10.1186/s41512-023-00153-1](https://doi.org/10.1186/s41512-023-00153-1)
