@@ -1,0 +1,7 @@
+"scenario","N","reading","delta_se_full","delta_sp_full","target_reached","joint_assurance","max_assurance_evaluated","N_at_max_assurance","N_at_max_equals_single_N","assurance_read","expected","abs_diff_vs_expected","reading_label"
+"P1",678,"(i) published full-width targets",0.14,0.1,TRUE,0.800348994834556,0.800348994834556,678,TRUE,0.800348994834556,0.8003489948,3.4555691641458e-11,"(i) published full-width targets"
+"P1",678,"(ii) delta/2 used as full-width target",0.07,0.05,FALSE,NA,0.00317782950656221,678,TRUE,0.00317782950656221,0.003178,1.70493437787449e-07,"(ii) δ/2 used as the full-width target"
+"P1",678,"(iii) 2*delta used as full-width target",0.28,0.2,TRUE,0.999834387998638,0.999834387998638,678,TRUE,0.999834387998638,NA,NA,"(iii) 2δ used as the full-width target"
+"P2",672,"(i) published full-width targets",0.14,0.1,TRUE,0.800269208436753,0.800269208436753,672,TRUE,0.800269208436753,0.8002692084,3.67528230071912e-11,"(i) published full-width targets"
+"P2",672,"(ii) delta/2 used as full-width target",0.07,0.05,FALSE,NA,0.0381150317387544,672,TRUE,0.0381150317387544,0.038115,3.17387544163106e-08,"(ii) δ/2 used as the full-width target"
+"P2",672,"(iii) 2*delta used as full-width target",0.28,0.2,TRUE,0.999828968072591,0.999828968072591,672,TRUE,0.999828968072591,NA,NA,"(iii) 2δ used as the full-width target"

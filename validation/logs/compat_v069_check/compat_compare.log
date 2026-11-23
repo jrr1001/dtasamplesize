@@ -1,0 +1,37 @@
+compat_v069_check: comparison written 2026-11-23 01:36:04
+old: dtasamplesize 0.6.9 (C:/dta/lib_v069)
+new: dtasamplesize 0.7.0 (C:/dta/lib)
+
+P1             IDENTICAL  N_total old=678 new=678 | fields compared=27 | warnings identical=TRUE
+    (bam_sample_size: fields only in new version, not compared: alpha_ci, width_type, assurance_for, analysis_prior_se, analysis_prior_sp, analysis_prior_given, analysis_prior_size)
+P2             IDENTICAL  N_total old=672 new=672 | fields compared=27 | warnings identical=TRUE
+C01            IDENTICAL  N_total old=1188 new=1188 | fields compared=27 | warnings identical=TRUE
+C02            IDENTICAL  N_total old=599 new=599 | fields compared=27 | warnings identical=TRUE
+C03            IDENTICAL  N_total old=959 new=959 | fields compared=27 | warnings identical=TRUE
+C04            IDENTICAL  N_total old=950 new=950 | fields compared=27 | warnings identical=TRUE
+C05            IDENTICAL  N_total old=265 new=265 | fields compared=27 | warnings identical=TRUE
+C06            IDENTICAL  N_total old=1117 new=1117 | fields compared=27 | warnings identical=TRUE
+C07            IDENTICAL  N_total old=440 new=440 | fields compared=27 | warnings identical=TRUE
+C08            IDENTICAL  N_total old=607 new=607 | fields compared=27 | warnings identical=TRUE
+C09            IDENTICAL  N_total old=8 new=8 | fields compared=27 | warnings identical=TRUE
+C10            IDENTICAL  N_total old=3 new=3 | fields compared=27 | warnings identical=FALSE
+    warnings old: 
+    warnings new: The analysis prior for Se, equal to the design prior, Beta(8, 2) already has a prior-only interval width of 0.3881 <= its target delta (0.52, full_width): the width criterion is met before any data are observed, so success is dominated by the analysis prior. Use a weaker or flat analysis prior (analysis_prior_se) if this is not intended. || The analysis prior for Sp, equal to the design prior, Beta(2, 8) already has a prior-only interval width of 0.3881 <= its target delta (0.48, full_width): the width criterion is met before any data are observed, so success is dominated by the analysis prior. Use a weaker or flat analysis prior (analysis_prior_sp) if this is not intended.
+C11            IDENTICAL  N_total old=24 new=24 | fields compared=27 | warnings identical=TRUE
+C12            IDENTICAL  N_total old=NA new=NA | fields compared=27 | warnings identical=TRUE
+MC1            IDENTICAL  N_total old=700 new=700 | fields compared=27 | warnings identical=TRUE
+MC2            IDENTICAL  N_total old=53 new=53 | fields compared=27 | warnings identical=FALSE
+    warnings old: B = 300 is small; Monte Carlo error in the assurance estimate may be substantial. B >= 1000 (ideally 5000) is recommended for final results. Set options(dtasamplesize.warn_small_B = FALSE) to silence this.
+    warnings new: B = 300 is small; Monte Carlo error in the assurance estimate may be substantial. B >= 1000 (ideally 5000) is recommended for final results. Set options(dtasamplesize.warn_small_B = FALSE) to silence this. || The analysis prior for Se, equal to the design prior, Beta(17, 3) already has a prior-only interval width of 0.2976 <= its target delta (0.3, full_width): the width criterion is met before any data are observed, so success is dominated by the analysis prior. Use a weaker or flat analysis prior (analysis_prior_se) if this is not intended.
+MC3            IDENTICAL  N_total old=NA new=NA | fields compared=27 | warnings identical=TRUE
+MV1            IDENTICAL  N_total old=100 new=100 | fields compared=8 | warnings identical=TRUE
+    (mc_validate_buderer: fields only in new version, not compared: method_type)
+MV2            IDENTICAL  N_total old=100 new=100 | fields compared=8 | warnings identical=TRUE
+MV3            IDENTICAL  N_total old=31 new=31 | fields compared=8 | warnings identical=TRUE
+MV4            IDENTICAL  N_total old=60 new=60 | fields compared=8 | warnings identical=TRUE
+MV5            IDENTICAL  N_total old=271 new=271 | fields compared=8 | warnings identical=TRUE
+MV6            IDENTICAL  N_total old=150 new=150 | fields compared=8 | warnings identical=TRUE
+
+C12 (infeasible by design): N_total old = NA, new = NA; both NA: TRUE
+SUMMARY: 23/23 calls identical field by field (507 fields compared, `call` excluded); 0 different.
+RESULT: PASS 

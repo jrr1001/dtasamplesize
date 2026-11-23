@@ -1,0 +1,15 @@
+fixed_prevalence_control.R
+Date: 2026-11-23 00:52:59 -05
+R: R version 4.6.2 (2026-10-29 ucrt)
+dtasamplesize 0.7.0 (C:/dta/lib/dtasamplesize)
+Prevalence prior used to fix the prevalence at 0.20: Beta(2e6, 8e6)
+
+P1: N_total = 540, joint assurance = 0.8008797753, 29.7 s
+P2: N_total = 540, joint assurance = 0.8008797776, 20.7 s
+
+Reading: with the prevalence fixed at 0.20 and the number of diseased participants
+binomial, the sample size is the value above for each design. Compare with 678 and 672
+(Beta(4,16) prevalence prior) and with 533 (number of diseased participants fixed at
+round(0.20 N)).
+
+Expected 540 for both designs: PASS

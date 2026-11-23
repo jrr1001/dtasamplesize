@@ -1,0 +1,25 @@
+2026-11-23 02:02:56 | R version 4.6.2 (2026-10-29 ucrt) | dtasamplesize 0.7.0 at C:/dta/lib/dtasamplesize | tree commit 8fd1faf (+48 uncommitted paths) | script make_figure3_applied.R | out C:/dta/dtasamplesize/validation/logs/make_figure3_applied
+INPUT --applied C:/dta/dtasamplesize/validation/logs/applied_example/applied_example_main_table.csv sha256=ba65536b7a01a2ae0301d050e05a5ac60a0bc94ac8336b849ffb44e7c6a649c0
+INPUT --applied C:/dta/dtasamplesize/validation/logs/applied_example/applied_example_sensitivity.csv sha256=33058524c2033bfce6d0188e2a7636def61f4717e72cd9cef981a8a0a6423b2a
+Conventions: one-sided 95%, lower semi-widths 0.10 (Se) and 0.05 (Sp), joint, target 0.80, total N, exact; N_range 2:1450
+curve a0 = 0.5, use_in design (main)         N_first = 497  (10.5 s)
+curve a0 = 0.25, use_in design               N_first = 520  (10.1 s)
+curve a0 = 1, use_in design                  N_first = 480  (10.1 s)
+curve a0 = 0.5, use_in both                  N_first = 258  (10.2 s)
+WROTE R1_Figure3_applied_curves.csv (5796 rows)
+Decreases of A(N) along each curve (N_range 2:1450):
+  curve a0 = 0.5, use_in design (main)         decreases = 39; largest decrease = 1.918e-06 between N = 62 and N = 63; N of the decreases from 18 to 63
+  curve a0 = 0.25, use_in design               decreases = 38; largest decrease = 3.960e-06 between N = 62 and N = 63; N of the decreases from 18 to 63
+  curve a0 = 1, use_in design                  decreases = 42; largest decrease = 1.022e-06 between N = 62 and N = 63; N of the decreases from 18 to 68
+  curve a0 = 0.5, use_in both                  decreases = 0
+ANCHOR FIG3-01 first crossing of 0.80: main; a0 0.25; a0 1; both (T5-06, T5-10, T5-07) PASS (497, 520, 480, 258)
+ANCHOR FIG3-01b crossings equal to the applied_example.R tables (main, a0_0.25_design, a0_1_design, both_onesided_joint) PASS (497, 520, 480, 258)
+ANCHOR T5-06 A(497) of the main curve equals A_N of the main table (<= 1e-10) PASS (0.800661684969)
+ANCHOR FIG3-02-1 curve 1: A at its N_first >= 0.80 and A(N_first - 1) < 0.80 PASS (TRUE, TRUE)
+ANCHOR FIG3-02-2 curve 2: A at its N_first >= 0.80 and A(N_first - 1) < 0.80 PASS (TRUE, TRUE)
+ANCHOR FIG3-02-3 curve 3: A at its N_first >= 0.80 and A(N_first - 1) < 0.80 PASS (TRUE, TRUE)
+ANCHOR FIG3-02-4 curve 4: A at its N_first >= 0.80 and A(N_first - 1) < 0.80 PASS (TRUE, TRUE)
+WROTE Figure_3.pdf and Figure_3.tiff (170.0 mm x 121.4 mm, 600 dpi; cairo_pdf = TRUE)
+
+elapsed: 41.3 s
+SUMMARY: 7 anchors, all PASS

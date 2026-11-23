@@ -1,20 +1,17 @@
-* using log directory '<OUT>/check/dtasamplesize.Rcheck'
-* using R version 4.5.2 (2025-10-31 ucrt)
+* using log directory 'C:/dta/check/dtasamplesize.Rcheck'
+* using R version 4.6.2 (2026-10-29 ucrt)
 * using platform: x86_64-w64-mingw32
 * R was compiled by
     gcc.exe (GCC) 14.3.0
     GNU Fortran (GCC) 14.3.0
 * running under: Windows 11 x64 (build 26200)
 * using session charset: UTF-8
+* current time: 2026-11-23 05:53:10 UTC
 * using options '--no-manual --as-cran'
 * checking for file 'dtasamplesize/DESCRIPTION' ... OK
 * checking extension type ... Package
-* this is package 'dtasamplesize' version '0.6.9'
+* this is package 'dtasamplesize' version '0.7.0'
 * package encoding: UTF-8
-* checking CRAN incoming feasibility ... [37s] NOTE
-Maintainer: 'Jesús D. Rojas <jrojasrivero@gmail.com>'
-
-New submission
 * checking package namespace information ... OK
 * checking package dependencies ... OK
 * checking if this is a source package ... OK
@@ -22,7 +19,7 @@ New submission
 * checking for executable files ... OK
 * checking for hidden files and directories ... OK
 * checking for portable file names ... OK
-* checking whether package 'dtasamplesize' can be installed ... OK
+* checking whether package 'dtasamplesize' can be installed ... [17s] OK
 * checking installed package size ... OK
 * checking package directory ... OK
 * checking for future file timestamps ... OK
@@ -40,12 +37,11 @@ New submission
 * checking whether the namespace can be loaded with stated dependencies ... OK
 * checking whether the namespace can be unloaded cleanly ... OK
 * checking loading without being on the library search path ... OK
-* checking use of S3 registration ... OK
 * checking dependencies in R code ... OK
 * checking S3 generic/method consistency ... OK
 * checking replacement functions ... OK
 * checking foreign function calls ... OK
-* checking R code for possible problems ... [16s] OK
+* checking R code for possible problems ... [21s] OK
 * checking Rd files ... OK
 * checking Rd metadata ... OK
 * checking Rd line widths ... OK
@@ -57,18 +53,22 @@ New submission
 * checking for unstated dependencies in examples ... OK
 * checking installed files from 'inst/doc' ... OK
 * checking files in 'vignettes' ... OK
-* checking examples ... NOTE
+* checking examples ... [45s] OK
 Examples with CPU (user + system) or elapsed time > 5s
-                user system elapsed
-bam_sample_size 4.95   0.25    5.73
-* checking examples with --run-donttest ... [60s] OK
+                       user system elapsed
+bam_sensitivity       11.12   0.25   12.30
+bam_sample_size        9.83   0.10   11.41
+bam_sensitivity_local  7.97   0.08    8.55
+plot_assurance_curve   5.11   0.20    5.66
+bam_assurance_curve    3.85   0.05    5.30
+* checking examples with --run-donttest ... [91s] OK
 * checking for unstated dependencies in 'tests' ... OK
-* checking tests ... [26m] OK
-  Running 'testthat.R' [26m]
+* checking tests ... [34m] OK
+  Running 'testthat.R' [34m]
 * checking for unstated dependencies in vignettes ... OK
 * checking package vignettes ... OK
-* checking re-building of vignette outputs ... [16s] OK
+* checking re-building of vignette outputs ... [70s] OK
 * checking for non-standard things in the check directory ... OK
 * checking for detritus in the temp directory ... OK
 * DONE
-Status: 2 NOTEs
+Status: OK

@@ -1,0 +1,55 @@
+negative_control_halfwidth.R
+date:           2026-11-23 00:52:14 -05 
+R version:      R version 4.6.2 (2026-10-29 ucrt) 
+dtasamplesize:  0.7.0 
+width tolerance: none used in this script (package keeps its exact width <= delta comparison);
+agreement with expected values: |difference| <= 1e-06
+target_assurance = 0.80; credible level 0.95 (alpha_ci default); method = 'exact'
+
+--- Results (assurance_read = joint_assurance if not NA, else max_assurance_evaluated) ---
+ scenario   N                                 reading delta_se_full
+       P1 678        (i) published full-width targets          0.14
+       P1 678  (ii) delta/2 used as full-width target          0.07
+       P1 678 (iii) 2*delta used as full-width target          0.28
+       P2 672        (i) published full-width targets          0.14
+       P2 672  (ii) delta/2 used as full-width target          0.07
+       P2 672 (iii) 2*delta used as full-width target          0.28
+ delta_sp_full target_reached joint_assurance max_assurance_evaluated
+          0.10           TRUE       0.8003490             0.800348995
+          0.05          FALSE              NA             0.003177829
+          0.20           TRUE       0.9998344             0.999834388
+          0.10           TRUE       0.8002692             0.800269208
+          0.05          FALSE              NA             0.038115032
+          0.20           TRUE       0.9998290             0.999828968
+ N_at_max_assurance N_at_max_equals_single_N assurance_read  expected
+                678                     TRUE    0.800348995 0.8003490
+                678                     TRUE    0.003177829 0.0031780
+                678                     TRUE    0.999834388        NA
+                672                     TRUE    0.800269208 0.8002692
+                672                     TRUE    0.038115032 0.0381150
+                672                     TRUE    0.999828968        NA
+ abs_diff_vs_expected
+             3.46e-11
+             1.70e-07
+                   NA
+             3.68e-11
+             3.17e-08
+                   NA
+
+--- Agreement with expected values ---
+P1 (i) published full-width targets           read 0.8003489948 expected 0.8003489948 -> AGREE
+P1 (ii) delta/2 used as full-width target     read 0.0031778295 expected 0.0031780000 -> AGREE
+P1 (iii) 2*delta used as full-width target    no expected value; read 0.9998343880
+P2 (i) published full-width targets           read 0.8002692084 expected 0.8002692084 -> AGREE
+P2 (ii) delta/2 used as full-width target     read 0.0381150317 expected 0.0381150000 -> AGREE
+P2 (iii) 2*delta used as full-width target    no expected value; read 0.9998289681
+(expected (ii) values are given to 6 decimals, so the tolerance for those is 5e-7)
+N_at_max_assurance equals the single N in every (ii) row: TRUE
+
+--- Direction ---
+Only reading (ii) reproduces the negative-control value of about 0.0032 (P1, N = 678):
+it corresponds to TREATING THE HALF-WIDTH delta/2 AS THE FULL-WIDTH TARGET, i.e. a
+target twice as strict as the published one. Reading (iii), 2*delta as full width, is
+the opposite (looser) misreading and gives the assurance shown in the table.
+
+Done.

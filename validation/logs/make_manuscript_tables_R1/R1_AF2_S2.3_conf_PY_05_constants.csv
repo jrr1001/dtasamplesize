@@ -1,0 +1,7 @@
+"case","variant","N_star","shift","note","source"
+"P1","V2 HPD (shortest) interval",666,-12,"","validation/python/logs/conf_PY_05_shared_assumptions.py.log, L2-L14"
+"P1","V5 n_d fixed at round(N*E[prev])",533,-145,"","validation/python/logs/conf_PY_05_shared_assumptions.py.log, L2-L14"
+"P1","V3 delta treated as HALF width",NA,NA,"N* > 900; assurance at N = 678 is 0.003178","validation/python/logs/conf_PY_05_shared_assumptions.py.log, L2-L14"
+"P2","V2 HPD (shortest) interval",658,-14,"","validation/python/logs/conf_PY_05_shared_assumptions.py.log, L2-L14"
+"P2","V5 n_d fixed at round(N*E[prev])",533,-139,"","validation/python/logs/conf_PY_05_shared_assumptions.py.log, L2-L14"
+"P2","V3 delta treated as HALF width",NA,NA,"N* > 900; assurance at N = 672 is 0.038115","validation/python/logs/conf_PY_05_shared_assumptions.py.log, L2-L14"

@@ -1,0 +1,4 @@
+"Function","Purpose"
+"mc_validate_buderer","Monte Carlo validation of the classical formula (diagnostic, not a planner)"
+"bam_sample_size","Bayesian assurance sample size for the joint precision of Se and Sp, under uncertain prevalence (closed-form exact mode available)"
+"joint_sample_size","Joint Se and Sp precision by direct Monte Carlo simulation, cohort design"

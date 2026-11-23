@@ -1,9 +1,14 @@
+R version:           R version 4.6.2 (2026-10-29 ucrt) 
+dtasamplesize:       0.7.0 
+Output directory:    C:/dta/dtasamplesize/validation/output 
 
 ========== 1. Assurance gap of the classical Buderer sample size ==========
 buderer_n(Se=0.85, d=0.07) = 100   (article: 100)   PASS
 buderer_n(Se=0.90, d=0.05) = 139   (article: 139)   PASS
-P(CI width <= target) = 0.5730   (article: 0.5730)   PASS
-Wald coverage         = 0.9380   (article: 0.9380)   PASS
+P(CI width <= target) = 0.5730   (Additional file 2, Table S2.7: 0.5730)   PASS
+Wald coverage         = 0.9380   (Additional file 2, Table S2.7: 0.9380)   PASS
+exact P(CI width <= 0.14), wald   = 0.5683   (article: 0.5683)   PASS
+exact P(CI width <= 0.14), wilson = 0.5683   (article: 0.5683)   PASS
 
 ========== 2. Joint assurance for Se and Sp: exact crossing at N = 678 (Figure 2) ==========
 N_total = 678   (article: 678)   PASS
@@ -11,14 +16,33 @@ joint assurance at N=678 = 0.8003489948   (article: 0.8003489948)   PASS
 target_reached at N=677 = FALSE   (expected: FALSE)   PASS
 max_assurance_evaluated at N=677 = 0.7996848824   (article: 0.7996848824)   PASS
 
-========== 3. Table 4: Buderer, BAM (exact, harmonized priors), joint Se/Sp ==========
+========== 3. Method comparison (Table 2 of v0.6.9 and of the R1): Buderer, BAM (exact, harmonized priors), joint Se/Sp ==========
 Buderer (classical), combined N = 500   (article: 500)   PASS
 BAM (exact, harmonized priors), N = 672   (article: 672)   PASS
   joint assurance at N=672  = 0.8002692084   (article: 0.8002692084)   PASS
 Joint Se/Sp (joint_sample_size), N = 580   (article: 580, first candidate of the 10-step grid)   PASS
   joint assurance at N=580  = 0.8041   (article: 0.8041)   PASS
   joint_prob_mcse at N=580  = 0.002806   (article/log: ~0.002806)   PASS
-  B = 20000, seed = 2026, search_type = grid_first_candidate, N_range_used identical to seq(100,800,10): **CHECK**
+  B = 20000, seed = 2026, search_type = grid_first_candidate, N_range_used equal in value to seq(100,800,10): PASS
   AUC gate: first_N_auc_pass = 350
+
+SUMMARY: 17 of 17 checks PASS, 0 **CHECK**
+  buderer_n(0.85, 0.07) = 100: PASS
+  buderer_n(0.90, 0.05) = 139: PASS
+  MC P(width) n=100 = 0.5730: PASS
+  MC Wald coverage n=100 = 0.9380: PASS
+  exact P(100), wald = 0.5683: PASS
+  exact P(100), wilson = 0.5683: PASS
+  BAM exact N_total = 678: PASS
+  BAM exact A(678) = 0.8003489948: PASS
+  BAM exact target_reached(677) = FALSE: PASS
+  BAM exact A(677) = 0.7996848824: PASS
+  Buderer combined N = 500: PASS
+  BAM harmonized N = 672: PASS
+  BAM harmonized A(672) = 0.8002692084: PASS
+  joint_sample_size N = 580: PASS
+  joint_sample_size P = 0.8041: PASS
+  joint_sample_size MCSE = 0.002806: PASS
+  joint_sample_size N_range_used = seq(100,800,10) (values): PASS
 
 === reproduce_manuscript done ===

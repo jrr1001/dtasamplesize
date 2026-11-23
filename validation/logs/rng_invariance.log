@@ -1,4 +1,4 @@
-R.version.string: R version 4.5.2 (2025-10-31 ucrt) 
+R.version.string: R version 4.6.2 (2026-10-29 ucrt) 
 RNGkind() documented kinds (per ?RNGkind, 'all five ... available in R' in
 the manuscript is a selection of these eight, not literally all of them):
   Wichmann-Hill, Marsaglia-Multicarry, Super-Duper, Mersenne-Twister,

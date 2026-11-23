@@ -1,0 +1,77 @@
+bridge_frequentist_bayesian.R
+Date: 2026-11-23 01:28:44 
+R: R version 4.6.2 (2026-10-29 ucrt) 
+packageVersion(dtasamplesize): 0.7.0 
+find.package(dtasamplesize): C:/dta/lib/dtasamplesize 
+TOL = 1e-12 ; N_CAP = 1200 
+
+Point design values: Se = 0.85, Sp = 0.90, prevalence = 0.20 (means of the example priors)
+
+Building width tables (qbeta enumeration up to n = 1200 ) ...
+  done in 18.1 s
+
+==== Cross-check with bam_sample_size(method = 'exact') (Beta design) ====
+  Beta design / informative: package N_total = 672 (A = 0.8002692084) ; script N* = 672 (A = 0.8002692084) ; MATCH (7 s)
+  Beta design / jeffreys   : package N_total = 824 (A = 0.8000427878) ; script N* = 824 (A = 0.8000427878) ; MATCH (7 s)
+  Beta design / uniform    : package N_total = 831 (A = 0.8004347172) ; script N* = 831 (A = 0.8004347172) ; MATCH (7 s)
+
+==== Results: N* (first N with joint assurance >= 0.80) ====
+         design    analysis N_star  A_at_N_star A_at_N_star_minus_1 n_N_above_star_below_target
+          point      wilson    578 0.8012446830        0.7983424783                           0
+          point    jeffreys    576 0.8014445644        0.7985691107                           0
+          point     uniform    579 0.8025248296        0.7996598075                           0
+          point informative    466 0.8002314678        0.7972794804                           0
+           beta      wilson    831 0.8004258747        0.7999171971                           0
+           beta    jeffreys    824 0.8000427878        0.7995362212                           0
+           beta     uniform    831 0.8004347172        0.7999271575                           0
+           beta informative    672 0.8002692084        0.7996594780                           0
+ beta_prev_only      wilson    808 0.8002488985        0.7996631106                           0
+ beta_prev_only    jeffreys    801 0.8005210275        0.7999338545                           0
+ beta_prev_only     uniform    808 0.8003217534        0.7997366002                           0
+ beta_prev_only informative    637 0.8000737465        0.7993439504                           0
+ beta_meas_only      wilson    660 0.8000771180        0.7988285449                           0
+ beta_meas_only    jeffreys    661 0.8005695567        0.7993555798                           0
+ beta_meas_only     uniform    661 0.8006337284        0.7993809601                           0
+ beta_meas_only informative    540 0.8008800413        0.7995723969                           0
+
+==== Preliminary values against obtained ====
+                                   cell preliminary obtained                                            source difference
+ point / Wilson (frequentist reference)         578      578 earlier exploratory calculation (not distributed)          0
+                       point / Jeffreys         576      576 earlier exploratory calculation (not distributed)          0
+                        point / uniform         579      579 earlier exploratory calculation (not distributed)          0
+                    point / informative         466      466 earlier exploratory calculation (not distributed)          0
+                     Beta / informative         672      672                        article, Table 2 (N = 672)          0
+
+==== 2 x 2 factorial (N*), rows = design, columns = analysis ====
+ design vague_Jeffreys vague_uniform informative Wilson_frequentist
+  point            576           579         466                578
+   Beta            824           831         672                831
+(The 'Beta / Wilson' cell is the Wilson-interval event under the Beta design; it is an extra, not part of the 2 x 2.)
+
+Extra decomposition cells (design uncertainty by source):
+         design    analysis N_star  A_at_N_star
+ beta_prev_only      wilson    808 0.8002488985
+ beta_prev_only    jeffreys    801 0.8005210275
+ beta_prev_only     uniform    808 0.8003217534
+ beta_prev_only informative    637 0.8000737465
+ beta_meas_only      wilson    660 0.8000771180
+ beta_meas_only    jeffreys    661 0.8005695567
+ beta_meas_only     uniform    661 0.8006337284
+ beta_meas_only informative    540 0.8008800413
+
+==== Sentence for the text (numbers as obtained) ====
+With a point design prior, the frequentist Wilson-interval event gives N = 578, and Bayesian credible
+intervals with a vague analysis prior give N = 576 (Jeffreys) and 579 (uniform), so the interval type alone
+moves N by at most 2. Replacing the point design by the Beta design priors of the example, with the same
+vague analysis priors, changes N to 824 (Jeffreys) and 831 (uniform), a change of +248 and +252 relative to
+the point-design values (effect of design uncertainty). Replacing the vague analysis priors by the
+informative priors of the example, with the point design, changes N from 576-579 to 466 (effect of the
+informative analysis prior, -110 to -113). The worked example combines both changes (Beta design, informative
+analysis): N = 672, that is +94 relative to the frequentist reference 578; the design uncertainty and the
+informative analysis prior act in opposite directions. Along the path point design with Jeffreys analysis,
+Beta design with Jeffreys analysis, Beta design with informative analysis: 576, 824, 672 (+248, then -152).
+
+(The sentence is generated from the table; check the sign of each effect before reusing the wording: design effect on vague analysis = +248 / +252, analysis effect under point design = -110 / -113, analysis effect under Beta design = -152 / -159.)
+
+Total elapsed: 52.6 s
+Output directory: C:/dta/dtasamplesize/validation/logs/bridge_frequentist_bayesian 

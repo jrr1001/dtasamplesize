@@ -1,0 +1,41 @@
+edge_case_empty_arm.R
+date:           2026-11-23 00:54:40 -05 
+R version:      R version 4.6.2 (2026-10-29 ucrt) 
+dtasamplesize:  0.7.0 (cross-check only; the computation is self-contained beta-binomial enumeration)
+tolerance: width <= delta uses TOL_W = 1e-12; implementation agreement |dA| <= 1e-10
+
+Operational definition of 'suppressing the convention':
+  package convention = 'empty arm = failure': P_arm(0) = 0 for both arms, so any replication
+  with K = 0 or K = N contributes 0 to the joint assurance.
+  suppressed convention = remove that override and evaluate the empty arm (m = 0, x = 0)
+  by its prior-only credible interval Beta(a, b) with the same formula as every other arm:
+  P_arm(0) = 1 if prior width <= delta (+TOL_W), else 0. Terms with m >= 1 are unchanged.
+  The assurance can therefore change only if the prior-only width of an empty arm is <= its
+  target, and by at most P(K in {0, N}).
+
+--- Results ---
+        case   N level delta_se delta_sp      P_K_in_0_N prior_width_se prior_width_sp A_empty_fail A_empty_prior_interval        shift min_abs_width_minus_delta A_package_exact abs_diff_package_vs_script
+      C10_N3   3  0.90     0.52     0.48 4.272727273e-01   0.3881123795   0.3881123795 0.5727272727           1.0000000000 0.4272727273           5.070128463e-02    0.5727272727                          0
+   worked_N3   3  0.95     0.14     0.10 5.428571429e-01   0.2975504155   0.8114013519 0.0000000000           0.0000000000 0.0000000000           1.225568904e-01    0.0000000000                          0
+ worked_N678 678  0.95     0.14     0.10 3.975655249e-07   0.2975504155   0.8114013519 0.8003489948           0.8003489948 0.0000000000           8.942225815e-05    0.8003489948                          0
+
+Worked example (P1) prior widths at 95%: Se Beta(17,3) = 0.29755; Sp Beta(2,2) = 0.811401 (both above their targets 0.14 and 0.10, so the empty-arm convention cannot change A).
+C10 prior widths at 90%: Se Beta(8,2) = 0.388112; Sp Beta(2,8) = 0.388112 (both below 0.52 and 0.48: the prior-only interval already meets the target).
+
+--- Agreement with expected values from planning evidence ---
+C10 N=3  P(K in {0,3})                                     got 0.4273         expected 0.4273         -> AGREE
+C10 N=3  A, empty arm = failure                            got 0.5727         expected 0.5727         -> AGREE
+C10 N=3  A, empty arm by prior-only interval               got 1              expected 1              -> AGREE
+C10 prior width Se                                         got 0.388          expected 0.388          -> AGREE
+C10 prior width Sp                                         got 0.388          expected 0.388          -> AGREE
+Worked N=3  P(K in {0,3})                                  got 0.5429         expected 0.5429         -> AGREE
+Worked N=3  A, empty arm = failure (unchanged by convention) got 0              expected 0              -> AGREE
+Worked prior width Se                                      got 0.298          expected 0.298          -> AGREE
+Worked prior width Sp                                      got 0.811          expected 0.811          -> AGREE
+Worked N=678  P(K in {0,678})                              got 3.976e-07      expected 3.976e-07      -> AGREE
+Worked N=678  A(678), empty arm = failure (published P1 0.8003489948) got 0.8003489948   expected 0.8003489948   -> AGREE
+shift in A due to the convention: worked N=3 = 0; worked N=678 = 0
+Package (bam_sample_size, method='exact', N_range = single N) vs this script, max |dA| = 0 -> AGREE (tolerance 1e-10)
+Smallest |width - delta| over arm sizes 1..min(N,60) and all x (should be >> TOL_W): 8.942225815e-05
+
+Done.

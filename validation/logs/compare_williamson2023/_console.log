@@ -1,0 +1,96 @@
+compare_williamson2023.R
+date: 2026-11-23 00:55:37
+packageVersion(dtasamplesize): 0.7.0
+find.package(dtasamplesize): C:/dta/lib/dtasamplesize
+R.version.string: R version 4.6.2 (2026-10-29 ucrt)
+TOL = 1e-12; output_dir = C:/dta/dtasamplesize/validation/logs/compare_williamson2023
+
+=== PART 1: illustrative example [M, Illustrative example, Table 3(i), Table 4] ===
+inputs: Se Beta(25,7); Sp Beta(30,2); prevalence Beta(13.56,122.06); one-sided 95% half-widths 0.10 (Se), 0.05 (Sp); assurance 0.80; joint objective
+package bam_sample_size(): N_total = 321; joint_assurance = 0.8007552; warnings issued: 0
+package bam_assurance_curve(250:400): N_first = 321; n_decreases = 0; monotone = TRUE
+  N = 320: A package = 0.7985632900; A own enumeration = 0.7985632900; |diff| = 0.00e+00; plan preliminary = 0.7985633
+  N = 321: A package = 0.8007552287; A own enumeration = 0.8007552287; |diff| = 0.00e+00; plan preliminary = 0.8007552
+  N = 322: A package = 0.8029263806; A own enumeration = 0.8029263806; |diff| = 0.00e+00; plan preliminary = 0.8029264
+  published N = 321; package N = 321; difference = 0
+  part 1 elapsed: 10.9 s
+
+=== PART 2: Figure 3 text [M, Results; Figure 3] ===
+inputs: Se only (assurance_for = 'se'); one-sided 95% half-width 0.10; assurance 0.80;
+design = analysis prior Beta(9,3), Beta(10,2), Beta(11,1); prevalence prior: declared assumption
+(mean rho_T, 95% equal-tailed width 0.1); NOT published in [M].
+rho_T = 0.05: prevalence prior Beta(3.4331052678, 65.2290000879); mean = 0.050000; 95% width = 0.10000000
+  Se Beta(9,3): package N = 1628 (A = 0.8001367, 20 s); own enumeration N = 1628 (A(N-1) = 0.7998871, A(N) = 0.8001367); published 1630
+    P_se(M) = 1.000000000000; Beta-Binomial mass of m > M at N = 1628: 4.514e-06; warnings: 0
+  Se Beta(10,2): package N = 1294 (A = 0.8001847, 20 s); own enumeration N = 1294 (A(N-1) = 0.7998878, A(N) = 0.8001847); published 1295
+    P_se(M) = 1.000000000000; Beta-Binomial mass of m > M at N = 1294: 3.210e-08; warnings: 0
+  Se Beta(11,1): package N = 782 (A = 0.8003049, 10 s); own enumeration N = 782 (A(N-1) = 0.7998861, A(N) = 0.8003049); published 783
+    P_se(M) = 1.000000000000; Beta-Binomial mass of m > M at N = 782: 1.443e-15; warnings: 0
+rho_T = 0.30: prevalence prior Beta(96.3370637248, 224.7864820246); mean = 0.300000; 95% width = 0.10000000
+  Se Beta(9,3): package N = 182 (A = 0.8062217, 4 s); own enumeration N = 182 (A(N-1) = 0.7988008, A(N) = 0.8062217); published 182
+    P_se(M) = 1.000000000000; Beta-Binomial mass of m > M at N = 182: -1.643e-14; warnings: 0
+  Se Beta(10,2): package N = 154 (A = 0.8019545, 4 s); own enumeration N = 154 (A(N-1) = 0.7963132, A(N) = 0.8019545); published 154
+    P_se(M) = 1.000000000000; Beta-Binomial mass of m > M at N = 154: -1.887e-14; warnings: 0
+  Se Beta(11,1): package N = 101 (A = 0.8042516, 3 s); own enumeration N = 101 (A(N-1) = 0.7996768, A(N) = 0.8042516); published 101
+    P_se(M) = 1.000000000000; Beta-Binomial mass of m > M at N = 101: -1.399e-14; warnings: 0
+  part 2 (package + base enumeration) elapsed: 66.4 s
+
+--- variants for the difference at rho_T = 0.05 (P7) and consistency check at rho_T = 0.30 ---
+  rho_T = 0.05 V0  N = 1628, 1294, 782 (published 1630, 1295, 783); A = 0.800137, 0.800185, 0.800305 | base: qbeta, non-strict, unrounded prevalence prior
+  rho_T = 0.05 V1  N = 1628, 1294, 782 (published 1630, 1295, 783); A = 0.800137, 0.800185, 0.800305 | strict success (width < target)
+  rho_T = 0.05 V2a N = 1630, 1295, 783 (published 1630, 1295, 783); A = 0.800141, 0.800023, 0.800345 | prevalence hyperparameters rounded to 2 decimals
+  rho_T = 0.05 V2b N = 1648, 1310, 791 (published 1630, 1295, 783); A = 0.800036, 0.800213, 0.800189 | prevalence hyperparameters rounded to 1 decimal
+  rho_T = 0.05 V3a N = 1628, 1294, 782 (published 1630, 1295, 783); A = 0.800137, 0.800185, 0.800305 | quantiles by uniroot on pbeta, default tolerance (1.2e-4)
+  rho_T = 0.05 V3b N = 1628, 1294, 782 (published 1630, 1295, 783); A = 0.800137, 0.800185, 0.800305 | quantiles by uniroot on pbeta, tolerance 1e-12
+  rho_T = 0.05 V4  N = 1601, 1274, 771 (published 1630, 1295, 783); A = 0.800136, 0.800176, 0.800124 | prevalence prior moment-matched, mean rho_T, sd = 0.1/(2*1.96)
+  rho_T = 0.05 V5  N = 1083, 921, 601 (published 1630, 1295, 783); A = 0.800864, 0.800567, 0.800067 | point prevalence: m ~ Bin(N, rho_T), no prior
+  rho_T = 0.05 V6  N = 1197, 988, 630 (published 1630, 1295, 783); A = 0.800064, 0.800640, 0.800580 | constant prior size: Beta(321 rho_T, 321 (1 - rho_T))
+  rho_T = 0.30 V0  N = 182, 154, 101 (published 182, 154, 101); A = 0.806222, 0.801954, 0.804252 | base: qbeta, non-strict, unrounded prevalence prior
+  rho_T = 0.30 V1  N = 182, 154, 101 (published 182, 154, 101); A = 0.806222, 0.801954, 0.804252 | strict success (width < target)
+  rho_T = 0.30 V2a N = 182, 154, 101 (published 182, 154, 101); A = 0.806236, 0.801964, 0.804256 | prevalence hyperparameters rounded to 2 decimals
+  rho_T = 0.30 V2b N = 182, 154, 101 (published 182, 154, 101); A = 0.805792, 0.801681, 0.804106 | prevalence hyperparameters rounded to 1 decimal
+  rho_T = 0.30 V3a N = 182, 154, 101 (published 182, 154, 101); A = 0.806222, 0.801954, 0.804252 | quantiles by uniroot on pbeta, default tolerance (1.2e-4)
+  rho_T = 0.30 V3b N = 182, 154, 101 (published 182, 154, 101); A = 0.806222, 0.801954, 0.804252 | quantiles by uniroot on pbeta, tolerance 1e-12
+  rho_T = 0.30 V4  N = 182, 154, 101 (published 182, 154, 101); A = 0.806253, 0.801965, 0.804256 | prevalence prior moment-matched, mean rho_T, sd = 0.1/(2*1.96)
+  rho_T = 0.30 V5  N = 179, 153, 100 (published 182, 154, 101); A = 0.800643, 0.802041, 0.801905 | point prevalence: m ~ Bin(N, rho_T), no prior
+  rho_T = 0.30 V6  N = 182, 154, 101 (published 182, 154, 101); A = 0.806215, 0.801952, 0.804251 | constant prior size: Beta(321 rho_T, 321 (1 - rho_T))
+  variants elapsed: 179.6 s
+
+=== PART 3 (package side): application configurations [APP] ===
+Package convention for all rows: joint, one-sided 95% lower half-width, design = analysis prior,
+exact. The application does not state its criterion (no field for credible level or sidedness in the
+Calculator, 2026-11-14_2353_calculator_default.png); the comparison below tests the one-sided
+half-width reading, which is the convention of [M].
+  config A, package (N_max = 500): N_total = 321; A = 0.8007552; target_reached = TRUE; max A evaluated = 0.8007552 at N = 321; 6 s
+  config B, package (N_max = 1000): N_total = 551; A = 0.8004911; target_reached = TRUE; max A evaluated = 0.8004911 at N = 551; 16 s
+  config C, package (N_max = 1000): N_total = 552; A = 0.8007302; target_reached = TRUE; max A evaluated = 0.8007302 at N = 552; 20 s
+  config D, package (N_max = 1000): N_total = 551; A = 0.8000575; target_reached = TRUE; max A evaluated = 0.8000575 at N = 551; 20 s
+  config E, package (N_max = 1000): N_total = NA; A =       NA; target_reached = FALSE; max A evaluated = 0.0581848 at N = 1000; 28 s
+  config C, package (N_max = 1500): N_total = 552; A = 0.8007302
+  A(N) package, config A: N=320 0.7985633; N=321 0.8007552; N=322 0.8029264
+  A(N) package, config B: N=550 0.7996935; N=551 0.8004911; N=552 0.8012851; N=553 0.8020755
+  A(N) package, config C: N=550 0.7991109; N=551 0.7999225; N=552 0.8007302; N=553 0.8015338
+  A(N) package, config D: N=550 0.7992493; N=551 0.8000575; N=552 0.8008619; N=553 0.8016624
+  alternative (manuscript) convention, two-sided full width = 2 x the half-width typed in the app:
+    config B: N_total = 672; A = 0.8002692
+    config C: N_total = 678; A = 0.8003490
+    config D: N_total = 677; A = 0.8006349
+  table written: f33_package_vs_app.csv (11 application observations)
+    A-1                                      app N = 321 A = 0.8008 | package N = 321 A(app N) = 0.8008 | N agree: TRUE; A agree (4 dp): TRUE
+    B-2                                      app N = 552 A = 0.8007 | package N = 551 A(app N) = 0.8013 | N agree: FALSE; A agree (4 dp): FALSE
+    B-3                                      app N = 551 A = 0.8005 | package N = 551 A(app N) = 0.8005 | N agree: TRUE; A agree (4 dp): TRUE
+    B-4                                      app N = 551 A = 0.8005 | package N = 551 A(app N) = 0.8005 | N agree: TRUE; A agree (4 dp): TRUE
+    C-1                                      app N = 551 A = 0.8005 | package N = 552 A(app N) = 0.7999 | N agree: FALSE; A agree (4 dp): FALSE
+    C-2                                      app N = 552 A = 0.8007 | package N = 552 A(app N) = 0.8007 | N agree: TRUE; A agree (4 dp): TRUE
+    C-3                                      app N = 552 A = 0.8007 | package N = 552 A(app N) = 0.8007 | N agree: TRUE; A agree (4 dp): TRUE
+    C-4                                      app N = 552 A = 0.8007 | package N = 552 A(app N) = 0.8007 | N agree: TRUE; A agree (4 dp): TRUE
+    C-5                                      app N = 552 A = 0.8007 | package N = 552 A(app N) = 0.8007 | N agree: TRUE; A agree (4 dp): TRUE
+    D-1 (Sp Beta(1,1), Both)                 app N = 551 A = 0.8005 | package N = 551 A(app N) = 0.8001 | N agree: TRUE; A agree (4 dp): FALSE
+    E-1 (Sp Beta(1,1), Sp half-width 0.01)   app N = NA A = NA | package N = NA A(app N) = NA | N agree: TRUE; A agree (4 dp): NA
+  Observation (not an explanation): the 3 application runs whose N or A differ from the package at the
+  typed priors (B-2, C-1, D-1) all agree with the package at the Sp prior that was entered immediately
+  before; the repeat runs agree with the typed priors. Not established: see the report (capture requested).
+  restrictions table written: f33_restrictions.csv (15 rows)
+  part 3 elapsed: 197.1 s
+
+total elapsed: 454 s

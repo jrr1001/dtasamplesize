@@ -1,3 +1,6 @@
+R version:           R version 4.6.2 (2026-10-29 ucrt) 
+dtasamplesize:       0.7.0 
+Output directory:    C:/dta/dtasamplesize/validation/logs/cross_validation 
 
 ==========  V1. Wilson score CI  ==========
 x= 85 n=100 | mine[0.76716,0.90694] Hmisc[0.76716,0.90694] prop.test[0.76716,0.90694]  PASS / PASS
@@ -48,6 +51,8 @@ max |simulation - closed form| = 0.0020 (B=200000)  PASS
 VIF package=1.384083  Rogan-Gladen=1.384083  PASS
 apparent Se: MC=0.7638  closed-form=0.7639  PASS
 
-Table 2 written to D:/Documents/UPNW/Articulos en proceso/Colaboraciones/Sample size accuracy/R-package/manuscript_assets/table2_crossvalidation.csv (5 rows, all pass = TRUE)
+table2_crossvalidation.csv written to C:/dta/dtasamplesize/validation/logs/cross_validation/table2_crossvalidation.csv (5 rows, all pass = TRUE)
+SUMMARY (table2_crossvalidation.csv rows): Wilson CI=PASS; Wald CI=PASS; buderer_n=PASS; Beta posterior interval width=PASS; Beta-Binomial predictive mass=PASS
+SUMMARY (internal checks, not in table2_crossvalidation.csv): V4 Hanley-McNeil (balanced)=PASS; V5 net-benefit identity=PASS; V6 net-benefit variance=PASS; V8 imperfect-ref VIF=PASS
 
 === cross_validation done ===

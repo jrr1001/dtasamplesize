@@ -1,4 +1,4 @@
-dtasamplesize installed version: 0.6.9 
+dtasamplesize installed version: 0.7.0 
 --version-check=off: FALSE 
 
 
@@ -24,4 +24,4 @@ dtasamplesize installed version: 0.6.9
   N_total is NOT max(N_range) (20): PASS
 
 ========== Verdict ==========
-RESULTADO G04: PASS
+RESULT G04: PASS

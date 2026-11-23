@@ -1,0 +1,294 @@
+compare_confirmatory_baselines.R
+R: R version 4.6.2 (2026-10-29 ucrt) 
+jsonlite: 2.0.0 
+
+Files compared:
+  NEW    regenerated in the current run (dtasamplesize 0.7.0)
+         C:/dta/dtasamplesize/validation/python/conf_package.json
+         sha256 bcb8ba59160881a27fa98550ce3ff65e3a78d28ae843cb36d612af8af461a1fd
+  V069   commit 38f12a8 (dtasamplesize 0.6.9)
+         C:/dta/dtasamplesize/validation/python/historical_not_current/conf_package_38f12a8_v0.6.9.json
+         sha256 d04659e3ce67477bd499853b300c0b119e4b9197978372b6b9f4f127c22750dc
+  RE063  commit bc943e0, re-run of 2026-09-16 with 0.6.3
+         C:/dta/dtasamplesize/validation/python/historical_not_current/conf_package_bc943e0_rerun_2026-09-16_v0.6.3.json
+         sha256 9f601c78b0aae9317830e90840ea94d3b2c3d296ef5b5390a22fd6cb17651486
+
+Line of logs/conf_R_01_package.R.log that states the package used for NEW:
+  dtasamplesize: 0.7.0 
+==============================================================================
+NEW (regenerated in the current run (dtasamplesize 0.7.0))
+  versus
+V069 (commit 38f12a8 (dtasamplesize 0.6.9))
+==============================================================================
+
+Fields in common: 189 (of which 12 are timings, listed but not results).
+Identical: 176; not identical: 13 (timings excluded: 176 identical, 1 not identical).
+
+Per scenario, number of non-identical result fields (timings excluded):
+  C01  fields 15  not identical  0  max absolute difference over numeric fields: 0
+  C02  fields 15  not identical  0  max absolute difference over numeric fields: 0
+  C03  fields 15  not identical  0  max absolute difference over numeric fields: 0
+  C04  fields 15  not identical  0  max absolute difference over numeric fields: 0
+  C05  fields 15  not identical  0  max absolute difference over numeric fields: 0
+  C06  fields 15  not identical  0  max absolute difference over numeric fields: 0
+  C07  fields 15  not identical  0  max absolute difference over numeric fields: 0
+  C08  fields 15  not identical  0  max absolute difference over numeric fields: 0
+  C09  fields 15  not identical  0  max absolute difference over numeric fields: 0
+  C10  fields 15  not identical  1  max absolute difference over numeric fields: 0
+  C11  fields 15  not identical  0  max absolute difference over numeric fields: 0
+  C12  fields 12  not identical  0  max absolute difference over numeric fields: 0
+
+Maximum absolute difference by field (numeric fields present as numbers in both files):
+  main.N_total                             n = 11  max |diff| = 0             scenarios not identical: none
+  main.joint_assurance                     n = 11  max |diff| = 0             scenarios not identical: none
+  main.mcse                                n = 11  max |diff| = 0             scenarios not identical: none
+  main.max_assurance_evaluated             n = 12  max |diff| = 0             scenarios not identical: none
+  main.N_at_max_assurance                  n = 12  max |diff| = 0             scenarios not identical: none
+  trio.-1.N                                n = 11  max |diff| = 0             scenarios not identical: none
+  trio.0.N                                 n = 11  max |diff| = 0             scenarios not identical: none
+  trio.0.assurance                         n = 11  max |diff| = 0             scenarios not identical: none
+  trio.1.N                                 n = 11  max |diff| = 0             scenarios not identical: none
+  trio.1.assurance                         n = 11  max |diff| = 0             scenarios not identical: none
+
+Fields that are not identical (1), with both values:
+  C10.main.warnings                  NEW = "The analysis prior for Se, equal to the design prior, Beta(8, 2) already has a prior-only interval width of 0...." | "The analysis prior for Sp, equal to the design prior, Beta(2, 8) already has a prior-only interval width of 0...."
+                                     V069 = <empty>
+
+Timings (secs), for reference only: C01 79.4/68.1; C02 47.6/45.5; C03 57.2/46.0; C04 59.3/48.6; C05 25.1/18.1; C06 79.7/74.9; C07 29.9/21.1; C08 32.8/27.0; C09  0.2/ 0.1; C10  0.2/ 0.1; C11  0.1/ 0.1; C12  6.1/ 3.7
+
+Fields only in NEW (0):
+Fields only in V069 (0):
+
+==============================================================================
+NEW (regenerated in the current run (dtasamplesize 0.7.0))
+  versus
+RE063 (commit bc943e0, re-run of 2026-09-16 with 0.6.3)
+==============================================================================
+
+Fields in common: 150 (of which 12 are timings, listed but not results).
+Identical: 122; not identical: 28 (timings excluded: 122 identical, 16 not identical).
+
+Per scenario, number of non-identical result fields (timings excluded):
+  C01  fields 12  not identical  1  max absolute difference over numeric fields: 0
+  C02  fields 12  not identical  1  max absolute difference over numeric fields: 0
+  C03  fields 12  not identical  1  max absolute difference over numeric fields: 0
+  C04  fields 12  not identical  1  max absolute difference over numeric fields: 0
+  C05  fields 12  not identical  1  max absolute difference over numeric fields: 0
+  C06  fields 12  not identical  1  max absolute difference over numeric fields: 0
+  C07  fields 12  not identical  1  max absolute difference over numeric fields: 0
+  C08  fields 12  not identical  1  max absolute difference over numeric fields: 0
+  C09  fields 12  not identical  1  max absolute difference over numeric fields: 0
+  C10  fields 12  not identical  2  max absolute difference over numeric fields: 0
+  C11  fields 12  not identical  1  max absolute difference over numeric fields: 0
+  C12  fields  6  not identical  4  max absolute difference over numeric fields: n/a
+
+Maximum absolute difference by field (numeric fields present as numbers in both files):
+  main.N_total                             n = 11  max |diff| = 0             scenarios not identical: none
+  main.joint_assurance                     n = 11  max |diff| = 0             scenarios not identical: none
+  main.mcse                                n = 11  max |diff| = 0             scenarios not identical: none
+  trio.-1.N                                n = 11  max |diff| = 0             scenarios not identical: none
+  trio.0.N                                 n = 11  max |diff| = 0             scenarios not identical: none
+  trio.0.assurance                         n = 11  max |diff| = 0             scenarios not identical: none
+  trio.1.N                                 n = 11  max |diff| = 0             scenarios not identical: none
+  trio.1.assurance                         n = 11  max |diff| = 0             scenarios not identical: none
+
+Fields that are not identical (16), with both values:
+  C01.trio.-1.assurance              NEW = NA
+                                     RE063 = 0.79991096076352253
+  C02.trio.-1.assurance              NEW = NA
+                                     RE063 = 0.79998029961403827
+  C03.trio.-1.assurance              NEW = NA
+                                     RE063 = 0.84993545180092034
+  C04.trio.-1.assurance              NEW = NA
+                                     RE063 = 0.89966448506961483
+  C05.trio.-1.assurance              NEW = NA
+                                     RE063 = 0.69659562335470271
+  C06.trio.-1.assurance              NEW = NA
+                                     RE063 = 0.79972561230637196
+  C07.trio.-1.assurance              NEW = NA
+                                     RE063 = 0.79949992032432637
+  C08.trio.-1.assurance              NEW = NA
+                                     RE063 = 0.74971949988304443
+  C09.trio.-1.assurance              NEW = NA
+                                     RE063 = 0.57181818181818134
+  C10.main.warnings                  NEW = "The analysis prior for Se, equal to the design prior, Beta(8, 2) already has a prior-only interval width of 0...." | "The analysis prior for Sp, equal to the design prior, Beta(2, 8) already has a prior-only interval width of 0...."
+                                     RE063 = <empty>
+  C10.trio.-1.assurance              NEW = NA
+                                     RE063 = 0.38181818181818189
+  C11.trio.-1.assurance              NEW = NA
+                                     RE063 = 0.68703431162830464
+  C12.main.N_total                   NEW = NA
+                                     RE063 = 400
+  C12.main.joint_assurance           NEW = NA
+                                     RE063 = 0
+  C12.main.mcse                      NEW = NA
+                                     RE063 = 0
+  C12.main.warnings                  NEW = "No n in n_range achieved target assurance for Se. Consider expanding n_range...." | "No n in n_range achieved target assurance for Sp. Consider expanding n_range...." | "No N in N_range achieved the target JOINT assurance under the exact calculation: the highest assurance seen wa..."
+                                     RE063 = "No n in n_range achieved target assurance for Se. Consider expanding n_range." | "No n in n_range achieved target assurance for Sp. Consider expanding n_range." | "No N in N_range achieved the target JOINT assurance under the exact calculation. Consider expanding N_range."
+
+Timings (secs), for reference only: C01 79.4/67.8; C02 47.6/43.1; C03 57.2/44.5; C04 59.3/49.1; C05 25.1/19.8; C06 79.7/74.4; C07 29.9/19.8; C08 32.8/27.2; C09  0.2/ 0.1; C10  0.2/ 0.1; C11  0.1/ 0.1; C12  6.1/15.7
+
+Fields only in NEW (39):
+  C01.main.target_reached            = TRUE
+  C01.main.max_assurance_evaluated   = 0.80021907253630076
+  C01.main.N_at_max_assurance        = 1188
+  C02.main.target_reached            = TRUE
+  C02.main.max_assurance_evaluated   = 0.80136362518485338
+  C02.main.N_at_max_assurance        = 599
+  C03.main.target_reached            = TRUE
+  C03.main.max_assurance_evaluated   = 0.85017288314710016
+  C03.main.N_at_max_assurance        = 959
+  C04.main.target_reached            = TRUE
+  C04.main.max_assurance_evaluated   = 0.90000534904759111
+  C04.main.N_at_max_assurance        = 950
+  C05.main.target_reached            = TRUE
+  C05.main.max_assurance_evaluated   = 0.70142473690082219
+  C05.main.N_at_max_assurance        = 265
+  C06.main.target_reached            = TRUE
+  C06.main.max_assurance_evaluated   = 0.80026015815182228
+  C06.main.N_at_max_assurance        = 1117
+  C07.main.target_reached            = TRUE
+  C07.main.max_assurance_evaluated   = 0.80064721214261203
+  C07.main.N_at_max_assurance        = 440
+  C08.main.target_reached            = TRUE
+  C08.main.max_assurance_evaluated   = 0.75073551521571413
+  C08.main.N_at_max_assurance        = 607
+  C09.main.target_reached            = TRUE
+  C09.main.max_assurance_evaluated   = 0.63912793089263775
+  C09.main.N_at_max_assurance        = 8
+  C10.main.target_reached            = TRUE
+  C10.main.max_assurance_evaluated   = 0.57272727272727308
+  C10.main.N_at_max_assurance        = 3
+  C11.main.target_reached            = TRUE
+  C11.main.max_assurance_evaluated   = 0.70126703848617045
+  C11.main.N_at_max_assurance        = 24
+  C12.main.target_reached            = FALSE
+  C12.main.max_assurance_evaluated   = 0
+  C12.main.N_at_max_assurance        = 10
+  C12.trio.infeasible.N              = NA
+  C12.trio.infeasible.assurance      = NA
+  C12.trio.infeasible.note           = "main search did not reach target_assurance; N_total +/- 1 not evaluated"
+Fields only in RE063 (6):
+  C12.trio.-1.N                      = 399
+  C12.trio.-1.assurance              = 0
+  C12.trio.0.N                       = 400
+  C12.trio.0.assurance               = 0
+  C12.trio.1.N                       = 401
+  C12.trio.1.assurance               = 0
+
+==============================================================================
+V069 (commit 38f12a8 (dtasamplesize 0.6.9))
+  versus
+RE063 (commit bc943e0, re-run of 2026-09-16 with 0.6.3)
+==============================================================================
+
+Fields in common: 150 (of which 12 are timings, listed but not results).
+Identical: 123; not identical: 27 (timings excluded: 123 identical, 15 not identical).
+
+Per scenario, number of non-identical result fields (timings excluded):
+  C01  fields 12  not identical  1  max absolute difference over numeric fields: 0
+  C02  fields 12  not identical  1  max absolute difference over numeric fields: 0
+  C03  fields 12  not identical  1  max absolute difference over numeric fields: 0
+  C04  fields 12  not identical  1  max absolute difference over numeric fields: 0
+  C05  fields 12  not identical  1  max absolute difference over numeric fields: 0
+  C06  fields 12  not identical  1  max absolute difference over numeric fields: 0
+  C07  fields 12  not identical  1  max absolute difference over numeric fields: 0
+  C08  fields 12  not identical  1  max absolute difference over numeric fields: 0
+  C09  fields 12  not identical  1  max absolute difference over numeric fields: 0
+  C10  fields 12  not identical  1  max absolute difference over numeric fields: 0
+  C11  fields 12  not identical  1  max absolute difference over numeric fields: 0
+  C12  fields  6  not identical  4  max absolute difference over numeric fields: n/a
+
+Maximum absolute difference by field (numeric fields present as numbers in both files):
+  main.N_total                             n = 11  max |diff| = 0             scenarios not identical: none
+  main.joint_assurance                     n = 11  max |diff| = 0             scenarios not identical: none
+  main.mcse                                n = 11  max |diff| = 0             scenarios not identical: none
+  trio.-1.N                                n = 11  max |diff| = 0             scenarios not identical: none
+  trio.0.N                                 n = 11  max |diff| = 0             scenarios not identical: none
+  trio.0.assurance                         n = 11  max |diff| = 0             scenarios not identical: none
+  trio.1.N                                 n = 11  max |diff| = 0             scenarios not identical: none
+  trio.1.assurance                         n = 11  max |diff| = 0             scenarios not identical: none
+
+Fields that are not identical (15), with both values:
+  C01.trio.-1.assurance              V069 = NA
+                                     RE063 = 0.79991096076352253
+  C02.trio.-1.assurance              V069 = NA
+                                     RE063 = 0.79998029961403827
+  C03.trio.-1.assurance              V069 = NA
+                                     RE063 = 0.84993545180092034
+  C04.trio.-1.assurance              V069 = NA
+                                     RE063 = 0.89966448506961483
+  C05.trio.-1.assurance              V069 = NA
+                                     RE063 = 0.69659562335470271
+  C06.trio.-1.assurance              V069 = NA
+                                     RE063 = 0.79972561230637196
+  C07.trio.-1.assurance              V069 = NA
+                                     RE063 = 0.79949992032432637
+  C08.trio.-1.assurance              V069 = NA
+                                     RE063 = 0.74971949988304443
+  C09.trio.-1.assurance              V069 = NA
+                                     RE063 = 0.57181818181818134
+  C10.trio.-1.assurance              V069 = NA
+                                     RE063 = 0.38181818181818189
+  C11.trio.-1.assurance              V069 = NA
+                                     RE063 = 0.68703431162830464
+  C12.main.N_total                   V069 = NA
+                                     RE063 = 400
+  C12.main.joint_assurance           V069 = NA
+                                     RE063 = 0
+  C12.main.mcse                      V069 = NA
+                                     RE063 = 0
+  C12.main.warnings                  V069 = "No n in n_range achieved target assurance for Se. Consider expanding n_range...." | "No n in n_range achieved target assurance for Sp. Consider expanding n_range...." | "No N in N_range achieved the target JOINT assurance under the exact calculation: the highest assurance seen wa..."
+                                     RE063 = "No n in n_range achieved target assurance for Se. Consider expanding n_range." | "No n in n_range achieved target assurance for Sp. Consider expanding n_range." | "No N in N_range achieved the target JOINT assurance under the exact calculation. Consider expanding N_range."
+
+Timings (secs), for reference only: C01 68.1/67.8; C02 45.5/43.1; C03 46.0/44.5; C04 48.6/49.1; C05 18.1/19.8; C06 74.9/74.4; C07 21.1/19.8; C08 27.0/27.2; C09  0.1/ 0.1; C10  0.1/ 0.1; C11  0.1/ 0.1; C12  3.7/15.7
+
+Fields only in V069 (39):
+  C01.main.target_reached            = TRUE
+  C01.main.max_assurance_evaluated   = 0.80021907253630076
+  C01.main.N_at_max_assurance        = 1188
+  C02.main.target_reached            = TRUE
+  C02.main.max_assurance_evaluated   = 0.80136362518485338
+  C02.main.N_at_max_assurance        = 599
+  C03.main.target_reached            = TRUE
+  C03.main.max_assurance_evaluated   = 0.85017288314710016
+  C03.main.N_at_max_assurance        = 959
+  C04.main.target_reached            = TRUE
+  C04.main.max_assurance_evaluated   = 0.90000534904759111
+  C04.main.N_at_max_assurance        = 950
+  C05.main.target_reached            = TRUE
+  C05.main.max_assurance_evaluated   = 0.70142473690082219
+  C05.main.N_at_max_assurance        = 265
+  C06.main.target_reached            = TRUE
+  C06.main.max_assurance_evaluated   = 0.80026015815182228
+  C06.main.N_at_max_assurance        = 1117
+  C07.main.target_reached            = TRUE
+  C07.main.max_assurance_evaluated   = 0.80064721214261203
+  C07.main.N_at_max_assurance        = 440
+  C08.main.target_reached            = TRUE
+  C08.main.max_assurance_evaluated   = 0.75073551521571413
+  C08.main.N_at_max_assurance        = 607
+  C09.main.target_reached            = TRUE
+  C09.main.max_assurance_evaluated   = 0.63912793089263775
+  C09.main.N_at_max_assurance        = 8
+  C10.main.target_reached            = TRUE
+  C10.main.max_assurance_evaluated   = 0.57272727272727308
+  C10.main.N_at_max_assurance        = 3
+  C11.main.target_reached            = TRUE
+  C11.main.max_assurance_evaluated   = 0.70126703848617045
+  C11.main.N_at_max_assurance        = 24
+  C12.main.target_reached            = FALSE
+  C12.main.max_assurance_evaluated   = 0
+  C12.main.N_at_max_assurance        = 10
+  C12.trio.infeasible.N              = NA
+  C12.trio.infeasible.assurance      = NA
+  C12.trio.infeasible.note           = "main search did not reach target_assurance; N_total +/- 1 not evaluated"
+Fields only in RE063 (6):
+  C12.trio.-1.N                      = 399
+  C12.trio.-1.assurance              = 0
+  C12.trio.0.N                       = 400
+  C12.trio.0.assurance               = 0
+  C12.trio.1.N                       = 401
+  C12.trio.1.assurance               = 0
+
+End of comparison. The script reports differences; it does not judge them.

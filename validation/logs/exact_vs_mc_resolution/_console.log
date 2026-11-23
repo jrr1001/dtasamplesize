@@ -1,0 +1,100 @@
+exact_vs_mc_resolution.R
+Date: 2026-11-23 01:03:13 
+R: R version 4.6.2 (2026-10-29 ucrt) 
+packageVersion(dtasamplesize): 0.7.0 
+find.package(dtasamplesize): C:/dta/lib/dtasamplesize 
+TOL = 1e-12 ; N_CAP = 900 
+
+==== (1) Exact enumeration (own implementation), cross-checked with the package ====
+P1: own enumeration N* = 678, A(N*) = 0.8003489948, A(N*-1) = 0.7996848824 (7.2 s)
+    package exact: N_total = 678, A(N*) = 0.8003489948 (|diff| = 0.00e+00); A(N*-1) = 0.7996848824 (|diff| = 0.00e+00)
+    distance to target: A(N*) - 0.80 = 3.4899e-04 ; 0.80 - A(N*-1) = 3.1512e-04 ; A(N*) - A(N*-1) = 6.6411e-04
+    preliminary (plan): 3.49e-04 and 3.15e-04 (published in the plan as 3.49e-4 and 3.15e-4)
+(2) replicates for 1.96 MCSE < nearer distance: B_min_margin = 6189944 ; < farther distance: B_max_margin = 5046545 ; MCSE < half(A(N*)-A(N*-1)): B_half_diff = 1451098
+    1.96 MCSE at typical B (p = 0.80): B = 2000: 0.0175 ; 10000: 0.0078 ; 50000: 0.0035 ; ratio to the nearer distance: 56, 25, 11
+    timing: own enumeration 7.2 s; bam_sample_size exact defaults 26.4 s; minimal-legacy 9.7 s
+
+P2: own enumeration N* = 672, A(N*) = 0.8002692084, A(N*-1) = 0.7996594780 (7.3 s)
+    package exact: N_total = 672, A(N*) = 0.8002692084 (|diff| = 0.00e+00); A(N*-1) = 0.7996594780 (|diff| = 0.00e+00)
+    distance to target: A(N*) - 0.80 = 2.6921e-04 ; 0.80 - A(N*-1) = 3.4052e-04 ; A(N*) - A(N*-1) = 6.0973e-04
+(2) replicates for 1.96 MCSE < nearer distance: B_min_margin = 8481151 ; < farther distance: B_max_margin = 5300806 ; MCSE < half(A(N*)-A(N*-1)): B_half_diff = 1721489
+    1.96 MCSE at typical B (p = 0.80): B = 2000: 0.0175 ; 10000: 0.0078 ; 50000: 0.0035 ; ratio to the nearer distance: 65, 29, 13
+    timing: own enumeration 7.3 s; bam_sample_size exact defaults 19.4 s; minimal-legacy 9.3 s
+
+==== (3) Range of N compatible with 0.80 at typical B (|A(N) - 0.80| <= 1.96 MCSE(B), MCSE at A(N)) ====
+  P1, B =  2000: N in [653, 704] (52 values; N* - 25, N* + 26)
+  P1, B = 10000: N in [666, 689] (24 values; N* - 12, N* + 11)
+  P1, B = 50000: N in [673, 682] (10 values; N* - 5, N* + 4)
+  P2, B =  2000: N in [644, 700] (57 values; N* - 28, N* + 28)
+  P2, B = 10000: N in [659, 684] (26 values; N* - 13, N* + 12)
+  P2, B = 50000: N in [666, 677] (12 values; N* - 6, N* + 5)
+
+==== (4) Anti-noise acceptance rule: A_hat - qnorm(0.95) MCSE >= 0.80 (package, Monte Carlo mode) ====
+Deterministic proxy: A_req(B) solves A - 1.645 sqrt(A(1-A)/B) = 0.80; N_rule(B) = first N with exact A(N) >= A_req(B).
+  P1, B =  2000: A_req = 0.81430 ; N_rule(B) = 701 ; exact N* = 678 ; shift = +23
+  P1, B = 10000: A_req = 0.80650 ; N_rule(B) = 688 ; exact N* = 678 ; shift = +10
+  P1, B = 50000: A_req = 0.80293 ; N_rule(B) = 682 ; exact N* = 678 ; shift = +4
+  P2, B =  2000: A_req = 0.81430 ; N_rule(B) = 697 ; exact N* = 672 ; shift = +25
+  P2, B = 10000: A_req = 0.80650 ; N_rule(B) = 683 ; exact N* = 672 ; shift = +11
+  P2, B = 50000: A_req = 0.80293 ; N_rule(B) = 677 ; exact N* = 672 ; shift = +5
+  P1 check seed 1, B =  2000: automatic grid N = 713 (18 s) ; window N = 713 (10 s) ; SAME
+  P1 check seed 1, B = 10000: automatic grid N = 690 (82 s) ; window N = 690 (43 s) ; SAME
+  P1, B =  2000, seed 11: N returned = 699 ; A_hat = 0.8165 (MCSE 0.0087) ; exact A there = 0.8136 ; N - N* = +21 ; 8 s
+  P1, B =  2000, seed 22: N returned = 695 ; A_hat = 0.8155 (MCSE 0.0087) ; exact A there = 0.8112 ; N - N* = +17 ; 8 s
+  P1, B =  2000, seed 33: N returned = 688 ; A_hat = 0.8190 (MCSE 0.0086) ; exact A there = 0.8068 ; N - N* = +10 ; 8 s
+  P1, B =  2000, seed 44: N returned = 693 ; A_hat = 0.8155 (MCSE 0.0087) ; exact A there = 0.8099 ; N - N* = +15 ; 8 s
+  P1, B =  2000, seed 55: N returned = 691 ; A_hat = 0.8165 (MCSE 0.0087) ; exact A there = 0.8087 ; N - N* = +13 ; 8 s
+  P1, B = 10000, seed 11: N returned = 679 ; A_hat = 0.8068 (MCSE 0.0039) ; exact A there = 0.8010 ; N - N* = +1 ; 40 s
+  P1, B = 10000, seed 22: N returned = 699 ; A_hat = 0.8068 (MCSE 0.0039) ; exact A there = 0.8136 ; N - N* = +21 ; 42 s
+  P1, B = 10000, seed 33: N returned = 688 ; A_hat = 0.8095 (MCSE 0.0039) ; exact A there = 0.8068 ; N - N* = +10 ; 43 s
+  P1, B = 50000, seed 11: N returned = 682 ; A_hat = 0.8042 (MCSE 0.0018) ; exact A there = 0.8030 ; N - N* = +4 ; 193 s
+  P1, B = 50000, seed 22: N returned = 678 ; A_hat = 0.8032 (MCSE 0.0018) ; exact A there = 0.8003 ; N - N* = +0 ; 185 s
+  P1, B = 50000, seed 33: N returned = 682 ; A_hat = 0.8031 (MCSE 0.0018) ; exact A there = 0.8030 ; N - N* = +4 ; 175 s
+  P2 check seed 1, B =  2000: automatic grid N = 705 (20 s) ; window N = 705 (7 s) ; SAME
+  P2 check seed 1, B = 10000: automatic grid N = 680 (86 s) ; window N = 680 (24 s) ; SAME
+  P2, B =  2000, seed 11: N returned = 698 ; A_hat = 0.8230 (MCSE 0.0085) ; exact A there = 0.8154 ; N - N* = +26 ; 6 s
+  P2, B =  2000, seed 22: N returned = 699 ; A_hat = 0.8180 (MCSE 0.0086) ; exact A there = 0.8160 ; N - N* = +27 ; 5 s
+  P2, B =  2000, seed 33: N returned = 679 ; A_hat = 0.8150 (MCSE 0.0087) ; exact A there = 0.8045 ; N - N* = +7 ; 5 s
+  P2, B =  2000, seed 44: N returned = 686 ; A_hat = 0.8165 (MCSE 0.0087) ; exact A there = 0.8086 ; N - N* = +14 ; 5 s
+  P2, B =  2000, seed 55: N returned = 698 ; A_hat = 0.8200 (MCSE 0.0086) ; exact A there = 0.8154 ; N - N* = +26 ; 6 s
+  P2, B = 10000, seed 11: N returned = 679 ; A_hat = 0.8075 (MCSE 0.0039) ; exact A there = 0.8045 ; N - N* = +7 ; 29 s
+  P2, B = 10000, seed 22: N returned = 693 ; A_hat = 0.8072 (MCSE 0.0039) ; exact A there = 0.8126 ; N - N* = +21 ; 27 s
+  P2, B = 10000, seed 33: N returned = 676 ; A_hat = 0.8081 (MCSE 0.0039) ; exact A there = 0.8027 ; N - N* = +4 ; 25 s
+  P2, B = 50000, seed 11: N returned = 675 ; A_hat = 0.8030 (MCSE 0.0018) ; exact A there = 0.8021 ; N - N* = +3 ; 109 s
+  P2, B = 50000, seed 22: N returned = 672 ; A_hat = 0.8030 (MCSE 0.0018) ; exact A there = 0.8003 ; N - N* = +0 ; 106 s
+  P2, B = 50000, seed 33: N returned = 676 ; A_hat = 0.8040 (MCSE 0.0018) ; exact A there = 0.8027 ; N - N* = +4 ; 108 s
+
+Summary of the Monte Carlo runs (explicit window, declared seeds):
+ scenario     B n_seeds N_exact N_returned_min N_returned_median N_returned_max n_NA shift_median_vs_exact N_rule_proxy A_hat_median A_exact_at_returned_median
+       P1  2000       5     678            688               693            699    0                    15          701      0.81650                   0.809927
+       P2  2000       5     672            679               698            699    0                    26          697      0.81800                   0.815407
+       P1 10000       3     678            679               688            699    0                    10          688      0.80680                   0.806812
+       P2 10000       3     672            676               679            693    0                     7          683      0.80750                   0.804479
+       P1 50000       3     678            678               682            682    0                     4          682      0.80316                   0.802972
+       P2 50000       3     672            672               675            676    0                     3          677      0.80302                   0.802086
+
+==== (5) Timings (seconds, this machine, one core; orders of magnitude only) ====
+ scenario                                                method     B                   grid elapsed_s
+       P1                 exact (own enumeration up to N = 900)    NA             N = 2..900     7.214
+       P1                      exact (bam_sample_size defaults)  5000 automatic integer scan    26.420
+       P1    exact (bam_sample_size, B = 1000, n_range = 20:60)  1000 automatic integer scan     9.740
+       P2                 exact (own enumeration up to N = 900)    NA             N = 2..900     7.252
+       P2                      exact (bam_sample_size defaults)  5000 automatic integer scan    19.370
+       P2    exact (bam_sample_size, B = 1000, n_range = 20:60)  1000 automatic integer scan     9.290
+       P1                    monte_carlo automatic grid, seed 1  2000               372:1170    17.870
+       P1                   monte_carlo explicit window, seed 1  2000                618:838    10.190
+       P1                    monte_carlo automatic grid, seed 1 10000               372:1125    82.440
+       P1                   monte_carlo explicit window, seed 1 10000                618:838    42.920
+       P2                    monte_carlo automatic grid, seed 1  2000               171:1170    20.330
+       P2                   monte_carlo explicit window, seed 1  2000                612:832     6.780
+       P2                    monte_carlo automatic grid, seed 1 10000               168:1125    86.280
+       P2                   monte_carlo explicit window, seed 1 10000                612:832    24.360
+       P1 monte_carlo explicit window, mean over declared seeds  2000                   <NA>     8.310
+       P2 monte_carlo explicit window, mean over declared seeds  2000                   <NA>     5.304
+       P1 monte_carlo explicit window, mean over declared seeds 10000                   <NA>    41.623
+       P2 monte_carlo explicit window, mean over declared seeds 10000                   <NA>    26.713
+       P1 monte_carlo explicit window, mean over declared seeds 50000                   <NA>   184.420
+       P2 monte_carlo explicit window, mean over declared seeds 50000                   <NA>   107.773
+
+Total elapsed: 1530.0 s
+Output directory: C:/dta/dtasamplesize/validation/logs/exact_vs_mc_resolution 

@@ -1,0 +1,73 @@
+R version:         R version 4.6.2 (2026-10-29 ucrt) 
+Output directory:  C:/dta/dtasamplesize/validation/logs/minimal_session 
+
+[1] '0.7.0'
+
+ Exact (binomial enumeration) Validation of Buderer Formula 
+
+  n_diseased: 100 
+  N_total: 100 
+
+  ci_method P_width_target  coverage median_width P75_width P90_width
+1      wald      0.5683152 0.9330186    0.1399694 0.1472454 0.1567971
+2    wilson      0.5683152 0.9332462    0.1397757 0.1465444 0.1554622
+
+ Bayesian Assurance Method (BAM) for DTA Sample Size 
+
+  width criterion: full width of the equal-tailed 95% interval; delta_se, delta_sp compared exactly (width <= delta)
+  assurance objective: joint (Se and Sp widths both met in the same study)
+  analysis priors: same as design priors (Se a + b = 20, Sp a + b = 4)
+  n_diseased: 107 
+  n_non_diseased: 373 
+  N_total: 678 
+  joint_assurance: 0.800349 
+  B: 5000 
+        scenario width_type assurance_for alpha_ci target_assurance
+1       sp_vague full_width         joint     0.95              0.8
+2 sp_informative full_width         joint     0.95              0.8
+3      se_weaker full_width         joint     0.95              0.8
+  delta_se delta_sp prior_se_a prior_se_b prior_sp_a prior_sp_b
+1     0.14      0.1       17.0        3.0          2          2
+2     0.14      0.1       17.0        3.0         18          2
+3     0.14      0.1        8.5        1.5          2          2
+  prior_prev_a prior_prev_b analysis_prior_se_a analysis_prior_se_b
+1            4           16                17.0                 3.0
+2            4           16                17.0                 3.0
+3            4           16                 8.5                 1.5
+  analysis_prior_sp_a analysis_prior_sp_b N_total       A_N A_N_minus_1
+1                   2                   2     678 0.8003490   0.7996849
+2                  18                   2     672 0.8002692   0.7996595
+3                   2                   2     759 0.8002021   0.7996842
+  target_reached max_assurance_evaluated N_at_max_assurance
+1           TRUE               0.8003490                678
+2           TRUE               0.8002692                672
+3           TRUE               0.8002021                759
+R version 4.6.2 (2026-10-29 ucrt)
+Platform: x86_64-w64-mingw32/x64
+Running under: Windows 11 x64 (build 26200)
+
+Matrix products: default
+  LAPACK version 3.12.1
+
+locale:
+[1] LC_COLLATE=English_United States.utf8 
+[2] LC_CTYPE=English_United States.utf8   
+[3] LC_MONETARY=English_United States.utf8
+[4] LC_NUMERIC=C                          
+[5] LC_TIME=English_United States.utf8    
+
+time zone: America/Lima
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods  
+[7] base     
+
+other attached packages:
+[1] dtasamplesize_0.7.0
+
+loaded via a namespace (and not attached):
+[1] compiler_4.6.2
+
+Elapsed: 40.7 seconds
+Log written to C:/dta/dtasamplesize/validation/logs/minimal_session/minimal_session.log 

@@ -1,0 +1,6 @@
+"package","version_reviewed_for_this_matrix","reviewed_on","currently_installed_version","status"
+"presize","0.3.11","2026-08-24","0.3.11","installed; matches the version reviewed"
+"pROC","1.19.0.1","2026-08-24","1.19.1","installed; DIFFERENT version than reviewed -- re-check the matrix before trusting it"
+"MKpower","1.1","2026-08-24","1.1","installed; matches the version reviewed"
+"epiR","2.0.95","2026-08-24","3.0.1","installed; DIFFERENT version than reviewed -- re-check the matrix before trusting it"
+"MKmisc","2.0","2026-08-24","2.0","installed; matches the version reviewed"

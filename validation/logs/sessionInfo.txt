@@ -1,4 +1,4 @@
-R version 4.5.2 (2025-10-31 ucrt)
+R version 4.6.2 (2026-10-29 ucrt)
 Platform: x86_64-w64-mingw32/x64
 Running under: Windows 11 x64 (build 26200)
 
@@ -19,7 +19,7 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] dtasamplesize_0.6.9
+[1] dtasamplesize_0.7.0
 
 loaded via a namespace (and not attached):
-[1] compiler_4.5.2
+[1] compiler_4.6.2

@@ -1,0 +1,109 @@
+operating_characteristics.R
+date:                  2026-11-23 01:29:41 -05 
+R:                     R version 4.6.2 (2026-10-29 ucrt) 
+dtasamplesize:         0.7.0 
+find.package:          C:/dta/lib/dtasamplesize 
+output dir:            C:/dta/dtasamplesize/validation/logs/operating_characteristics 
+TOL (width <= target + TOL): 1e-12; level 0.95; z = 1.95996398454005
+targets (full widths): Se 0.14, Sp 0.1
+grid: Se 14 values (0.65..0.975), Sp 12 values (0.7..0.975), prev 0.1/0.2/0.3
+
+========== 0. Controls of the interval code ==========
+n =   7: max|width mine - package| Wald 0.00e+00, Wilson 0.00e+00
+n = 100: max|width mine - package| Wald 0.00e+00, Wilson 0.00e+00
+n = 116: max|width mine - package| Wald 0.00e+00, Wilson 0.00e+00
+n = 543: max|width mine - package| Wald 0.00e+00, Wilson 0.00e+00
+buderer_total_N(0.85, 0.90, 0.07, 0.05, 0.20) = 500 (manuscript Table 2: 500) PASS
+
+========== 1. Building interval tables ==========
+tables built in 6 s
+prior-only width P1 Se Beta(17,3) = 0.2976 vs target 0.14 -> meets target: FALSE (P_arm(0) = 0 coincides)
+prior-only width P1 Sp Beta(2,2) = 0.8114 vs target 0.10 -> meets target: FALSE (P_arm(0) = 0 coincides)
+prior-only width P2 Se Beta(17,3) = 0.2976 vs target 0.14 -> meets target: FALSE (P_arm(0) = 0 coincides)
+prior-only width P2 Sp Beta(18,2) = 0.2473 vs target 0.10 -> meets target: FALSE (P_arm(0) = 0 coincides)
+
+========== 2. Operating characteristics on the grid ==========
+grid evaluated in 10.6 s; rows: 2520 (5 designs x 504 points)
+
+========== 3. Planning point (Se 0.85, Sp 0.90, prev 0.20) ==========
+              design   N p_success p_width_se p_width_sp cov_se cov_sp bias_se  bias_sp p_empty_se_arm p_empty_sp_arm
+   Buderer_N500_Wald 500    0.5265     0.5265          1 0.9364 0.9449       0  0.00000       3.51e-49              0
+ Buderer_N500_Wilson 500    0.5276     0.5276          1 0.9505 0.9503       0  0.00000       3.51e-49              0
+   Joint_N580_Wilson 580    0.8070     0.8070          1 0.9511 0.9504       0  0.00000       6.20e-57              0
+         BAM_P1_N678 678    0.9994     0.9994          1 0.9621 0.9483       0 -0.00293       1.97e-66              0
+         BAM_P2_N672 672    0.9992     0.9992          1 0.9622 0.9528       0  0.00000       7.52e-66              0
+
+========== 4. Range over the grid, by design ==========
+              design   N points success_min success_median success_max frac_success_ge_080 cov_se_min cov_se_max cov_sp_min cov_sp_max bias_se_min bias_se_max bias_sp_min bias_sp_max max_p_empty_se_arm max_p_empty_sp_arm
+         BAM_P1_N678 678    504           0         0.9974           1               0.643     0.8199     0.9739     0.9377     0.9505     -0.0287      0.0459     -0.0040     -0.0013           9.47e-32           0.00e+00
+         BAM_P2_N672 672    504           0         0.9969           1               0.643     0.8186     0.9740     0.9333     0.9545     -0.0289      0.0462     -0.0031      0.0082           1.78e-31           0.00e+00
+   Buderer_N500_Wald 500    504           0         0.2850           1               0.310     0.7125     0.9465     0.9235     0.9487      0.0000      0.0000      0.0000      0.0000           1.32e-23          3.64e-262
+ Buderer_N500_Wilson 500    504           0         0.2691           1               0.331     0.9494     0.9609     0.9498     0.9546      0.0000      0.0000      0.0000      0.0000           1.32e-23          3.64e-262
+   Joint_N580_Wilson 580    504           0         0.6305           1               0.452     0.9490     0.9617     0.9498     0.9519      0.0000      0.0000      0.0000      0.0000           2.89e-27          5.37e-304
+
+--- P(success) vs true Se (Sp 0.90, prev 0.20) ---
+    Se Buderer_N500_Wald Buderer_N500_Wilson Joint_N580_Wilson BAM_P1_N678 BAM_P2_N672
+ 0.650            0.0000              0.0000            0.0001      0.1649      0.1464
+ 0.675            0.0001              0.0001            0.0010      0.3059      0.2800
+ 0.700            0.0005              0.0005            0.0049      0.4889      0.4596
+ 0.725            0.0027              0.0030            0.0204      0.6791      0.6529
+ 0.750            0.0122              0.0130            0.0666      0.8349      0.8166
+ 0.775            0.0441              0.0460            0.1728      0.9331      0.9235
+ 0.800            0.1269              0.1300            0.3572      0.9796      0.9759
+ 0.825            0.2902              0.2933            0.5927      0.9956      0.9946
+ 0.850            0.5265              0.5276            0.8070      0.9994      0.9992
+ 0.875            0.7663              0.7652            0.9386      0.9999      0.9999
+ 0.900            0.9256              0.9241            0.9887      1.0000      1.0000
+ 0.925            0.9877              0.9871            0.9991      1.0000      1.0000
+ 0.950            0.9993              0.9992            1.0000      1.0000      1.0000
+ 0.975            1.0000              1.0000            1.0000      1.0000      1.0000
+
+--- P(success) vs true Sp (Se 0.85, prev 0.20) ---
+    Sp Buderer_N500_Wald Buderer_N500_Wilson Joint_N580_Wilson BAM_P1_N678 BAM_P2_N672
+ 0.700            0.5265              0.5276             0.807      0.9994      0.9992
+ 0.725            0.5265              0.5276             0.807      0.9994      0.9992
+ 0.750            0.5265              0.5276             0.807      0.9994      0.9992
+ 0.775            0.5265              0.5276             0.807      0.9994      0.9992
+ 0.800            0.5265              0.5276             0.807      0.9994      0.9992
+ 0.825            0.5265              0.5276             0.807      0.9994      0.9992
+ 0.850            0.5265              0.5276             0.807      0.9994      0.9992
+ 0.875            0.5265              0.5276             0.807      0.9994      0.9992
+ 0.900            0.5265              0.5276             0.807      0.9994      0.9992
+ 0.925            0.5265              0.5276             0.807      0.9994      0.9992
+ 0.950            0.5265              0.5276             0.807      0.9994      0.9992
+ 0.975            0.5265              0.5276             0.807      0.9994      0.9992
+
+--- P(success) vs true prevalence (Se 0.85, Sp 0.90) ---
+ prev Buderer_N500_Wald Buderer_N500_Wilson Joint_N580_Wilson BAM_P1_N678 BAM_P2_N672
+  0.1            0.0561              0.0279            0.0464      0.3289      0.3186
+  0.2            0.5265              0.5276            0.8070      0.9994      0.9992
+  0.3            0.9962              0.9972            1.0000      1.0000      1.0000
+
+========== 5. Comparison with published and preliminary values ==========
+                                                          item                                   source published  obtained      diff tolerance agrees                                       note
+                     P(width<=0.14) Wald, n=100 fixed, Se=0.85 width_attainment_exact.R / plan evidence 0.5683000 0.5683152  1.52e-05  5.00e-05   TRUE      published value rounded to 4 decimals
+                   P(width<=0.14) Wilson, n=100 fixed, Se=0.85 width_attainment_exact.R / plan evidence 0.5683000 0.5683152  1.52e-05  5.00e-05   TRUE      published value rounded to 4 decimals
+                                     Joint Wilson exact A(578)                 comparator_calls.log L62 0.8012447 0.8012447  2.25e-11  5.00e-10   TRUE                                           
+                                     Joint Wilson exact A(577)                 comparator_calls.log L63 0.7983425 0.7983425 -4.45e-11  5.00e-11   TRUE                                           
+     Joint Wilson exact A(580) vs this script's planning point                                 internal 0.8069809 0.8069809  1.11e-16  1.00e-12   TRUE separate code path (scalar loop vs matrix)
+ Joint Wilson MC 0.8041 (B = 20000, seed 2026) vs exact A(580)                         article, Table 2 0.8041000 0.8069809  2.88e-03  8.42e-03   TRUE                  (MC - exact)/MCSE = -1.03
+                                        BAM P1 A(678), package                  article, worked example 0.8003490 0.8003490  3.46e-11  5.00e-11   TRUE                                           
+                                        BAM P1 A(677), package                  article, worked example 0.7996849 0.7996849 -4.24e-11  5.00e-11   TRUE                                           
+                                        BAM P2 A(672), package                         article, Table 2 0.8002692 0.8002692  3.68e-11  5.00e-11   TRUE                                           
+Exact Joint Wilson A(580) = 0.8069808699 ; MC 0.8041 +/- 0.002806 differs by -1.03 MCSE
+
+========== 6. Average of P(success) over the DESIGN prior vs A(N) of the package ==========
+Gauss-Legendre nodes: 400 (exact for polynomial degree <= 799; integrands have degree <= N + 18 = 696)
+       design      A_package avg_betabinomial diff_betabinomial avg_quadrature    diff_quadrature
+ BAM P1 N=678 0.800348994835   0.800348994835                 0 0.800348994835 -4.77395900589e-15
+ BAM P2 N=672 0.800269208437   0.800269208437                 0 0.800269208437 -1.11022302463e-15
+max |difference| over both designs and both methods: 4.77e-15
+Check passes if <= 1e-10: PASS
+
+========== 7. Figure ==========
+null device 
+          1 
+figure written: oc_success_vs_Se.png
+
+Elapsed: 120.3 s
+Done.

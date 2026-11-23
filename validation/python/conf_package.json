@@ -25,7 +25,7 @@
         "assurance": 0.80052658871515803
       }
     },
-    "secs": 68.079648971557617
+    "secs": 79.391695022583008
   },
   "C02": {
     "id": "C02",
@@ -53,7 +53,7 @@
         "assurance": 0.80273872800350066
       }
     },
-    "secs": 45.478884935379028
+    "secs": 47.623917102813721
   },
   "C03": {
     "id": "C03",
@@ -81,7 +81,7 @@
         "assurance": 0.85040976310954364
       }
     },
-    "secs": 46.037276983261108
+    "secs": 57.224126815795898
   },
   "C04": {
     "id": "C04",
@@ -109,7 +109,7 @@
         "assurance": 0.90034489266665996
       }
     },
-    "secs": 48.569000959396362
+    "secs": 59.336333036422729
   },
   "C05": {
     "id": "C05",
@@ -137,7 +137,7 @@
         "assurance": 0.70620397131842494
       }
     },
-    "secs": 18.100659132003784
+    "secs": 25.106406927108765
   },
   "C06": {
     "id": "C06",
@@ -165,7 +165,7 @@
         "assurance": 0.80079294885879349
       }
     },
-    "secs": 74.940392017364502
+    "secs": 79.6718909740448
   },
   "C07": {
     "id": "C07",
@@ -193,7 +193,7 @@
         "assurance": 0.80178244399418441
       }
     },
-    "secs": 21.116775989532471
+    "secs": 29.931529998779297
   },
   "C08": {
     "id": "C08",
@@ -221,7 +221,7 @@
         "assurance": 0.75174730374146292
       }
     },
-    "secs": 26.960394859313965
+    "secs": 32.761758089065552
   },
   "C09": {
     "id": "C09",
@@ -249,7 +249,7 @@
         "assurance": 0.68619292472233817
       }
     },
-    "secs": 0.090794086456298828
+    "secs": 0.15121912956237793
   },
   "C10": {
     "id": "C10",
@@ -261,7 +261,7 @@
       "target_reached": true,
       "max_assurance_evaluated": 0.57272727272727308,
       "N_at_max_assurance": 3,
-      "warnings": []
+      "warnings": ["The analysis prior for Se, equal to the design prior, Beta(8, 2) already has a prior-only interval width of 0.3881 <= its target delta (0.52, full_width): the width criterion is met before any data are observed, so success is dominated by the analysis prior. Use a weaker or flat analysis prior (analysis_prior_se) if this is not intended.", "The analysis prior for Sp, equal to the design prior, Beta(2, 8) already has a prior-only interval width of 0.3881 <= its target delta (0.48, full_width): the width criterion is met before any data are observed, so success is dominated by the analysis prior. Use a weaker or flat analysis prior (analysis_prior_sp) if this is not intended."]
     },
     "trio": {
       "-1": {
@@ -277,7 +277,7 @@
         "assurance": 0.68531468531468609
       }
     },
-    "secs": 0.089325904846191406
+    "secs": 0.15700078010559082
   },
   "C11": {
     "id": "C11",
@@ -305,7 +305,7 @@
         "assurance": 0.71459688210326255
       }
     },
-    "secs": 0.10622215270996094
+    "secs": 0.14811611175537109
   },
   "C12": {
     "id": "C12",
@@ -326,6 +326,6 @@
         "note": "main search did not reach target_assurance; N_total +/- 1 not evaluated"
       }
     },
-    "secs": 3.6838579177856445
+    "secs": 6.1461009979248047
   }
 }

@@ -1,0 +1,369 @@
+compare_wilson2022.R
+date:             2026-11-23 00:50:37 -05 
+R version:        R version 4.6.2 (2026-10-29 ucrt) 
+dtasamplesize:    0.7.0 
+find.package:     C:/dta/lib/dtasamplesize 
+output dir:       C:/dta/dtasamplesize/validation/logs/compare_wilson2022 
+Data S2 results:  C:/dta/inputs/dataS2_results.csv 
+TOL = 1e-12 ; target assurance = 0.8 ; sections: a b c d e f 
+
+==== (a) VAP, [W] section 5.1 ====
+Inputs: Se ~ Beta(25.9, 2.1), prevalence ~ Beta(29, 98), design = analysis,
+two-sided 95%, total width 0.16, assurance 0.80, Se only (assurance_for = 'se').
+package: n* = 104, A(n*) = 0.800484; A(104,105,106,150) = 0.800484, 0.802691, 0.804878, 0.882579
+own exact enumeration: n* = 104; A(104,105,106,150) = 0.800484, 0.802691, 0.804878, 0.882579; max |own - package| = 3.89e-15
+emulation (code rule): n* = 106, A(n*) = 0.800664; A(104,105,106,150) = 0.795487, 0.798102, 0.800664, 0.882478
+emulation of optimize(|A - 0.8|) on [10, 310]: minimum = 105.738945, ceiling = 106
+[time] (a): 1.9 s
+
+==== (b) [W] section 6.1 ====
+Inputs: Se only, two-sided 95%, total width 0.18, assurance 0.80, lambda = 0.9, n0 = 50;
+design Se ~ Beta(n0*lambda*rho, n0*rho*(1-lambda)), prevalence ~ Beta(n0*rho, n0*(1-rho));
+analysis prior = design prior (inference from the legend of Fig. 3 and the label 'BAM').
+
+-- rho = 0.10 (rho=0.10; lambda=0.9; n0=50; Se Beta(4.5,0.5); prev Beta(5,45); design=analysis; total width 0.18), search up to N = 800 --
+package: n* = 661; A(n*) = 0.8001322; max A evaluated = 0.800132 at N = 661
+emulation (code rule): n* = 681; own exact enumeration: n* = 661
+ rho   N A_package A_own_exact A_code_rule
+ 0.1 500  0.726497    0.726497    0.703147
+ 0.1 660  0.799734    0.799734    0.790897
+ 0.1 661  0.800132    0.800132    0.791344
+ 0.1 680  0.807572    0.807572    0.799659
+ 0.1 681  0.807957    0.807957    0.800087
+ 0.1 682  0.808341    0.808341    0.800514
+[time] rho = 0.10: 8.4 s
+
+-- rho = 0.05 (rho=0.05; lambda=0.9; n0=50; Se Beta(2.25,0.25); prev Beta(2.5,47.5); design=analysis; total width 0.18), search up to N = 1800 --
+package: n* = 1408; A(n*) = 0.800096; max A evaluated = 0.800096 at N = 1408
+emulation (code rule): n* = 1643; own exact enumeration: n* = 1408
+  rho    N A_package A_own_exact A_code_rule
+ 0.05 1000  0.734150    0.734150    0.657783
+ 0.05 1020  0.737902    0.737902    0.664176
+ 0.05 1407  0.799959    0.799959    0.759712
+ 0.05 1408  0.800096    0.800096    0.759906
+ 0.05 1642  0.829392    0.829392    0.799878
+ 0.05 1643  0.829506    0.829506    0.800028
+ 0.05 1644  0.829620    0.829620    0.800178
+[time] rho = 0.05: 48.4 s
+
+-- rho = 0.01 (rho=0.01; lambda=0.9; n0=50; Se Beta(0.45,0.05); prev Beta(0.5,49.5); design=analysis; total width 0.18), search up to N = 4000 --
+package: n* = NA; A(n*) = NA; max A evaluated = 0.691744 at N = 4000
+emulation (code rule): n* = NA; own exact enumeration: n* = NA
+  rho    N A_package A_own_exact A_code_rule
+ 0.01 2769  0.646417    0.646417    0.355151
+ 0.01 2770  0.646463    0.646463    0.355232
+ 0.01 2771  0.646509    0.646509    0.355312
+[time] rho = 0.01: 217.6 s
+
+-- P2: attempts to explain 2770 (rho = 0.01) --
+A_code on N = 100, 200, ..., 4000 (every 5th shown):
+   500   1000   1500   2000   2500   3000   3500   4000 
+0.0428 0.1401 0.2202 0.2826 0.3323 0.3730 0.4071 0.4362 
+A_code is increasing on that grid; max = 0.4362 at N = 4000
+  optimize(|A_code - 0.8|, [10, 2000]) -> minimum = 2000.000, ceiling = 2000 (A there = 0.2826)
+  optimize(|A_code - 0.8|, [10, 3000]) -> minimum = 3000.000, ceiling = 3000 (A there = 0.3730)
+  optimize(|A_code - 0.8|, [10, 4000]) -> minimum = 4000.000, ceiling = 4000 (A there = 0.4362)
+A(2770): code rule = 0.3552, exact = 0.6465
+  alternative [n0 = 25, design = analysis]: first crossing code rule = NA, exact = NA (cap 4000); A_code(2770) = 0.2911
+  alternative [n0 = 75, design = analysis]: first crossing code rule = NA, exact = NA (cap 4000); A_code(2770) = 0.3838
+  alternative [n0 = 100, design = analysis]: first crossing code rule = NA, exact = NA (cap 4000); A_code(2770) = 0.3996
+  alternative [n0 = 50, flat analysis Beta(1,1)]: first crossing code rule = NA, exact = NA (cap 4000); A_code(2770) = 0.2940
+[time] (b): 656.8 s
+
+==== (c) prior-data conflict, [W] sections 4.3 and 5.3 ====
+Data (Table 1C): 51 TP, 2 FN (53 with VAP); 55 FP, 42 TN (97 without); n = 150.
+Priors: prevalence Beta(29, 98); Se Beta(25.9, 2.1) (design = analysis).
+                      quantity  reference x_obs   n    a    b  p_lower
+1        prevalence (diseased) prevalence    53 150 29.0 98.0 0.991253
+2 sensitivity (true positives)   analysis    51  53 25.9  2.1 0.758945
+    p_upper
+1 0.0118529
+2 0.3896820
+own cumulative sums: P(X<=53) = 0.9913, P(X>=53) = 0.0119; P(X<=51) = 0.7589, P(X>=51) = 0.3897
+[time] (c): 0.0 s
+
+==== (d) Table 2 of Wilson et al.: sensitivity to the initial prior (epsilon = 0.00354, distance H2 = 1 - BC) ====
+Initial priors: Se Beta(9.9,1.1), prevalence Beta(12,43); pilot 16 TP, 1 FN, 35 FP, 20 TN (Table 1B);
+perturbed initial prior + pilot = design = analysis prior of the perturbed parameter;
+A evaluated at N = 106 (the published n*); total width 0.16, Se only.
+number of angles: seq(-pi, pi, 0.1) = 63; seq(-pi, pi, 0.01) = 629
+
+-- perturbation of the Se prior --
+grid rule (63 angles, r step 0.1): max |d - eps| = 0.00213; a range [7.91, 12.70], b range [0.90, 1.35]
+max |own exact - package| over the 63 points = 4.55e-15
+package on the grid: A in [0.7407, 0.8612]; n* at A-min prior = 129, at A-max prior = 76
+emulation on the grid: A in [0.7299, 0.8600]; n* (optimize, ceiling) at A-min = 130, at A-max = 82; (first crossing) 130 and 82
+A-min prior (code rule): initial (9.003, 1.175); A-max prior: initial (12.695, 1.263)
+package, exact contour, 63 angles: A in [0.7442, 0.8684]; n* over the contour in [74, 128]; n* at A-min = 128, at A-max = 74; directions without root: 0, imprecise: 0 [81 s]
+package, exact contour, 629 angles: A in [0.7416, 0.8705]; n* over the contour in [73, 129]; n* at A-min = 129, at A-max = 73; directions without root: 0, imprecise: 0 [666 s]
+
+-- perturbation of the prev prior --
+grid rule (63 angles, r step 0.1): max |d - eps| = 0.00054; a range [9.49, 14.80], b range [33.94, 51.80]
+max |own exact - package| over the 63 points = 3.33e-15
+package on the grid: A in [0.8004, 0.8093]; n* at A-min prior = 106, at A-max prior = 102
+emulation on the grid: A in [0.7953, 0.8059]; n* (optimize, ceiling) at A-min = 108, at A-max = 104; (first crossing) 108 and 104
+A-min prior (code rule): initial (11.492, 43.618); A-max prior: initial (12.600, 42.639)
+package, exact contour, 63 angles: A in [0.8004, 0.8091]; n* over the contour in [102, 106]; n* at A-min = 106, at A-max = 102; directions without root: 0, imprecise: 0 [63 s]
+package, exact contour, 629 angles: A in [0.8004, 0.8091]; n* over the contour in [102, 106]; n* at A-min = 106, at A-max = 102; directions without root: 0, imprecise: 0 [591 s]
+
+Sensitivity of the package result to the angular grid:
+ parameter angles   A_min   A_max n_star_min n_star_max n_dir_no_root
+        Se     63 0.74417 0.86843         74        128             0
+        Se    629 0.74164 0.87055         73        129             0
+      prev     63 0.80044 0.80911        102        106             0
+      prev    629 0.80044 0.80911        102        106             0
+ n_dir_imprecise
+               0
+               0
+               0
+               0
+[time] (d): 1421.9 s
+
+==== (e) design and analysis priors distinct: [WS1] B.4 Table 1 and Supplement C ====
+Standard (analysis = design): package 104, emulation 106; Combination / Hybrid II (flat Se analysis prior): package 290 (A = 0.8004), emulation 290
+Hybrid I (informative Se analysis prior, flat prevalence analysis prior): the prevalence has no analysis prior in the package nor in the criterion, so the size equals the Standard one by construction.
+A(290) with flat analysis: package 0.8004; emulation (code) 0.8003
+
+Supplement C ([WS1] Tables 2-4, L310-442): 56 cells x 4 columns transcribed (BAM 25, 50, 75, Non-inf).
+Design: Se ~ Beta(n0*se*prev, n0*prev*(1-se)), prev ~ Beta(n0*prev, n0*(1-prev)), n0 = 25, 50, 75; BAM: analysis = design;
+Non-inf: analysis Beta(1,1), design prior with n0 = 75 (P3) or n0 = 25 (as described in [W] sec 6.1).
+  emulation: 8 of 56 cells done [4 s]
+  emulation: 16 of 56 cells done [7 s]
+  emulation: 24 of 56 cells done [8 s]
+  emulation: 32 of 56 cells done [13 s]
+  emulation: 40 of 56 cells done [19 s]
+  emulation: 48 of 56 cells done [25 s]
+  emulation: 56 of 56 cells done [47 s]
+package (exact) for the four published columns of every cell ...
+
+Supplement C: number of cells that coincide with the published value (published N = 1 cells counted as a match for the package when it returns 2, the scan starting at N = 2):
+    w   column cells match_code_rule match_package
+ 0.22    bam25    16              16            15
+ 0.22    bam50    16              16            15
+ 0.22    bam75    16              16            15
+ 0.22   noninf    16              16            16
+ 0.22 noninf25    16              NA            NA
+ 0.18    bam25    20              20            18
+ 0.18    bam50    20              20            19
+ 0.18    bam75    20              20            19
+ 0.18   noninf    20              20            20
+ 0.18 noninf25    20              NA            NA
+ 0.14    bam25    20              20            19
+ 0.14    bam50    20              20            20
+ 0.14    bam75    20              20            20
+ 0.14   noninf    20              20            20
+ 0.14 noninf25    20              NA            NA
+
+Cells where the emulation or the package differ from the published value:
+    w prev   se column n0_design published emulation_code own_exact_from1
+ 0.22  0.7 0.85  bam50        50        12             12              11
+ 0.22  0.5 0.85  bam75        75        13             13              10
+ 0.22  0.3 0.85  bam25        25       171            171             170
+ 0.18  0.7 0.90  bam25        25        57             57              56
+ 0.18  0.7 0.90  bam50        50        19             19              18
+ 0.18  0.5 0.90  bam75        75        23             23              21
+ 0.18  0.3 0.90  bam25        25       199            199             198
+ 0.14  0.3 0.90  bam25        25       352            352             351
+ package dataS2_original
+      11              NA
+      10              NA
+     170              NA
+      56              57
+      18              19
+      21              23
+     198             199
+     351              NA
+[time] (e): 261.5 s
+
+==== (f) Supplement F (joint Se and Sp) ====
+Not reproduced: [WS1] F gives only curves and box plots (no numerical sample sizes), and does not state the Sp prior,
+the Se grid step, the search range or the analysis prior. Figures were not digitised.
+Declared as a limitation: the joint two-sided mode of the package has no numerical external reproduction.
+
+Data S2 original values merged for 156 keys of 422 in the file.
+Table 2 grid of Wilson et al., Se: max |a_emulated - a_DataS2| = 4.97e-14, max |b| = 5.11e-15; max |A_emulation - A_DataS2| = 2.32e-13 (63 points)
+Table 2 grid of Wilson et al., prev: max |a_emulated - a_DataS2| = 4.80e-14, max |b| = 4.97e-14; max |A_emulation - A_DataS2| = 3.68e-13 (63 points)
+Supplement C cells with the original code: 14; emulation coincides in 14.
+
+Table written: 214 rows -> compare_wilson2022_table.csv
+                                       key published     package   emulation
+                                VAP|n_star   106.000 1.04000e+02 1.06000e+02
+                                VAP|A_N104        NA 8.00484e-01 7.95487e-01
+                                VAP|A_N105        NA 8.02691e-01 7.98102e-01
+                                VAP|A_N106        NA 8.04878e-01 8.00664e-01
+                                VAP|A_N150     0.880 8.82579e-01 8.82478e-01
+                      VAP|optimize_minimum        NA          NA 1.05739e+02
+                      VAP|optimize_ceiling   106.000          NA 1.06000e+02
+                  VAP|own_exact_vs_package        NA 3.88578e-15          NA
+                        S61|rho0.10|n_star   681.000 6.61000e+02 6.81000e+02
+                        S61|rho0.10|A_N680        NA 8.07572e-01 7.99659e-01
+                        S61|rho0.10|A_N681        NA 8.07957e-01 8.00087e-01
+                        S61|rho0.10|A_N500        NA 7.26497e-01 7.03147e-01
+                        S61|rho0.05|n_star  1643.000 1.40800e+03 1.64300e+03
+                       S61|rho0.05|A_N1642        NA 8.29392e-01 7.99878e-01
+                       S61|rho0.05|A_N1643        NA 8.29506e-01 8.00028e-01
+                       S61|rho0.05|A_N1000        NA 7.34150e-01 6.57783e-01
+                       S61|rho0.05|A_N1020        NA 7.37902e-01 6.64176e-01
+                        S61|rho0.01|n_star  2770.000          NA          NA
+                       S61|rho0.01|A_N2770        NA 6.46463e-01 3.55232e-01
+                       S61|rho0.01|A_N2771        NA 6.46509e-01 3.55312e-01
+                 S61|rho0.01|max_A_to_4000        NA 6.91744e-01 4.36197e-01
+                            S61|rho0.01|P2  2770.000          NA          NA
+                      CONF|prev_pctl_lower    99.000 9.91253e+01 9.91253e+01
+                      CONF|prev_tail_upper        NA 1.18529e-02 1.18529e-02
+                        CONF|se_pctl_lower    76.000 7.58945e+01 7.58945e+01
+                        CONF|se_tail_upper        NA 3.89682e-01 3.89682e-01
+                               T2|Se|A_min     0.730 7.40701e-01 7.29853e-01
+                               T2|Se|A_max     0.860 8.61209e-01 8.59993e-01
+                       T2|Se|nstar_at_Amin   130.000 1.29000e+02 1.30000e+02
+                       T2|Se|nstar_at_Amax    82.000 7.60000e+01 8.20000e+01
+           T2|Se|nstar_first_cross_at_Amin        NA 1.29000e+02 1.30000e+02
+           T2|Se|nstar_first_cross_at_Amax        NA 7.60000e+01 8.20000e+01
+                     T2|Se|contour63|A_min     0.730 7.44165e-01          NA
+                     T2|Se|contour63|A_max     0.860 8.68430e-01          NA
+    T2|Se|contour63|nstar_min_over_contour    82.000 7.40000e+01          NA
+    T2|Se|contour63|nstar_max_over_contour   130.000 1.28000e+02          NA
+             T2|Se|contour63|nstar_at_Amin   130.000 1.28000e+02          NA
+             T2|Se|contour63|nstar_at_Amax    82.000 7.40000e+01          NA
+                    T2|Se|contour629|A_min     0.730 7.41636e-01          NA
+                    T2|Se|contour629|A_max     0.860 8.70549e-01          NA
+   T2|Se|contour629|nstar_min_over_contour    82.000 7.30000e+01          NA
+   T2|Se|contour629|nstar_max_over_contour   130.000 1.29000e+02          NA
+            T2|Se|contour629|nstar_at_Amin   130.000 1.29000e+02          NA
+            T2|Se|contour629|nstar_at_Amax    82.000 7.30000e+01          NA
+                             T2|prev|A_min     0.800 8.00424e-01 7.95350e-01
+                             T2|prev|A_max     0.810 8.09267e-01 8.05869e-01
+                     T2|prev|nstar_at_Amin   108.000 1.06000e+02 1.08000e+02
+                     T2|prev|nstar_at_Amax   104.000 1.02000e+02 1.04000e+02
+         T2|prev|nstar_first_cross_at_Amin        NA 1.06000e+02 1.08000e+02
+         T2|prev|nstar_first_cross_at_Amax        NA 1.02000e+02 1.04000e+02
+                   T2|prev|contour63|A_min     0.800 8.00443e-01          NA
+                   T2|prev|contour63|A_max     0.810 8.09106e-01          NA
+  T2|prev|contour63|nstar_min_over_contour   104.000 1.02000e+02          NA
+  T2|prev|contour63|nstar_max_over_contour   108.000 1.06000e+02          NA
+           T2|prev|contour63|nstar_at_Amin   108.000 1.06000e+02          NA
+           T2|prev|contour63|nstar_at_Amax   104.000 1.02000e+02          NA
+                  T2|prev|contour629|A_min     0.800 8.00441e-01          NA
+                  T2|prev|contour629|A_max     0.810 8.09107e-01          NA
+ T2|prev|contour629|nstar_min_over_contour   104.000 1.02000e+02          NA
+ T2|prev|contour629|nstar_max_over_contour   108.000 1.06000e+02          NA
+          T2|prev|contour629|nstar_at_Amin   108.000 1.06000e+02          NA
+          T2|prev|contour629|nstar_at_Amax   104.000 1.02000e+02          NA
+                        B4|Standard|n_star   106.000 1.04000e+02 1.06000e+02
+                     B4|Combination|n_star   290.000 2.90000e+02 2.90000e+02
+                         B4|HybridI|n_star   106.000 1.04000e+02 1.06000e+02
+                        B4|HybridII|n_star   290.000 2.90000e+02 2.90000e+02
+                         B4|A_N289_nonTRUE        NA 7.98484e-01 7.98355e-01
+                         B4|A_N290_nonTRUE        NA 8.00380e-01 8.00256e-01
+                        B4|est|Standard_Se     0.949 9.49383e-01          NA
+                     B4|est|Combination_Se     0.945 9.45455e-01          NA
+                      B4|est|Standard_prev     0.296 2.96029e-01          NA
+                   B4|est|Combination_prev     0.355 3.55263e-01          NA
+                      SC|w0.22|bam25|match    16.000 1.50000e+01 1.60000e+01
+                      SC|w0.22|bam50|match    16.000 1.50000e+01 1.60000e+01
+                      SC|w0.22|bam75|match    16.000 1.50000e+01 1.60000e+01
+                     SC|w0.22|noninf|match    16.000 1.60000e+01 1.60000e+01
+                      SC|w0.18|bam25|match    20.000 1.80000e+01 2.00000e+01
+                      SC|w0.18|bam50|match    20.000 1.90000e+01 2.00000e+01
+                      SC|w0.18|bam75|match    20.000 1.90000e+01 2.00000e+01
+                     SC|w0.18|noninf|match    20.000 2.00000e+01 2.00000e+01
+                      SC|w0.14|bam25|match    20.000 1.90000e+01 2.00000e+01
+                      SC|w0.14|bam50|match    20.000 2.00000e+01 2.00000e+01
+                      SC|w0.14|bam75|match    20.000 2.00000e+01 2.00000e+01
+                     SC|w0.14|noninf|match    20.000 2.00000e+01 2.00000e+01
+                   SC|w0.22|noninf25|match    16.000          NA 0.00000e+00
+                   SC|w0.18|noninf25|match    20.000          NA 0.00000e+00
+                   SC|w0.14|noninf25|match    20.000          NA 0.00000e+00
+                             SF|limitation        NA          NA          NA
+ dataS2_original
+     106.0000000
+       0.7954871
+       0.7981022
+       0.8006637
+       0.8824776
+     105.7389450
+     106.0000000
+              NA
+              NA
+       0.7996592
+       0.8000871
+       0.7031472
+              NA
+              NA
+              NA
+       0.6577826
+       0.6641759
+              NA
+              NA
+              NA
+              NA
+              NA
+      99.1252949
+       0.0118529
+      75.8945265
+       0.3896820
+       0.7298526
+       0.8599931
+     130.0000000
+      82.0000000
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+       0.7953499
+       0.8058687
+     108.0000000
+     104.0000000
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+     106.0000000
+     290.0000000
+     106.0000000
+     290.0000000
+       0.7983550
+       0.8002565
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+              NA
+
+Total elapsed: 39.0 min
+sessionInfo (short): R version 4.6.2 (2026-10-29 ucrt) ; dtasamplesize 0.7.0 

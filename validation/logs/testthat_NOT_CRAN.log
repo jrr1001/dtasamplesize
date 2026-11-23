@@ -1,0 +1,57 @@
+R: R version 4.6.2 (2026-10-29 ucrt) 
+date: 2026-11-23 01:31:57 -05 
+packageVersion(dtasamplesize): 0.7.0 
+find.package: C:/dta/lib/dtasamplesize 
+NOT_CRAN = true 
+BRIDGE Jeffreys: N = 576, A = 0.8014201
+BRIDGE uniform: N = 579, A = 0.8025010
+BRIDGE informative: N = 466, A = 0.8002138
+MC vs exact (separate priors), N = 300: exact 0.042951, MC 0.044150, diff/MCSE = 0.84
+MC vs exact (separate priors), N = 678: exact 0.699567, MC 0.701100, diff/MCSE = 0.47
+
+Beta priors from previous-stage (pilot) data -- power prior with fixed weight a0
+
+  design: cohort | a0 = 1 | use_in = design 
+  pilot counts: tp = 16  fn = 1  tn = 20  fp = 35 
+
+  Base priors (before the pilot)
+    Se    Beta(9.9, 1.1)  mean = 0.9000  a + b = 11 
+    Sp    Beta(1, 1)  mean = 0.5000  a + b = 2 
+    prev  Beta(12, 43)  mean = 0.2182  a + b = 55 
+
+  Design priors (updated with the pilot)
+    Se    Beta(25.9, 2.1)  mean = 0.9250  a + b = 28 
+    Sp    Beta(21, 36)  mean = 0.3684  a + b = 57 
+    prev  Beta(29, 98)  mean = 0.2283  a + b = 127  
+
+  Analysis priors (= base priors) 
+    Se    Beta(9.9, 1.1)  mean = 0.9000  a + b = 11 
+    Sp    Beta(1, 1)  mean = 0.5000  a + b = 2 
+    (no analysis prior for prevalence)
+
+
+ Bayesian Assurance Method (BAM) for DTA Sample Size 
+
+  width criterion: full width of the equal-tailed 95% interval; delta_se, delta_sp compared exactly (width <= delta)
+  assurance objective: joint (Se and Sp widths both met in the same study)
+  analysis priors: same as design priors (Se a + b = 20, Sp a + b = 4)
+  n_diseased: 107 
+  n_non_diseased: 373 
+  N_total: 678 
+  joint_assurance: 0.800349 
+  B: 5000 
+contour extremes (2000 directions): Se a [7.6329, 12.7970] b [0.8917, 1.3621]; prev a [9.4879, 15.1885] b [33.8605, 54.6013]
+Williamson: N = 321, A = 0.8007552287
+VAP: N = 104, A = 0.8004835299
+Fig 3, rho_T = 0.30: N = 182, 154, 101
+[ FAIL 0 | WARN 0 | SKIP 2 | PASS 2147 ]
+
+══ Skipped tests (2) ═══════════════════════════════════════════════════════════
+• set DTA_RUN_SLOW_REF to run (N up to ~1600, O(N^2) qbeta) (1):
+  'test-bam_width_marginal.R:296:3'
+• shiny is installed; cannot test the missing-dependency path (1):
+  'test-launch_app.R:21:3'
+
+[ FAIL 0 | WARN 0 | SKIP 2 | PASS 2147 ]
+
+SUMMARY: FAIL 0 | WARN 0 | SKIP 2 | PASS 2147

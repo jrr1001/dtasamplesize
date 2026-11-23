@@ -1,0 +1,291 @@
+case,quantity,N,package,python,abs_diff,ok
+C01,effective_analysis_prior_se[0],,17.0,17.0,0.0,1
+C01,effective_analysis_prior_sp[0],,2.0,2.0,0.0,1
+C01,effective_analysis_prior_se[1],,3.0,3.0,0.0,1
+C01,effective_analysis_prior_sp[1],,2.0,2.0,0.0,1
+C01,target_reached,,1.0,1.0,0.0,1
+C01,N_total,,678.0,678.0,0.0,1
+C01,joint_assurance=A(N_total),678,0.8003489948345557,0.8003489948340634,4.922728891187944e-13,1
+C01,A(N) fixed-N (max_assurance_evaluated),2,0.0,0.0,0.0,1
+C01,A(N) fixed-N (max_assurance_evaluated),5,0.0,0.0,0.0,1
+C01,A(N) fixed-N (max_assurance_evaluated),20,0.0,0.0,0.0,1
+C01,A(N) fixed-N (max_assurance_evaluated),100,0.0001942529877618551,0.00019425298776184802,7.074419175467916e-18,1
+C01,A(N) fixed-N (max_assurance_evaluated),250,0.029827587341691397,0.02982758734169008,1.3149203947904198e-15,1
+C01,A(N) fixed-N (max_assurance_evaluated),677,0.7996848823576089,0.7996848823573808,2.2815083156046967e-13,1
+C01,A(N) fixed-N (max_assurance_evaluated),678,0.8003489948345557,0.8003489948340634,4.922728891187944e-13,1
+C01,A(N) fixed-N (max_assurance_evaluated),679,0.8010097649391572,0.8010097649386826,4.746203430272544e-13,1
+C01,ref_bam.BAMExact N_total vs package,,678.0,678.0,0.0,1
+C01,ref_bam.BAMExact A(N_total) vs package,678,0.8003489948345557,0.8003489948340634,4.922728891187944e-13,1
+C01,ref_bam.BAMExact A(N) vs extension (python-python),2,0.0,0.0,0.0,1
+C01,ref_bam.BAMExact A(N) vs extension (python-python),5,0.0,0.0,0.0,1
+C01,ref_bam.BAMExact A(N) vs extension (python-python),20,0.0,0.0,0.0,1
+C01,ref_bam.BAMExact A(N) vs extension (python-python),100,0.00019425298776184802,0.00019425298776184802,0.0,1
+C01,ref_bam.BAMExact A(N) vs extension (python-python),250,0.02982758734169008,0.02982758734169008,0.0,1
+C01,ref_bam.BAMExact A(N) vs extension (python-python),677,0.7996848823573808,0.7996848823573808,0.0,1
+C01,ref_bam.BAMExact A(N) vs extension (python-python),678,0.8003489948340634,0.8003489948340634,0.0,1
+C01,ref_bam.BAMExact A(N) vs extension (python-python),679,0.8010097649386826,0.8010097649386826,0.0,1
+C02,effective_analysis_prior_se[0],,0.5,0.5,0.0,1
+C02,effective_analysis_prior_sp[0],,0.5,0.5,0.0,1
+C02,effective_analysis_prior_se[1],,0.5,0.5,0.0,1
+C02,effective_analysis_prior_sp[1],,0.5,0.5,0.0,1
+C02,target_reached,,1.0,1.0,0.0,1
+C02,N_total,,825.0,825.0,0.0,1
+C02,joint_assurance=A(N_total),825,0.8002578291497717,0.8002578291499733,2.0161650127192843e-13,1
+C02,A(N) fixed-N (max_assurance_evaluated),2,0.0,0.0,0.0,1
+C02,A(N) fixed-N (max_assurance_evaluated),5,0.0,0.0,0.0,1
+C02,A(N) fixed-N (max_assurance_evaluated),20,0.0,0.0,0.0,1
+C02,A(N) fixed-N (max_assurance_evaluated),100,0.0012830304552726639,0.0012830304552726433,2.0599841277224584e-17,1
+C02,A(N) fixed-N (max_assurance_evaluated),250,0.02467246118963488,0.02467246118963364,1.2420620087993939e-15,1
+C02,A(N) fixed-N (max_assurance_evaluated),824,0.7997478642884122,0.7997478642876608,7.513989430663059e-13,1
+C02,A(N) fixed-N (max_assurance_evaluated),825,0.8002578291497717,0.8002578291499733,2.0161650127192843e-13,1
+C02,A(N) fixed-N (max_assurance_evaluated),826,0.8007662815439701,0.8007662815442361,2.660094367001875e-13,1
+C03,effective_analysis_prior_se[0],,1.0,1.0,0.0,1
+C03,effective_analysis_prior_sp[0],,1.0,1.0,0.0,1
+C03,effective_analysis_prior_se[1],,1.0,1.0,0.0,1
+C03,effective_analysis_prior_sp[1],,1.0,1.0,0.0,1
+C03,target_reached,,1.0,1.0,0.0,1
+C03,N_total,,831.0,831.0,0.0,1
+C03,joint_assurance=A(N_total),831,0.8001805522427875,0.8001805522423158,4.71733763163229e-13,1
+C03,A(N) fixed-N (max_assurance_evaluated),2,0.0,0.0,0.0,1
+C03,A(N) fixed-N (max_assurance_evaluated),5,0.0,0.0,0.0,1
+C03,A(N) fixed-N (max_assurance_evaluated),20,0.0,0.0,0.0,1
+C03,A(N) fixed-N (max_assurance_evaluated),100,0.0003620926612250939,0.00036209266122508223,1.1655173354219173e-17,1
+C03,A(N) fixed-N (max_assurance_evaluated),250,0.020131060198361167,0.020131060198360234,9.332812300755222e-16,1
+C03,A(N) fixed-N (max_assurance_evaluated),830,0.7996687787226358,0.7996687787225804,5.540012892879531e-14,1
+C03,A(N) fixed-N (max_assurance_evaluated),831,0.8001805522427875,0.8001805522423158,4.71733763163229e-13,1
+C03,A(N) fixed-N (max_assurance_evaluated),832,0.8006908038057184,0.8006908038067884,1.0699219288312634e-12,1
+C04,effective_analysis_prior_se[0],,30.0,30.0,0.0,1
+C04,effective_analysis_prior_sp[0],,10.0,10.0,0.0,1
+C04,effective_analysis_prior_se[1],,5.0,5.0,0.0,1
+C04,effective_analysis_prior_sp[1],,2.0,2.0,0.0,1
+C04,target_reached,,1.0,1.0,0.0,1
+C04,N_total,,577.0,577.0,0.0,1
+C04,joint_assurance=A(N_total),577,0.800157868160966,0.8001578681609722,6.217248937900877e-15,1
+C04,A(N) fixed-N (max_assurance_evaluated),2,0.0,0.0,0.0,1
+C04,A(N) fixed-N (max_assurance_evaluated),5,0.0,0.0,0.0,1
+C04,A(N) fixed-N (max_assurance_evaluated),20,0.0,0.0,0.0,1
+C04,A(N) fixed-N (max_assurance_evaluated),100,0.00033404041584302936,0.0003340404158430193,1.0083080204115191e-17,1
+C04,A(N) fixed-N (max_assurance_evaluated),250,0.04053503093138633,0.04053503093138484,1.4918621893400541e-15,1
+C04,A(N) fixed-N (max_assurance_evaluated),576,0.7991083705487523,0.7991083705487457,6.5503158452884236e-15,1
+C04,A(N) fixed-N (max_assurance_evaluated),577,0.800157868160966,0.8001578681609722,6.217248937900877e-15,1
+C04,A(N) fixed-N (max_assurance_evaluated),578,0.8011965419289641,0.8011965419296462,6.821210263296962e-13,1
+C05,effective_analysis_prior_se[0],,0.5,0.5,0.0,1
+C05,effective_analysis_prior_sp[0],,2.0,2.0,0.0,1
+C05,effective_analysis_prior_se[1],,0.5,0.5,0.0,1
+C05,effective_analysis_prior_sp[1],,2.0,2.0,0.0,1
+C05,target_reached,,1.0,1.0,0.0,1
+C05,N_total,,825.0,825.0,0.0,1
+C05,joint_assurance=A(N_total),825,0.8002862109524337,0.8002862109526353,2.0161650127192843e-13,1
+C05,A(N) fixed-N (max_assurance_evaluated),2,0.0,0.0,0.0,1
+C05,A(N) fixed-N (max_assurance_evaluated),5,0.0,0.0,0.0,1
+C05,A(N) fixed-N (max_assurance_evaluated),20,0.0,0.0,0.0,1
+C05,A(N) fixed-N (max_assurance_evaluated),100,0.0007003618708642814,0.0007003618708642722,9.215718466126788e-18,1
+C05,A(N) fixed-N (max_assurance_evaluated),250,0.023748113754849153,0.02374811375484796,1.1934897514720433e-15,1
+C05,A(N) fixed-N (max_assurance_evaluated),824,0.7997767096494689,0.7997767096487175,7.513989430663059e-13,1
+C05,A(N) fixed-N (max_assurance_evaluated),825,0.8002862109524337,0.8002862109526353,2.0161650127192843e-13,1
+C05,A(N) fixed-N (max_assurance_evaluated),826,0.8007942075989188,0.8007942075991848,2.660094367001875e-13,1
+C06,effective_analysis_prior_se[0],,17.0,17.0,0.0,1
+C06,effective_analysis_prior_sp[0],,2.0,2.0,0.0,1
+C06,effective_analysis_prior_se[1],,3.0,3.0,0.0,1
+C06,effective_analysis_prior_sp[1],,2.0,2.0,0.0,1
+C06,target_reached,,0.0,0.0,0.0,1
+C06,N_total,,nan,nan,nan,1
+C06,max_assurance_evaluated,,0.758180664165403,0.7581806641666182,1.2152501227546963e-12,1
+C06,N_at_max_assurance,,1000.0,1000.0,0.0,1
+C06,A(N) fixed-N (max_assurance_evaluated),2,0.0,0.0,0.0,1
+C06,A(N) fixed-N (max_assurance_evaluated),5,0.0,0.0,0.0,1
+C06,A(N) fixed-N (max_assurance_evaluated),20,0.0,0.0,0.0,1
+C06,A(N) fixed-N (max_assurance_evaluated),100,0.000730161514594967,0.0007301615145949472,1.984089975648473e-17,1
+C06,A(N) fixed-N (max_assurance_evaluated),250,0.02573669282721144,0.02573669282721043,1.0096090630185017e-15,1
+C07,effective_analysis_prior_se[0],,25.0,25.0,0.0,1
+C07,effective_analysis_prior_sp[0],,30.0,30.0,0.0,1
+C07,effective_analysis_prior_se[1],,7.0,7.0,0.0,1
+C07,effective_analysis_prior_sp[1],,2.0,2.0,0.0,1
+C07,target_reached,,1.0,1.0,0.0,1
+C07,N_total,,321.0,321.0,0.0,1
+C07,joint_assurance=A(N_total),321,0.8007552286865361,0.800755228686732,1.9584334154387761e-13,1
+C07,A(N) fixed-N (max_assurance_evaluated),2,0.0,0.0,0.0,1
+C07,A(N) fixed-N (max_assurance_evaluated),5,0.0,0.0,0.0,1
+C07,A(N) fixed-N (max_assurance_evaluated),20,0.0,0.0,0.0,1
+C07,A(N) fixed-N (max_assurance_evaluated),100,0.021069311124307925,0.02106931112430713,7.945033519973776e-16,1
+C07,A(N) fixed-N (max_assurance_evaluated),250,0.5883873483162239,0.5883873483162861,6.228351168147128e-14,1
+C07,A(N) fixed-N (max_assurance_evaluated),320,0.7985632899686134,0.7985632899685893,2.4091839634365897e-14,1
+C07,A(N) fixed-N (max_assurance_evaluated),321,0.8007552286865361,0.800755228686732,1.9584334154387761e-13,1
+C07,A(N) fixed-N (max_assurance_evaluated),322,0.802926380636369,0.8029263806366073,2.382538610845586e-13,1
+C08,effective_analysis_prior_se[0],,1.0,1.0,0.0,1
+C08,effective_analysis_prior_sp[0],,1.0,1.0,0.0,1
+C08,effective_analysis_prior_se[1],,1.0,1.0,0.0,1
+C08,effective_analysis_prior_sp[1],,1.0,1.0,0.0,1
+C08,target_reached,,1.0,1.0,0.0,1
+C08,N_total,,707.0,707.0,0.0,1
+C08,joint_assurance=A(N_total),707,0.8000157740267484,0.800015774026395,3.5338398873818733e-13,1
+C08,A(N) fixed-N (max_assurance_evaluated),2,0.0,0.0,0.0,1
+C08,A(N) fixed-N (max_assurance_evaluated),5,0.0,0.0,0.0,1
+C08,A(N) fixed-N (max_assurance_evaluated),20,6.279653051823944e-16,6.279653051823548e-16,3.9541652874203217e-29,1
+C08,A(N) fixed-N (max_assurance_evaluated),100,0.00010271082904231639,0.00010271082904231293,3.4558944247975454e-18,1
+C08,A(N) fixed-N (max_assurance_evaluated),250,0.03237439722095446,0.032374397220959306,4.8433479449272454e-15,1
+C08,A(N) fixed-N (max_assurance_evaluated),706,0.7988674395414099,0.7988674395411979,2.120525977034049e-13,1
+C08,A(N) fixed-N (max_assurance_evaluated),707,0.8000157740267484,0.800015774026395,3.5338398873818733e-13,1
+C08,A(N) fixed-N (max_assurance_evaluated),708,0.8011584813448183,0.8011584813453287,5.10480546722647e-13,1
+C09,effective_analysis_prior_se[0],,25.9,25.9,0.0,1
+C09,effective_analysis_prior_sp[0],,2.0,2.0,0.0,1
+C09,effective_analysis_prior_se[1],,2.1,2.1,0.0,1
+C09,effective_analysis_prior_sp[1],,2.0,2.0,0.0,1
+C09,target_reached,,1.0,1.0,0.0,1
+C09,N_total,,104.0,104.0,0.0,1
+C09,joint_assurance=A(N_total),104,0.8004835299367327,0.8004835299366801,5.2513549064769904e-14,1
+C09,A(N) fixed-N (max_assurance_evaluated),2,0.0,0.0,0.0,1
+C09,A(N) fixed-N (max_assurance_evaluated),5,0.00055432330552836,0.0005543233055283673,7.26415455565288e-18,1
+C09,A(N) fixed-N (max_assurance_evaluated),20,0.31539904446958866,0.31539904446955735,3.1308289294429414e-14,1
+C09,A(N) fixed-N (max_assurance_evaluated),100,0.7914440997491424,0.7914440997489876,1.5487611193520934e-13,1
+C09,A(N) fixed-N (max_assurance_evaluated),103,0.7982553205736331,0.7982553205735956,3.752553823233029e-14,1
+C09,A(N) fixed-N (max_assurance_evaluated),104,0.8004835299367327,0.8004835299366801,5.2513549064769904e-14,1
+C09,A(N) fixed-N (max_assurance_evaluated),105,0.802690940904451,0.802690940904216,2.3503421431314564e-13,1
+C09,A(N) fixed-N (max_assurance_evaluated),250,0.9687629656619953,0.968762965662077,8.171241461241152e-14,1
+C10,effective_analysis_prior_se[0],,0.5,0.5,0.0,1
+C10,effective_analysis_prior_sp[0],,2.0,2.0,0.0,1
+C10,effective_analysis_prior_se[1],,0.5,0.5,0.0,1
+C10,effective_analysis_prior_sp[1],,2.0,2.0,0.0,1
+C10,target_reached,,1.0,1.0,0.0,1
+C10,N_total,,824.0,824.0,0.0,1
+C10,joint_assurance=A(N_total),824,0.800046800976499,0.8000468009757482,7.508438315539934e-13,1
+C10,A(N) fixed-N (max_assurance_evaluated),2,0.0,0.0,0.0,1
+C10,A(N) fixed-N (max_assurance_evaluated),5,0.0,0.0,0.0,1
+C10,A(N) fixed-N (max_assurance_evaluated),20,2.202776500506341e-06,2.202776500506392e-06,5.124549330888517e-20,1
+C10,A(N) fixed-N (max_assurance_evaluated),100,0.061120071273939716,0.06112007127393797,1.7486012637846216e-15,1
+C10,A(N) fixed-N (max_assurance_evaluated),250,0.21121790729933998,0.2112179072993297,1.0269562977782698e-14,1
+C10,A(N) fixed-N (max_assurance_evaluated),823,0.7995403029880547,0.7995403029877899,2.6478819137309983e-13,1
+C10,A(N) fixed-N (max_assurance_evaluated),824,0.800046800976499,0.8000468009757482,7.508438315539934e-13,1
+C10,A(N) fixed-N (max_assurance_evaluated),825,0.8005518669755843,0.8005518669757862,2.0183854587685346e-13,1
+C11,effective_analysis_prior_se[0],,17.0,17.0,0.0,1
+C11,effective_analysis_prior_sp[0],,2.0,2.0,0.0,1
+C11,effective_analysis_prior_se[1],,3.0,3.0,0.0,1
+C11,effective_analysis_prior_sp[1],,2.0,2.0,0.0,1
+C11,target_reached,,1.0,1.0,0.0,1
+C11,N_total,,470.0,470.0,0.0,1
+C11,joint_assurance=A(N_total),470,0.8028229463595029,0.8028229463599859,4.829470157119431e-13,1
+C11,A(N) fixed-N (max_assurance_evaluated),2,0.0,0.0,0.0,1
+C11,A(N) fixed-N (max_assurance_evaluated),5,0.0,0.0,0.0,1
+C11,A(N) fixed-N (max_assurance_evaluated),20,0.0,0.0,0.0,1
+C11,A(N) fixed-N (max_assurance_evaluated),100,0.014414176945478233,0.014414176945477777,4.562322741819003e-16,1
+C11,A(N) fixed-N (max_assurance_evaluated),250,0.1338917271870777,0.13389172718707265,5.051514762044462e-15,1
+C11,A(N) fixed-N (max_assurance_evaluated),469,0.7993274502120752,0.7993274502119335,1.4166445794216997e-13,1
+C11,A(N) fixed-N (max_assurance_evaluated),470,0.8028229463595029,0.8028229463599859,4.829470157119431e-13,1
+C11,A(N) fixed-N (max_assurance_evaluated),471,0.8062700458269672,0.8062700458268237,1.4344081478157023e-13,1
+C12,effective_analysis_prior_se[0],,25.0,25.0,0.0,1
+C12,effective_analysis_prior_sp[0],,1.0,1.0,0.0,1
+C12,effective_analysis_prior_se[1],,7.0,7.0,0.0,1
+C12,effective_analysis_prior_sp[1],,1.0,1.0,0.0,1
+C12,target_reached,,1.0,1.0,0.0,1
+C12,N_total,,138.0,138.0,0.0,1
+C12,joint_assurance=A(N_total),138,0.8019595879936902,0.8019595879936537,3.6415315207705135e-14,1
+C12,A(N) fixed-N (max_assurance_evaluated),2,0.0,0.0,0.0,1
+C12,A(N) fixed-N (max_assurance_evaluated),5,0.0,0.0,0.0,1
+C12,A(N) fixed-N (max_assurance_evaluated),20,6.523683132822446e-12,6.523683132821846e-12,5.993828266741665e-25,1
+C12,A(N) fixed-N (max_assurance_evaluated),100,0.5358897865422597,0.5358897865422607,9.992007221626409e-16,1
+C12,A(N) fixed-N (max_assurance_evaluated),137,0.7965421103819225,0.7965421103820093,8.681944052568724e-14,1
+C12,A(N) fixed-N (max_assurance_evaluated),138,0.8019595879936902,0.8019595879936537,3.6415315207705135e-14,1
+C12,A(N) fixed-N (max_assurance_evaluated),139,0.807296374297659,0.8072963742975486,1.1035616864774056e-13,1
+C12,A(N) fixed-N (max_assurance_evaluated),250,0.9982803511203138,0.9982803511204207,1.0691447727140257e-13,1
+C13,pilot_update:prior_se[0],,25.9,25.9,0.0,1
+C13,pilot_update:prior_se[1],,2.1,2.1,0.0,1
+C13,pilot_update:prior_sp[0],,21.0,21.0,0.0,1
+C13,pilot_update:prior_sp[1],,36.0,36.0,0.0,1
+C13,pilot_update:prior_prev[0],,29.0,29.0,0.0,1
+C13,pilot_update:prior_prev[1],,98.0,98.0,0.0,1
+C13,pilot_update:analysis_prior_se[0],,25.9,25.9,0.0,1
+C13,pilot_update:analysis_prior_se[1],,2.1,2.1,0.0,1
+C13,pilot_update:analysis_prior_sp[0],,21.0,21.0,0.0,1
+C13,pilot_update:analysis_prior_sp[1],,36.0,36.0,0.0,1
+C13,effective_analysis_prior_se[0],,25.9,25.9,0.0,1
+C13,effective_analysis_prior_sp[0],,21.0,21.0,0.0,1
+C13,effective_analysis_prior_se[1],,2.1,2.1,0.0,1
+C13,effective_analysis_prior_sp[1],,36.0,36.0,0.0,1
+C13,target_reached,,1.0,1.0,0.0,1
+C13,N_total,,104.0,104.0,0.0,1
+C13,joint_assurance=A(N_total),104,0.8004835299338596,0.8004835299338129,4.674038933671909e-14,1
+C13,A(N) fixed-N (max_assurance_evaluated),2,0.0,0.0,0.0,1
+C13,A(N) fixed-N (max_assurance_evaluated),5,0.0,0.0,0.0,1
+C13,A(N) fixed-N (max_assurance_evaluated),20,0.0,0.0,0.0,1
+C13,A(N) fixed-N (max_assurance_evaluated),100,0.7914440997315211,0.7914440997313805,1.4055423491754482e-13,1
+C13,A(N) fixed-N (max_assurance_evaluated),103,0.7982553205691184,0.798255320569087,3.141931159689193e-14,1
+C13,A(N) fixed-N (max_assurance_evaluated),104,0.8004835299338596,0.8004835299338129,4.674038933671909e-14,1
+C13,A(N) fixed-N (max_assurance_evaluated),105,0.8026909409026209,0.8026909409023906,2.3037127760972e-13,1
+C13,A(N) fixed-N (max_assurance_evaluated),250,0.9687629656619959,0.968762965662126,1.3011813848606835e-13,1
+C14,pilot_update:prior_se[0],,17.9,17.9,0.0,1
+C14,pilot_update:prior_se[1],,1.6,1.6,0.0,1
+C14,pilot_update:prior_sp[0],,11.0,11.0,0.0,1
+C14,pilot_update:prior_sp[1],,18.5,18.5,0.0,1
+C14,pilot_update:prior_prev[0],,20.5,20.5,0.0,1
+C14,pilot_update:prior_prev[1],,70.5,70.5,0.0,1
+C14,pilot_update:analysis_prior_se[0],,9.9,9.9,0.0,1
+C14,pilot_update:analysis_prior_se[1],,1.1,1.1,0.0,1
+C14,pilot_update:analysis_prior_sp[0],,1.0,1.0,0.0,1
+C14,pilot_update:analysis_prior_sp[1],,1.0,1.0,0.0,1
+C14,effective_analysis_prior_se[0],,9.9,9.9,0.0,1
+C14,effective_analysis_prior_sp[0],,1.0,1.0,0.0,1
+C14,effective_analysis_prior_se[1],,1.1,1.1,0.0,1
+C14,effective_analysis_prior_sp[1],,1.0,1.0,0.0,1
+C14,target_reached,,1.0,1.0,0.0,1
+C14,N_total,,250.0,250.0,0.0,1
+C14,joint_assurance=A(N_total),250,0.8014832892805739,0.8014832892804665,1.0735856648125264e-13,1
+C14,A(N) fixed-N (max_assurance_evaluated),2,0.0,0.0,0.0,1
+C14,A(N) fixed-N (max_assurance_evaluated),5,0.0,0.0,0.0,1
+C14,A(N) fixed-N (max_assurance_evaluated),20,0.0,0.0,0.0,1
+C14,A(N) fixed-N (max_assurance_evaluated),100,0.4289948302028589,0.42899483020285467,4.218847493575595e-15,1
+C14,A(N) fixed-N (max_assurance_evaluated),249,0.799918030875934,0.7999180308759551,2.1094237467877974e-14,1
+C14,A(N) fixed-N (max_assurance_evaluated),250,0.8014832892805739,0.8014832892804665,1.0735856648125264e-13,1
+C14,A(N) fixed-N (max_assurance_evaluated),251,0.8030394439986394,0.8030394439986178,2.1538326677728037e-14,1
+C15,pilot_update:prior_se[0],,31.0,31.0,0.0,1
+C15,pilot_update:prior_se[1],,6.0,6.0,0.0,1
+C15,pilot_update:prior_sp[0],,41.0,41.0,0.0,1
+C15,pilot_update:prior_sp[1],,26.0,26.0,0.0,1
+C15,pilot_update:prior_prev[0],,12.0,12.0,0.0,1
+C15,pilot_update:prior_prev[1],,43.0,43.0,0.0,1
+C15,pilot_update:analysis_prior_se[0],,31.0,31.0,0.0,1
+C15,pilot_update:analysis_prior_se[1],,6.0,6.0,0.0,1
+C15,pilot_update:analysis_prior_sp[0],,41.0,41.0,0.0,1
+C15,pilot_update:analysis_prior_sp[1],,26.0,26.0,0.0,1
+C15,effective_analysis_prior_se[0],,31.0,31.0,0.0,1
+C15,effective_analysis_prior_sp[0],,41.0,41.0,0.0,1
+C15,effective_analysis_prior_se[1],,6.0,6.0,0.0,1
+C15,effective_analysis_prior_sp[1],,26.0,26.0,0.0,1
+C15,target_reached,,1.0,1.0,0.0,1
+C15,N_total,,104.0,104.0,0.0,1
+C15,joint_assurance=A(N_total),104,0.8034259592789962,0.8034259592789266,6.961098364399732e-14,1
+C15,A(N) fixed-N (max_assurance_evaluated),2,0.0,0.0,0.0,1
+C15,A(N) fixed-N (max_assurance_evaluated),5,0.0,0.0,0.0,1
+C15,A(N) fixed-N (max_assurance_evaluated),20,0.0,0.0,0.0,1
+C15,A(N) fixed-N (max_assurance_evaluated),100,0.7859031630024489,0.7859031630023492,9.969802761133906e-14,1
+C15,A(N) fixed-N (max_assurance_evaluated),103,0.7991715067169046,0.7991715067168066,9.803269307440132e-14,1
+C15,A(N) fixed-N (max_assurance_evaluated),104,0.8034259592789962,0.8034259592789266,6.961098364399732e-14,1
+C15,A(N) fixed-N (max_assurance_evaluated),105,0.8075981934416921,0.8075981934416558,3.630429290524262e-14,1
+C15,A(N) fixed-N (max_assurance_evaluated),250,0.9922441694908334,0.9922441694906703,1.630917623174355e-13,1
+C16,effective_analysis_prior_se[0],,0.5,0.5,0.0,1
+C16,effective_analysis_prior_sp[0],,0.5,0.5,0.0,1
+C16,effective_analysis_prior_se[1],,0.5,0.5,0.0,1
+C16,effective_analysis_prior_sp[1],,0.5,0.5,0.0,1
+C16,target_reached,,1.0,1.0,0.0,1
+C16,N_total,,788.0,788.0,0.0,1
+C16,joint_assurance=A(N_total),788,0.9001551416273772,0.9001551416269156,4.616307336391401e-13,1
+C16,A(N) fixed-N (max_assurance_evaluated),2,0.0,0.0,0.0,1
+C16,A(N) fixed-N (max_assurance_evaluated),5,0.0,0.0,0.0,1
+C16,A(N) fixed-N (max_assurance_evaluated),20,0.0,0.0,0.0,1
+C16,A(N) fixed-N (max_assurance_evaluated),100,0.004940448918860395,0.004940448918860269,1.2576745200831851e-16,1
+C16,A(N) fixed-N (max_assurance_evaluated),250,0.09859313878560304,0.09859313878559889,4.1494585545365226e-15,1
+C16,A(N) fixed-N (max_assurance_evaluated),787,0.8998370327204829,0.899837032720387,9.592326932761353e-14,1
+C16,A(N) fixed-N (max_assurance_evaluated),788,0.9001551416273772,0.9001551416269156,4.616307336391401e-13,1
+C16,A(N) fixed-N (max_assurance_evaluated),789,0.9004720498653372,0.9004720498652353,1.0191847366058937e-13,1
+C17,effective_analysis_prior_se[0],,17.0,17.0,0.0,1
+C17,effective_analysis_prior_sp[0],,2.0,2.0,0.0,1
+C17,effective_analysis_prior_se[1],,3.0,3.0,0.0,1
+C17,effective_analysis_prior_sp[1],,2.0,2.0,0.0,1
+C17,target_reached,,0.0,0.0,0.0,1
+C17,N_total,,nan,nan,nan,1
+C17,max_assurance_evaluated,,4.7078607211046085e-08,4.7078607211117964e-08,7.187868650840789e-20,1
+C17,N_at_max_assurance,,1000.0,1000.0,0.0,1
+C17,A(N) fixed-N (max_assurance_evaluated),2,0.0,0.0,0.0,1
+C17,A(N) fixed-N (max_assurance_evaluated),5,0.0,0.0,0.0,1
+C17,A(N) fixed-N (max_assurance_evaluated),20,0.0,0.0,0.0,1
+C17,A(N) fixed-N (max_assurance_evaluated),100,0.0,0.0,0.0,1
+C17,A(N) fixed-N (max_assurance_evaluated),250,0.0,0.0,0.0,1

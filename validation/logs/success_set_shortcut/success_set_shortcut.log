@@ -1,0 +1,417 @@
+success_set_shortcut.R
+Date: 2026-11-23 01:29:38 
+R: R version 4.6.2 (2026-10-29 ucrt) 
+packageVersion(dtasamplesize): 0.7.0 
+find.package(dtasamplesize): C:/dta/lib/dtasamplesize 
+TOL = 1e-12 
+
+---- P1 [article] ; objective JOINT ; target 0.80 ; level 0.95 ; table up to n = 900 (8.5 s)
+  published: N = 678 (0.6.9 article, abstract) 
+  N*: enumeration 678 | printed 678 | code 679 | only_b 678 | only_c 679 | only_e 678 | only_d 678 | only_f 678
+  A(N*) enumeration = 0.8003489948 at N* = 678 ; A(N*-1) = 0.7996848824
+  A(N*) printed     = 0.8003489948 at N* = 678 ; A(N*-1) = 0.7996848824
+  A(N*) code        = 0.8006085133 at N* = 679 ; A(N*-1) = 0.7999458200
+  max |A_code - A_enum| = 1.823e-03 (N = 411) ; max |A_printed - A_enum| = 0.000e+00 (N = 2)
+  arm Se: arm sizes n in 1..678: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 1..512): 0 non-contiguous of 512; ties(|W-w*|<=TOL) over n<=678: 0
+         relevant n with P_code != P_enum (>1e-15): 7 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 6.829e-02 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=9 c=7 e=0 d=0 f=0 g=0 ; masses: b=1.298e-16 c=6.829e-02 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Se: max |P_code - (P_enum - lost + spurious)| = 1.11e-16 over n = 0..900
+  arm Se: arm sizes n = 1..900 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+  arm Sp: arm sizes n in 1..678: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 166..678): 0 non-contiguous of 513; ties(|W-w*|<=TOL) over n<=678: 0
+         relevant n with P_code != P_enum (>1e-15): 0 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 0.000e+00 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=0 c=0 e=0 d=0 f=0 g=0 ; masses: b=0.000e+00 c=0.000e+00 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Sp: max |P_code - (P_enum - lost + spurious)| = 0.00e+00 over n = 0..900
+  arm Sp: arm sizes n = 1..900 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+
+---- P2 [article] ; objective JOINT ; target 0.80 ; level 0.95 ; table up to n = 900 (7.8 s)
+  published: N = 672 (0.6.9 article, Table 2) 
+  N*: enumeration 672 | printed 672 | code 673 | only_b 672 | only_c 673 | only_e 672 | only_d 672 | only_f 672
+  A(N*) enumeration = 0.8002692084 at N* = 672 ; A(N*-1) = 0.7996594780
+  A(N*) printed     = 0.8002692084 at N* = 672 ; A(N*-1) = 0.7996594780
+  A(N*) code        = 0.8004638788 at N* = 673 ; A(N*-1) = 0.7998542518
+  max |A_code - A_enum| = 7.105e-03 (N = 178) ; max |A_printed - A_enum| = 0.000e+00 (N = 2)
+  arm Se: arm sizes n in 1..672: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 1..508): 0 non-contiguous of 508; ties(|W-w*|<=TOL) over n<=672: 0
+         relevant n with P_code != P_enum (>1e-15): 7 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 6.829e-02 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=9 c=7 e=0 d=0 f=0 g=0 ; masses: b=1.298e-16 c=6.829e-02 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Se: max |P_code - (P_enum - lost + spurious)| = 1.11e-16 over n = 0..900
+  arm Se: arm sizes n = 1..900 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+  arm Sp: arm sizes n in 1..672: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 164..672): 0 non-contiguous of 509; ties(|W-w*|<=TOL) over n<=672: 0
+         relevant n with P_code != P_enum (>1e-15): 0 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 0.000e+00 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=0 c=0 e=0 d=0 f=0 g=0 ; masses: b=0.000e+00 c=0.000e+00 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Sp: max |P_code - (P_enum - lost + spurious)| = 0.00e+00 over n = 0..900
+  arm Sp: arm sizes n = 1..900 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+
+---- C01 [grid] ; objective JOINT ; target 0.80 ; level 0.95 ; table up to n = 1318 (19.9 s)
+  published: LOCKED_confirmatory_grid.json (no published N) 
+  N*: enumeration 1188 | printed 1188 | code 1189 | only_b 1188 | only_c 1189 | only_e 1188 | only_d 1188 | only_f 1188
+  A(N*) enumeration = 0.8002190725 at N* = 1188 ; A(N*-1) = 0.7999109608
+  A(N*) printed     = 0.8002190725 at N* = 1188 ; A(N*-1) = 0.7999109608
+  A(N*) code        = 0.8003043780 at N* = 1189 ; A(N*-1) = 0.7999964032
+  max |A_code - A_enum| = 2.653e-03 (N = 294) ; max |A_printed - A_enum| = 0.000e+00 (N = 2)
+  arm Se: arm sizes n in 1..1188: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 1..820): 0 non-contiguous of 820; ties(|W-w*|<=TOL) over n<=1188: 0
+         relevant n with P_code != P_enum (>1e-15): 7 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 2.669e-02 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=6 c=7 e=0 d=0 f=0 g=0 ; masses: b=3.366e-27 c=2.669e-02 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Se: max |P_code - (P_enum - lost + spurious)| = 0.00e+00 over n = 0..1318
+  arm Se: arm sizes n = 1..1318 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+  arm Sp: arm sizes n in 1..1188: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 368..1188): 0 non-contiguous of 821; ties(|W-w*|<=TOL) over n<=1188: 0
+         relevant n with P_code != P_enum (>1e-15): 0 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 0.000e+00 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=0 c=0 e=0 d=0 f=0 g=0 ; masses: b=0.000e+00 c=0.000e+00 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Sp: max |P_code - (P_enum - lost + spurious)| = 2.78e-17 over n = 0..1318
+  arm Sp: arm sizes n = 1..1318 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+
+---- C02 [grid] ; objective JOINT ; target 0.80 ; level 0.95 ; table up to n = 800 (5.8 s)
+  published: LOCKED_confirmatory_grid.json (no published N) 
+  N*: enumeration 599 | printed 599 | code 599 | only_b 599 | only_c 599 | only_e 599 | only_d 599 | only_f 599
+  A(N*) enumeration = 0.8013636252 at N* = 599 ; A(N*-1) = 0.7999802996
+  A(N*) printed     = 0.8013636252 at N* = 599 ; A(N*-1) = 0.7999802996
+  A(N*) code        = 0.8013635363 at N* = 599 ; A(N*-1) = 0.7999802094
+  max |A_code - A_enum| = 4.902e-04 (N = 143) ; max |A_printed - A_enum| = 0.000e+00 (N = 2)
+  arm Se: arm sizes n in 1..599: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 33..566): 0 non-contiguous of 534; ties(|W-w*|<=TOL) over n<=599: 0
+         relevant n with P_code != P_enum (>1e-15): 18 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 6.118e-02 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=15 c=13 e=0 d=0 f=0 g=0 ; masses: b=4.805e-15 c=6.118e-02 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Se: max |P_code - (P_enum - lost + spurious)| = 5.55e-17 over n = 0..800
+  arm Se: arm sizes n = 1..800 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+  arm Sp: arm sizes n in 1..599: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 33..566): 0 non-contiguous of 534; ties(|W-w*|<=TOL) over n<=599: 0
+         relevant n with P_code != P_enum (>1e-15): 8 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 4.090e-03 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=10 c=8 e=0 d=0 f=0 g=0 ; masses: b=1.236e-25 c=4.090e-03 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Sp: max |P_code - (P_enum - lost + spurious)| = 0.00e+00 over n = 0..800
+  arm Sp: arm sizes n = 1..800 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+
+---- C03 [grid] ; objective JOINT ; target 0.85 ; level 0.95 ; table up to n = 1200 (14.0 s)
+  published: LOCKED_confirmatory_grid.json (no published N) 
+  N*: enumeration 959 | printed 959 | code 968 | only_b 959 | only_c 968 | only_e 959 | only_d 959 | only_f 959
+  A(N*) enumeration = 0.8501728831 at N* = 959 ; A(N*-1) = 0.8499354518
+  A(N*) printed     = 0.8501728831 at N* = 959 ; A(N*-1) = 0.8499354518
+  A(N*) code        = 0.8502171113 at N* = 968 ; A(N*-1) = 0.8499809053
+  max |A_code - A_enum| = 1.797e-02 (N = 178) ; max |A_printed - A_enum| = 0.000e+00 (N = 2)
+  arm Se: arm sizes n in 1..959: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 1..609): 0 non-contiguous of 609; ties(|W-w*|<=TOL) over n<=959: 0
+         relevant n with P_code != P_enum (>1e-15): 10 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 1.228e-01 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=7 c=5 e=0 d=0 f=0 g=0 ; masses: b=2.444e-05 c=1.228e-01 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Se: max |P_code - (P_enum - lost + spurious)| = 5.55e-17 over n = 0..1200
+  arm Se: arm sizes n = 1..1200 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+  arm Sp: arm sizes n in 1..959: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 350..959): 0 non-contiguous of 610; ties(|W-w*|<=TOL) over n<=959: 0
+         relevant n with P_code != P_enum (>1e-15): 0 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 0.000e+00 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=0 c=0 e=0 d=0 f=0 g=0 ; masses: b=0.000e+00 c=0.000e+00 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Sp: max |P_code - (P_enum - lost + spurious)| = 0.00e+00 over n = 0..1200
+  arm Sp: arm sizes n = 1..1200 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+
+---- C04 [grid] ; objective JOINT ; target 0.90 ; level 0.95 ; table up to n = 1200 (13.9 s)
+  published: LOCKED_confirmatory_grid.json (no published N) 
+  N*: enumeration 950 | printed 950 | code 950 | only_b 950 | only_c 950 | only_e 950 | only_d 950 | only_f 950
+  A(N*) enumeration = 0.9000053490 at N* = 950 ; A(N*-1) = 0.8996644851
+  A(N*) printed     = 0.9000053490 at N* = 950 ; A(N*-1) = 0.8996644851
+  A(N*) code        = 0.9000026392 at N* = 950 ; A(N*-1) = 0.8996617629
+  max |A_code - A_enum| = 3.883e-04 (N = 197) ; max |A_printed - A_enum| = 0.000e+00 (N = 2)
+  arm Se: arm sizes n in 1..950: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 199..948): 0 non-contiguous of 750; ties(|W-w*|<=TOL) over n<=950: 0
+         relevant n with P_code != P_enum (>1e-15): 0 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 0.000e+00 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=0 c=0 e=0 d=0 f=0 g=0 ; masses: b=0.000e+00 c=0.000e+00 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Se: max |P_code - (P_enum - lost + spurious)| = 0.00e+00 over n = 0..1200
+  arm Se: arm sizes n = 1..1200 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+  arm Sp: arm sizes n in 1..950: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 2..751): 0 non-contiguous of 750; ties(|W-w*|<=TOL) over n<=950: 0
+         relevant n with P_code != P_enum (>1e-15): 11 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 2.718e-03 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=16 c=6 e=0 d=0 f=0 g=0 ; masses: b=2.718e-03 c=1.094e-03 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Sp: max |P_code - (P_enum - lost + spurious)| = 0.00e+00 over n = 0..1200
+  arm Sp: arm sizes n = 1..1200 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+
+---- C05 [grid] ; objective JOINT ; target 0.70 ; level 0.95 ; table up to n = 400 (1.5 s)
+  published: LOCKED_confirmatory_grid.json (no published N) 
+  N*: enumeration 265 | printed 265 | code 265 | only_b 265 | only_c 265 | only_e 265 | only_d 265 | only_f 265
+  A(N*) enumeration = 0.7014247369 at N* = 265 ; A(N*-1) = 0.6965956234
+  A(N*) printed     = 0.7014247369 at N* = 265 ; A(N*-1) = 0.6965956234
+  A(N*) code        = 0.7012978008 at N* = 265 ; A(N*-1) = 0.6964658794
+  max |A_code - A_enum| = 3.575e-03 (N = 72) ; max |A_printed - A_enum| = 0.000e+00 (N = 2)
+  arm Se: arm sizes n in 1..265: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 1..236): 0 non-contiguous of 236; ties(|W-w*|<=TOL) over n<=265: 0
+         relevant n with P_code != P_enum (>1e-15): 16 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 2.353e-01 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=12 c=8 e=0 d=0 f=0 g=0 ; masses: b=6.079e-05 c=2.353e-01 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Se: max |P_code - (P_enum - lost + spurious)| = 5.55e-17 over n = 0..400
+  arm Se: arm sizes n = 1..400 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+  arm Sp: arm sizes n in 1..265: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 29..264): 0 non-contiguous of 236; ties(|W-w*|<=TOL) over n<=265: 0
+         relevant n with P_code != P_enum (>1e-15): 15 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 1.163e-02 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=12 c=7 e=0 d=0 f=0 g=0 ; masses: b=2.055e-09 c=1.163e-02 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Sp: max |P_code - (P_enum - lost + spurious)| = 1.39e-17 over n = 0..400
+  arm Sp: arm sizes n = 1..400 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+
+---- C06 [grid] ; objective JOINT ; target 0.80 ; level 0.95 ; table up to n = 1239 (17.1 s)
+  published: LOCKED_confirmatory_grid.json (no published N) 
+  N*: enumeration 1117 | printed 1117 | code 1117 | only_b 1117 | only_c 1117 | only_e 1117 | only_d 1117 | only_f 1117
+  A(N*) enumeration = 0.8002601582 at N* = 1117 ; A(N*-1) = 0.7997256123
+  A(N*) printed     = 0.8002601582 at N* = 1117 ; A(N*-1) = 0.7997256123
+  A(N*) code        = 0.8002600954 at N* = 1117 ; A(N*-1) = 0.7997255494
+  max |A_code - A_enum| = 7.774e-07 (N = 465) ; max |A_printed - A_enum| = 0.000e+00 (N = 2)
+  arm Se: arm sizes n in 1..1117: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 2..1086): 0 non-contiguous of 1085; ties(|W-w*|<=TOL) over n<=1117: 0
+         relevant n with P_code != P_enum (>1e-15): 7 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 6.617e-05 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=9 c=7 e=0 d=0 f=0 g=0 ; masses: b=7.034e-48 c=6.617e-05 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Se: max |P_code - (P_enum - lost + spurious)| = 0.00e+00 over n = 0..1239
+  arm Se: arm sizes n = 1..1239 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+  arm Sp: arm sizes n in 1..1117: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 31..1115): 0 non-contiguous of 1085; ties(|W-w*|<=TOL) over n<=1117: 0
+         relevant n with P_code != P_enum (>1e-15): 7 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 8.655e-06 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=9 c=7 e=0 d=0 f=0 g=0 ; masses: b=4.122e-39 c=8.655e-06 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Sp: max |P_code - (P_enum - lost + spurious)| = 0.00e+00 over n = 0..1239
+  arm Sp: arm sizes n = 1..1239 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+
+---- C07 [grid] ; objective JOINT ; target 0.80 ; level 0.90 ; table up to n = 800 (5.0 s)
+  published: LOCKED_confirmatory_grid.json (no published N) 
+  N*: enumeration 440 | printed 440 | code 441 | only_b 440 | only_c 441 | only_e 440 | only_d 440 | only_f 440
+  A(N*) enumeration = 0.8006472121 at N* = 440 ; A(N*-1) = 0.7994999203
+  A(N*) printed     = 0.8006472121 at N* = 440 ; A(N*-1) = 0.7994999203
+  A(N*) code        = 0.8005785639 at N* = 441 ; A(N*-1) = 0.7994347229
+  max |A_code - A_enum| = 4.153e-03 (N = 289) ; max |A_printed - A_enum| = 0.000e+00 (N = 2)
+  arm Se: arm sizes n in 1..440: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 1..337): 0 non-contiguous of 337; ties(|W-w*|<=TOL) over n<=440: 0
+         relevant n with P_code != P_enum (>1e-15): 8 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 1.247e-01 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=6 c=6 e=0 d=0 f=0 g=0 ; masses: b=4.886e-15 c=1.247e-01 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Se: max |P_code - (P_enum - lost + spurious)| = 1.11e-16 over n = 0..800
+  arm Se: arm sizes n = 1..800 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+  arm Sp: arm sizes n in 1..440: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 103..440): 0 non-contiguous of 338; ties(|W-w*|<=TOL) over n<=440: 0
+         relevant n with P_code != P_enum (>1e-15): 0 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 0.000e+00 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=0 c=0 e=0 d=0 f=0 g=0 ; masses: b=0.000e+00 c=0.000e+00 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Sp: max |P_code - (P_enum - lost + spurious)| = 0.00e+00 over n = 0..800
+  arm Sp: arm sizes n = 1..800 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+
+---- C08 [grid] ; objective JOINT ; target 0.75 ; level 0.95 ; table up to n = 800 (5.5 s)
+  published: LOCKED_confirmatory_grid.json (no published N) 
+  N*: enumeration 607 | printed 607 | code 607 | only_b 607 | only_c 607 | only_e 607 | only_d 607 | only_f 607
+  A(N*) enumeration = 0.7507355152 at N* = 607 ; A(N*-1) = 0.7497194999
+  A(N*) printed     = 0.7507355152 at N* = 607 ; A(N*-1) = 0.7497194999
+  A(N*) code        = 0.7506532030 at N* = 607 ; A(N*-1) = 0.7496366453
+  max |A_code - A_enum| = 3.007e-03 (N = 178) ; max |A_printed - A_enum| = 0.000e+00 (N = 2)
+  arm Se: arm sizes n in 1..607: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 1..486): 0 non-contiguous of 486; ties(|W-w*|<=TOL) over n<=607: 0
+         relevant n with P_code != P_enum (>1e-15): 15 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 2.114e-02 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=16 c=4 e=0 d=0 f=0 g=0 ; masses: b=2.114e-02 c=1.055e-07 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Se: max |P_code - (P_enum - lost + spurious)| = 1.39e-17 over n = 0..800
+  arm Se: arm sizes n = 1..800 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+  arm Sp: arm sizes n in 1..607: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 121..607): 0 non-contiguous of 487; ties(|W-w*|<=TOL) over n<=607: 0
+         relevant n with P_code != P_enum (>1e-15): 0 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 0.000e+00 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=0 c=0 e=0 d=0 f=0 g=0 ; masses: b=0.000e+00 c=0.000e+00 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Sp: max |P_code - (P_enum - lost + spurious)| = 1.39e-17 over n = 0..800
+  arm Sp: arm sizes n = 1..800 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+
+---- C09 [grid] ; objective JOINT ; target 0.60 ; level 0.95 ; table up to n = 60 (0.0 s)
+  published: LOCKED_confirmatory_grid.json (no published N) 
+  N*: enumeration 8 | printed 8 | code 12 | only_b 11 | only_c 10 | only_e 8 | only_d 7 | only_f 8
+  A(N*) enumeration = 0.6391279309 at N* = 8 ; A(N*-1) = 0.5718181818
+  A(N*) printed     = 0.6391279309 at N* = 8 ; A(N*-1) = 0.5718181818
+  A(N*) code        = 0.6636920355 at N* = 12 ; A(N*-1) = 0.5920695404
+  max |A_code - A_enum| = 4.260e-01 (N = 5) ; max |A_printed - A_enum| = 0.000e+00 (N = 2)
+  arm Se: arm sizes n in 1..8: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 1..8): 0 non-contiguous of 8; ties(|W-w*|<=TOL) over n<=8: 0
+         relevant n with P_code != P_enum (>1e-15): 2 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 6.000e-01 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=0 c=1 e=0 d=1 f=0 g=0 ; masses: b=0.000e+00 c=6.000e-01 e=0.000e+00 d=2.500e-01 f=0.000e+00 g=0.000e+00
+  arm Se: max |P_code - (P_enum - lost + spurious)| = 0.00e+00 over n = 0..60
+  arm Se: arm sizes n = 1..60 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+  arm Sp: arm sizes n in 1..8: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 1..8): 0 non-contiguous of 8; ties(|W-w*|<=TOL) over n<=8: 0
+         relevant n with P_code != P_enum (>1e-15): 4 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 8.000e-01 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=6 c=0 e=0 d=0 f=0 g=0 ; masses: b=8.000e-01 c=0.000e+00 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Sp: max |P_code - (P_enum - lost + spurious)| = 0.00e+00 over n = 0..60
+  arm Sp: arm sizes n = 1..60 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+
+---- C10 [grid] ; objective JOINT ; target 0.50 ; level 0.90 ; table up to n = 60 (0.0 s)
+  published: LOCKED_confirmatory_grid.json (no published N) 
+  N*: enumeration 3 | printed 3 | code 3 | only_b 3 | only_c 3 | only_e 3 | only_d 3 | only_f 3
+  A(N*) enumeration = 0.5727272727 at N* = 3 ; A(N*-1) = 0.3818181818
+  A(N*) printed     = 0.5727272727 at N* = 3 ; A(N*-1) = 0.3818181818
+  A(N*) code        = 0.5727272727 at N* = 3 ; A(N*-1) = 0.3818181818
+  max |A_code - A_enum| = 0.000e+00 (N = 2) ; max |A_printed - A_enum| = 0.000e+00 (N = 2)
+  arm Se: arm sizes n in 1..3: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 1..3): 0 non-contiguous of 3; ties(|W-w*|<=TOL) over n<=3: 0
+         relevant n with P_code != P_enum (>1e-15): 0 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 0.000e+00 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=0 c=0 e=0 d=0 f=0 g=0 ; masses: b=0.000e+00 c=0.000e+00 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Se: max |P_code - (P_enum - lost + spurious)| = 0.00e+00 over n = 0..60
+  arm Se: arm sizes n = 1..60 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+  arm Sp: arm sizes n in 1..3: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 1..3): 0 non-contiguous of 3; ties(|W-w*|<=TOL) over n<=3: 0
+         relevant n with P_code != P_enum (>1e-15): 0 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 0.000e+00 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=0 c=0 e=0 d=0 f=0 g=0 ; masses: b=0.000e+00 c=0.000e+00 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Sp: max |P_code - (P_enum - lost + spurious)| = 0.00e+00 over n = 0..60
+  arm Sp: arm sizes n = 1..60 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+
+---- C11 [grid] ; objective JOINT ; target 0.70 ; level 0.95 ; table up to n = 60 (0.1 s)
+  published: LOCKED_confirmatory_grid.json (no published N) 
+  N*: enumeration 24 | printed 24 | code 37 | only_b 33 | only_c 29 | only_e 24 | only_d 24 | only_f 24
+  A(N*) enumeration = 0.7012670385 at N* = 24 ; A(N*-1) = 0.6870343116
+  A(N*) printed     = 0.7012670385 at N* = 24 ; A(N*-1) = 0.6870343116
+  A(N*) code        = 0.7008533204 at N* = 37 ; A(N*-1) = 0.6904003008
+  max |A_code - A_enum| = 2.732e-01 (N = 9) ; max |A_printed - A_enum| = 0.000e+00 (N = 2)
+  arm Se: arm sizes n in 1..24: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 1..24): 0 non-contiguous of 24; ties(|W-w*|<=TOL) over n<=24: 0
+         relevant n with P_code != P_enum (>1e-15): 3 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 6.667e-01 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=4 c=2 e=0 d=0 f=0 g=0 ; masses: b=4.000e-01 c=3.333e-01 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Se: max |P_code - (P_enum - lost + spurious)| = 0.00e+00 over n = 0..60
+  arm Se: arm sizes n = 1..60 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+  arm Sp: arm sizes n in 1..24: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 1..24): 0 non-contiguous of 24; ties(|W-w*|<=TOL) over n<=24: 0
+         relevant n with P_code != P_enum (>1e-15): 3 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 6.667e-01 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=4 c=2 e=0 d=0 f=0 g=0 ; masses: b=4.000e-01 c=3.333e-01 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Sp: max |P_code - (P_enum - lost + spurious)| = 0.00e+00 over n = 0..60
+  arm Sp: arm sizes n = 1..60 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+
+---- C12 [grid] ; objective JOINT ; target 0.80 ; level 0.95 ; table up to n = 400 (1.5 s)
+  published: LOCKED_confirmatory_grid.json (no published N) 
+  N*: enumeration NA | printed NA | code NA | only_b NA | only_c NA | only_e NA | only_d NA | only_f NA
+  enumeration: no crossing up to N = 400 (max A = 0.000000 at N = 2)
+  printed    : no crossing up to N = 400 (max A = 0.000000 at N = 2)
+  code       : no crossing up to N = 400 (max A = 0.000000 at N = 2)
+  max |A_code - A_enum| = 0.000e+00 (N = 2) ; max |A_printed - A_enum| = 0.000e+00 (N = 2)
+  arm Se: max |P_code - (P_enum - lost + spurious)| = 0.00e+00 over n = 0..400
+  arm Se: arm sizes n = 1..400 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+  arm Sp: max |P_code - (P_enum - lost + spurious)| = 0.00e+00 over n = 0..400
+  arm Sp: arm sizes n = 1..400 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+
+---- WILSON_VAP [wilson] ; objective marginal Se ; target 0.80 ; level 0.95 ; table up to n = 320 (0.6 s)
+  published: n* = 106, A(150) = 0.88 (Wilson 2022, section 5.1) 
+  N*: enumeration 104 | printed 104 | code 106 | only_b 104 | only_c 106 | only_e 104 | only_d 104 | only_f 104
+  A(N*) enumeration = 0.8004835299 at N* = 104 ; A(N*-1) = 0.7982553206
+  A(N*) printed     = 0.8004835299 at N* = 104 ; A(N*-1) = 0.7982553206
+  A(N*) code        = 0.8006637280 at N* = 106 ; A(N*-1) = 0.7981022378
+  max |A_code - A_enum| = 4.718e-01 (N = 32) ; max |A_printed - A_enum| = 0.000e+00 (N = 2)
+  arm Se: arm sizes n in 1..104: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 1..60): 0 non-contiguous of 60; ties(|W-w*|<=TOL) over n<=104: 0
+         relevant n with P_code != P_enum (>1e-15): 7 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 6.951e-01 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=0 c=7 e=0 d=0 f=0 g=0 ; masses: b=0.000e+00 c=6.951e-01 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Se: max |P_code - (P_enum - lost + spurious)| = 0.00e+00 over n = 0..320
+  arm Se: arm sizes n = 1..320 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+
+---- WILSON_B4_flat [wilson] ; objective marginal Se ; target 0.80 ; level 0.95 ; table up to n = 400 (0.8 s)
+  published: 290 (Combination / Hybrid II; Data S1 B.4 Table 1, L268-292); Standard/Hybrid I = WILSON_VAP = 106 
+  N*: enumeration 290 | printed 290 | code 290 | only_b 290 | only_c 290 | only_e 290 | only_d 290 | only_f 290
+  A(N*) enumeration = 0.8003799041 at N* = 290 ; A(N*-1) = 0.7984842922
+  A(N*) printed     = 0.8003799041 at N* = 290 ; A(N*-1) = 0.7984842922
+  A(N*) code        = 0.8002564910 at N* = 290 ; A(N*-1) = 0.7983549665
+  max |A_code - A_enum| = 1.559e-01 (N = 103) ; max |A_printed - A_enum| = 0.000e+00 (N = 2)
+  arm Se: arm sizes n in 1..290: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 12..146): 0 non-contiguous of 135; ties(|W-w*|<=TOL) over n<=290: 0
+         relevant n with P_code != P_enum (>1e-15): 18 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 3.064e-01 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=26 c=10 e=0 d=0 f=0 g=0 ; masses: b=2.794e-12 c=3.064e-01 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Se: max |P_code - (P_enum - lost + spurious)| = 5.55e-17 over n = 0..400
+  arm Se: arm sizes n = 1..400 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+
+---- WILSON_61_rho010 [wilson] ; objective marginal Se ; target 0.80 ; level 0.95 ; table up to n = 800 (3.4 s)
+  published: 681 (Wilson 2022, section 6.1, lambda = 0.9, n0 = 50, rho = 0.10) 
+  N*: enumeration 661 | printed 661 | code 681 | only_b 661 | only_c 681 | only_e 661 | only_d 661 | only_f 661
+  A(N*) enumeration = 0.8001321798 at N* = 661 ; A(N*-1) = 0.7997337586
+  A(N*) printed     = 0.8001321798 at N* = 661 ; A(N*-1) = 0.7997337586
+  A(N*) code        = 0.8000871186 at N* = 681 ; A(N*-1) = 0.7996592102
+  max |A_code - A_enum| = 2.899e-01 (N = 128) ; max |A_printed - A_enum| = 0.000e+00 (N = 2)
+  arm Se: arm sizes n in 1..661: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 1..290): 0 non-contiguous of 290; ties(|W-w*|<=TOL) over n<=661: 0
+         relevant n with P_code != P_enum (>1e-15): 19 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 5.668e-01 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=12 c=11 e=0 d=0 f=0 g=0 ; masses: b=2.954e-06 c=5.668e-01 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Se: max |P_code - (P_enum - lost + spurious)| = 1.11e-16 over n = 0..800
+  arm Se: arm sizes n = 1..800 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+
+---- WILSON_61_rho005 [wilson] ; objective marginal Se ; target 0.80 ; level 0.95 ; table up to n = 1900 (19.5 s)
+  published: 1643 (Wilson 2022, section 6.1, rho = 0.05); additional case 
+  N*: enumeration 1408 | printed 1408 | code 1643 | only_b 1408 | only_c 1643 | only_e 1408 | only_d 1408 | only_f 1408
+  A(N*) enumeration = 0.8000959552 at N* = 1408 ; A(N*-1) = 0.7999587440
+  A(N*) printed     = 0.8000959552 at N* = 1408 ; A(N*-1) = 0.7999587440
+  A(N*) code        = 0.8000280782 at N* = 1643 ; A(N*-1) = 0.7998775275
+  max |A_code - A_enum| = 3.440e-01 (N = 229) ; max |A_printed - A_enum| = 0.000e+00 (N = 2)
+  arm Se: arm sizes n in 1..1408: 0 non-contiguous; relevant support at N*_enum (pmf>1e-8, n = 1..477): 0 non-contiguous of 477; ties(|W-w*|<=TOL) over n<=1408: 0
+         relevant n with P_code != P_enum (>1e-15): 24 ; with P_print != P_enum: 0 ; max |P_code - P_enum| = 6.797e-01 ; max |P_print - P_enum| = 0.000e+00
+         cause counts over relevant n (n_b, n_c, n_e, n_d, n_f, n_g as number of counts x): b=16 c=13 e=0 d=0 f=0 g=0 ; masses: b=4.096e-04 c=6.797e-01 e=0.000e+00 d=0.000e+00 f=0.000e+00 g=0.000e+00
+  arm Se: max |P_code - (P_enum - lost + spurious)| = 1.11e-16 over n = 0..1900
+  arm Se: arm sizes n = 1..1900 where W(x) is NOT quasi-concave in x (failure set non-contiguous for some w): 0
+
+==== Cross-check of the enumeration against bam_sample_size(method = 'exact') ====
+  P1                 package N_total = 678 ; enumeration N* = 678 ; |A diff| = 0.00e+00 ; MATCH
+  P2                 package N_total = 672 ; enumeration N* = 672 ; |A diff| = 0.00e+00 ; MATCH
+  C01                package N_total = 1188 ; enumeration N* = 1188 ; |A diff| = 0.00e+00 ; MATCH
+  C02                package N_total = 599 ; enumeration N* = 599 ; |A diff| = 0.00e+00 ; MATCH
+  C03                package N_total = 959 ; enumeration N* = 959 ; |A diff| = 0.00e+00 ; MATCH
+  C04                package N_total = 950 ; enumeration N* = 950 ; |A diff| = 0.00e+00 ; MATCH
+  C05                package N_total = 265 ; enumeration N* = 265 ; |A diff| = 0.00e+00 ; MATCH
+  C06                package N_total = 1117 ; enumeration N* = 1117 ; |A diff| = 0.00e+00 ; MATCH
+  C07                package N_total = 440 ; enumeration N* = 440 ; |A diff| = 0.00e+00 ; MATCH
+  C08                package N_total = 607 ; enumeration N* = 607 ; |A diff| = 0.00e+00 ; MATCH
+  C09                package N_total = 8 ; enumeration N* = 8 ; |A diff| = 0.00e+00 ; MATCH
+  C10                package N_total = 3 ; enumeration N* = 3 ; |A diff| = 0.00e+00 ; MATCH
+  C11                package N_total = 24 ; enumeration N* = 24 ; |A diff| = 0.00e+00 ; MATCH
+  C12                package N_total = NA ; enumeration N* = NA ; |A diff| = 0.00e+00 ; MATCH
+  WILSON_VAP         package N_total = 104 ; enumeration N* = 104 ; |A diff| = 0.00e+00 ; MATCH
+  WILSON_B4_flat     package N_total = 290 ; enumeration N* = 290 ; |A diff| = 0.00e+00 ; MATCH
+  WILSON_61_rho010   package N_total = 661 ; enumeration N* = 661 ; |A diff| = 0.00e+00 ; MATCH
+
+==== Stress: quasi-concavity of W(x) over a grid of analysis priors (extra) ====
+  prior grid a, b in {0.1, 0.5, 1, 2, 5, 20, 50}; levels 0.90, 0.95, 0.99; n = 1..300: 147 (prior, level) combinations; combinations with some non-quasi-concave n: 0; total non-quasi-concave (prior, level, n): 0
+
+==== SUMMARY: N* by rule (first N >= 2 with A >= target) ====
+         scenario enumeration printed code only_b only_c only_e only_d only_f
+               P1         678     678  679    678    679    678    678    678
+               P2         672     672  673    672    673    672    672    672
+              C01        1188    1188 1189   1188   1189   1188   1188   1188
+              C02         599     599  599    599    599    599    599    599
+              C03         959     959  968    959    968    959    959    959
+              C04         950     950  950    950    950    950    950    950
+              C05         265     265  265    265    265    265    265    265
+              C06        1117    1117 1117   1117   1117   1117   1117   1117
+              C07         440     440  441    440    441    440    440    440
+              C08         607     607  607    607    607    607    607    607
+              C09           8       8   12     11     10      8      7      8
+              C10           3       3    3      3      3      3      3      3
+              C11          24      24   37     33     29     24     24     24
+              C12          NA      NA   NA     NA     NA     NA     NA     NA
+       WILSON_VAP         104     104  106    104    106    104    104    104
+   WILSON_B4_flat         290     290  290    290    290    290    290    290
+ WILSON_61_rho010         661     661  681    661    681    661    661    661
+ WILSON_61_rho005        1408    1408 1643   1408   1643   1408   1408   1408
+
+A(N*) of each main rule at its own N*, and the code/printed A at the enumeration N*:
+         scenario        rule N_star A_at_N_star A_at_N_star_enumeration
+               P1 enumeration    678  0.80034899              0.80034899
+               P1     printed    678  0.80034899              0.80034899
+               P1        code    679  0.80060851              0.79994582
+               P2 enumeration    672  0.80026921              0.80026921
+               P2     printed    672  0.80026921              0.80026921
+               P2        code    673  0.80046388              0.79985425
+              C01 enumeration   1188  0.80021907              0.80021907
+              C01     printed   1188  0.80021907              0.80021907
+              C01        code   1189  0.80030438              0.79999640
+              C02 enumeration    599  0.80136363              0.80136363
+              C02     printed    599  0.80136363              0.80136363
+              C02        code    599  0.80136354              0.80136354
+              C03 enumeration    959  0.85017288              0.85017288
+              C03     printed    959  0.85017288              0.85017288
+              C03        code    968  0.85021711              0.84807139
+              C04 enumeration    950  0.90000535              0.90000535
+              C04     printed    950  0.90000535              0.90000535
+              C04        code    950  0.90000264              0.90000264
+              C05 enumeration    265  0.70142474              0.70142474
+              C05     printed    265  0.70142474              0.70142474
+              C05        code    265  0.70129780              0.70129780
+              C06 enumeration   1117  0.80026016              0.80026016
+              C06     printed   1117  0.80026016              0.80026016
+              C06        code   1117  0.80026010              0.80026010
+              C07 enumeration    440  0.80064721              0.80064721
+              C07     printed    440  0.80064721              0.80064721
+              C07        code    441  0.80057856              0.79943472
+              C08 enumeration    607  0.75073552              0.75073552
+              C08     printed    607  0.75073552              0.75073552
+              C08        code    607  0.75065320              0.75065320
+              C09 enumeration      8  0.63912793              0.63912793
+              C09     printed      8  0.63912793              0.63912793
+              C09        code     12  0.66369204              0.29617441
+              C10 enumeration      3  0.57272727              0.57272727
+              C10     printed      3  0.57272727              0.57272727
+              C10        code      3  0.57272727              0.57272727
+              C11 enumeration     24  0.70126704              0.70126704
+              C11     printed     24  0.70126704              0.70126704
+              C11        code     37  0.70085332              0.51275548
+              C12 enumeration     NA          NA                      NA
+              C12     printed     NA          NA                      NA
+              C12        code     NA          NA                      NA
+       WILSON_VAP enumeration    104  0.80048353              0.80048353
+       WILSON_VAP     printed    104  0.80048353              0.80048353
+       WILSON_VAP        code    106  0.80066373              0.79548713
+   WILSON_B4_flat enumeration    290  0.80037990              0.80037990
+   WILSON_B4_flat     printed    290  0.80037990              0.80037990
+   WILSON_B4_flat        code    290  0.80025649              0.80025649
+ WILSON_61_rho010 enumeration    661  0.80013218              0.80013218
+ WILSON_61_rho010     printed    661  0.80013218              0.80013218
+ WILSON_61_rho010        code    681  0.80008712              0.79134411
+ WILSON_61_rho005 enumeration   1408  0.80009596              0.80009596
+ WILSON_61_rho005     printed   1408  0.80009596              0.80009596
+ WILSON_61_rho005        code   1643  0.80002808              0.75990590
+
+Published figures (Wilson et al.) against the rules:
+  VAP: published 106 | code 106 | printed 104 | enumeration 104
+       A(104): code 0.7955 | printed 0.8005 | enumeration 0.8005
+       A(106): code 0.8007 | printed 0.8049 | enumeration 0.8049
+       A(150): code 0.8825 | printed 0.8826 | enumeration 0.8826
+  B.4 flat analysis prior: published 290 | code 290 | printed 290 | enumeration 290
+  6.1 rho = 0.10: published 681 | code 681 | printed 661 | enumeration 661
+  6.1 rho = 0.05 (extra): published 1643 | code 1643 | printed 1408 | enumeration 1408
+
+Non-contiguous (scenario, arm, n) rows written: 0
+Total elapsed: 253.2 s
+Output directory: C:/dta/dtasamplesize/validation/logs/success_set_shortcut 

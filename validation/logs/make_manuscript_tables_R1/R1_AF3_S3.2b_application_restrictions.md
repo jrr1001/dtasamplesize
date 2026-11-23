@@ -1,0 +1,17 @@
+| restriction | observation | capture | status |
+|---|---|---|---|
+| Only 'Both' operative | Text 'Currently only both sensitivity and specificity targets can be calculated using the input option'; Sensitivity-only and Specificity-only runs returned 'An error has occurred' | 2026-11-14_2353_calculator_default.png; 2026-11-14_2355_A_SensitivityOnly_output.png; 2026-11-14_2355_A_SpecificityOnly_output.png | observed |
+| Maximum N control 1 to 1000, default 500 | HTML range 1 to 1000, default 500 | 2026-11-14_2353_calculator_default.png | observed |
+| Server accepted max.n = 1500 | Calculated with max.n = 1500 (HTML control declares maximum 1000) | 2026-11-14_2359_C_Both_maxn1500_output.png | observed |
+| No credible-level field in the Calculator | Calculator has Set Target, two half-widths, Required Assurance, max n, Find n only | 2026-11-14_2353_calculator_default.png | observed |
+| No one-/two-sided choice in the Calculator | Not in the Calculator; the Analysis tab has alpha (0.05, range 0 to 0.2) and One/Two tailed (default One) | 2026-11-14_2353_calculator_default.png; 2026-11-15_0008_analysis_tab.png | observed (absent in Calculator) |
+| No separate design and analysis priors in the Calculator | Not observed in the Calculator; Analysis tab is a separate tab with its own Beta(A,B) prior | 2026-11-14_2353_calculator_default.png; 2026-11-15_0008_analysis_tab.png | observed (absent in Calculator) |
+| No batch or multi-scenario input | Not observed; one scenario per run; a 'Generate report' button exists in the Sample size tab (not tried) | 2026-11-14_2353_calculator_default.png | observed (absent; 'Generate report' not tried: [not verified]) |
+| Result when no N is found within max.n | 'is NA, which provides an assurance of NA' followed by 'An error has occurred' | 2026-11-15_0007_diagnostic_Sp_Beta11_SpTarget001_output.png | observed |
+| Repeatability | Same inputs gave 551 or 552 (B, C), and an error in the first B run | 2026-11-14_2357_B_Both_maxn1000_output.png; 2026-11-15_0003_B_Both_maxn1000_rep2_output.png; 2026-11-15_0004_B_Both_maxn1000_rep3_output.png; 2026-11-14_2358_C_Both_maxn1000_output.png; 2026-11-15_0001_C_Both_maxn1000_rep2_output.png | observed |
+| Assurance printed with 4 decimals | All outputs | all output captures | observed |
+| Prior input methods (Se, Sp) | Previous Results (2x2), Elicitation, Enter Parameters | 2026-11-14_2350_assurance_prior_method_dropdown.png; 2026-11-14_2351_assurance_enter_parameters_default.png; 2026-11-14_2351_assurance_elicitation_default.png | observed |
+| Prevalence prior input | Menu with Previous Data, Interval, Enter Parameters; only the alpha-beta table was visible in the options tried | 2026-11-14_2352_assurance_prevalence_prior_default.png; 2026-11-15_0008_assurance_prevalence_previous_data.png | observed (partly: [not verified] which of the three options uses the hidden inputs) |
+| Assurance curve plot | Curve of assurance against n with dashed lines at 0.8 and at N | 2026-11-14_2354_A_Both_calculator_output.png | observed |
+| Version string | 'MIC Calculator v0.03'; Info cites Wilson et al. (2022), not Williamson et al. (2023) | 2026-11-14_2350_landing_home.png; 2026-11-14_2350_info_tab.png | observed |
+| Package-side behaviour of the same inputs | Package exact search: see f33_package_vs_app.csv; package accepts any N_max, any prior, sidedness and level through arguments | this script | computed |

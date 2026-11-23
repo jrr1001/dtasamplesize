@@ -1,0 +1,7 @@
+"case","se","sp","prev","d_se","d_sp","alpha","n_diseased","n_nondiseased","N_total","note"
+"one-sided 95%, Sp = Wilson lower limit (principal)",0.796296296296296,0.989383585747155,0.131067961165049,0.1,0.05,0.1,44,12,336,""
+"one-sided 95%, Sp = 0.97",0.796296296296296,0.97,0.131067961165049,0.1,0.05,0.1,44,32,336,""
+"one-sided 95%, Sp = 0.994",0.796296296296296,0.994,0.131067961165049,0.1,0.05,0.1,44,7,336,""
+"two-sided 95%, half-widths 0.10/0.05, Sp = Wilson lower limit",0.796296296296296,0.989383585747155,0.131067961165049,0.1,0.05,0.05,63,17,481,""
+"one-sided 95%, prevalence 0.15 (Bulilete assumption)",0.796296296296296,0.989383585747155,0.15,0.1,0.05,0.1,44,12,294,""
+"REPRODUCTION of published 927: Se 0.90, d 0.05, prev 0.15, two-sided 95%",0.9,0.989383585747155,0.15,0.05,0.05,0.05,139,17,927,"Se arm only; published N = 927; difference 0"

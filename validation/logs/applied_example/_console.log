@@ -1,0 +1,423 @@
+
+==============================================================================
+applied_example.R: planning a Panbio validation study from a published pilot
+==============================================================================
+date: 2026-11-23 00:50:37
+R version 4.6.2 (2026-10-29 ucrt)
+packageVersion(dtasamplesize): 0.7.0
+find.package(dtasamplesize): C:/dta/lib/dtasamplesize
+TOL = 1e-12
+
+==============================================================================
+0. Data and published figures
+==============================================================================
+Pilot (Albert 2021): TP=43 FN=11 FP=0 TN=358 n=412; Se=0.7963 Sp=1.0000 prev=0.1311
+Validation (Bulilete 2021): TP=100 FN=40 FP=2 TN=1220 n=1362; Se=0.7143 Sp=0.9984 prev=0.1028
+Published: frequentist N = 927 (Bulilete Methods); enrolled 1369; analysed 1362
+
+==============================================================================
+1. Initial prior and its compatibility with the pilot
+==============================================================================
+Base case: flat Beta(1,1) for Se, Sp and prevalence. The compatibility
+check is OMITTED for a flat prior: with Beta(1,1) the predictive is uniform
+and the smallest attainable tail is 1/(n+1), so it cannot flag anything
+informative. The function is called once below only to show
+its warning.
+WARNING [flat initial prior]: flat Beta(1, 1) prior in: sensitivity (true positives) [analysis]; specificity (true negatives) [analysis]. The predictive is uniform and the smallest possible tail is 1/(n + 1); the check is not informative with a flat prior and only extreme results can be flagged.
+
+Secondary illustration: initial prior centred on the manufacturer claim
+(Se 0.933, Sp 0.994; Bulilete Background), ILLUSTRATIVE effective size
+NEFF declared as an assumption (the author must confirm it).
+ neff                     quantity reference x_obs   n     a    b p_lower
+   10 sensitivity (true positives)  analysis    43  54  9.33 0.67 0.08276
+   10 specificity (true negatives)  analysis   358 358  9.94 0.06 1.00000
+   20 sensitivity (true positives)  analysis    43  54 18.66 1.34 0.04934
+   20 specificity (true negatives)  analysis   358 358 19.88 0.12 1.00000
+ p_upper p_two_sided flag_lower flag_upper flag_two_sided
+  0.9334     0.16552      FALSE      FALSE          FALSE
+  0.8029     1.00000      FALSE      FALSE          FALSE
+  0.9648     0.09868       TRUE      FALSE          FALSE
+  0.7005     1.00000      FALSE      FALSE          FALSE
+Reading: the check reviews the INITIAL prior against the pilot; it says
+nothing about a0 (heterogeneity between pilot and study is not observed
+when planning, and a conflict does not say which source fails).
+
+==============================================================================
+2. Design prior from the pilot (power prior, fixed weight a0)
+==============================================================================
+a0 base = 0.5, grid 0.25, 0.5, 1. Rationale (similar populations): the
+pilot enrolled only symptomatic patients, children included (85 of 412);
+the validation enrolled adults only, with 54.8% close contacts and 36.7%
+referred for symptoms (Bulilete 2021), where Se was lower in asymptomatic
+people. Same test, sample type, operators, reference test and country,
+contiguous period. Partial similarity: a0 < 1 (0.5 as the base case).
+
+Beta priors from previous-stage (pilot) data -- power prior with fixed weight a0
+
+  design: cohort | a0 = 0.5 | use_in = design 
+  pilot counts: tp = 43  fn = 11  tn = 358  fp = 0 
+
+  Base priors (before the pilot)
+    Se    Beta(1, 1)  mean = 0.5000  a + b = 2 
+    Sp    Beta(1, 1)  mean = 0.5000  a + b = 2 
+    prev  Beta(1, 1)  mean = 0.5000  a + b = 2 
+
+  Design priors (updated with the pilot)
+    Se    Beta(22.5, 6.5)  mean = 0.7759  a + b = 29 
+    Sp    Beta(180, 1)  mean = 0.9945  a + b = 181 
+    prev  Beta(28, 180)  mean = 0.1346  a + b = 208  
+
+  Analysis priors (= base priors) 
+    Se    Beta(1, 1)  mean = 0.5000  a + b = 2 
+    Sp    Beta(1, 1)  mean = 0.5000  a + b = 2 
+    (no analysis prior for prevalence)
+
+
+
+Beta priors from previous-stage (pilot) data -- power prior with fixed weight a0
+
+  design: cohort | a0 = 0.5 | use_in = both 
+  pilot counts: tp = 43  fn = 11  tn = 358  fp = 0 
+
+  Base priors (before the pilot)
+    Se    Beta(1, 1)  mean = 0.5000  a + b = 2 
+    Sp    Beta(1, 1)  mean = 0.5000  a + b = 2 
+    prev  Beta(1, 1)  mean = 0.5000  a + b = 2 
+
+  Design priors (updated with the pilot)
+    Se    Beta(22.5, 6.5)  mean = 0.7759  a + b = 29 
+    Sp    Beta(180, 1)  mean = 0.9945  a + b = 181 
+    prev  Beta(28, 180)  mean = 0.1346  a + b = 208  
+
+  Analysis priors (= design priors) 
+    Se    Beta(22.5, 6.5)  mean = 0.7759  a + b = 29 
+    Sp    Beta(180, 1)  mean = 0.9945  a + b = 181 
+    (no analysis prior for prevalence)
+
+
+Analysis prior: principal = use_in 'design' (analysis prior = base
+Beta(1,1), design prior = pilot-updated). Alternative = 'both'.
+
+==============================================================================
+3. Exact sample size (principal table)
+==============================================================================
+WARNING [main table]: In 2 scenario(s) ('both_onesided_joint', 'both_twosided_joint') the analysis prior of a used arm already has a prior-only interval width within its target delta: the width criterion is met before any data are observed, so success is dominated by the analysis prior. Use a weaker or flat analysis prior (analysis_prior_se, analysis_prior_sp) if this is not intended. See bam_sample_size() for the detail of each call.
+main table time: 35.3 s
+              scenario       width_type assurance_for delta_se delta_sp N_total
+ design_onesided_joint lower_half_width         joint      0.1     0.05     497
+   both_onesided_joint lower_half_width         joint      0.1     0.05     258
+ design_twosided_joint       full_width         joint      0.2     0.10     612
+   both_twosided_joint       full_width         joint      0.2     0.10     363
+    design_onesided_se lower_half_width            se      0.1     0.05     497
+    design_twosided_se       full_width            se      0.2     0.05     612
+       A_N A_N_minus_1
+ 0.8006617   0.7985355
+ 0.8012337   0.7977808
+ 0.8002254   0.7986951
+ 0.8017257   0.7996048
+ 0.8006617   0.7985355
+ 0.8002254   0.7986951
+
+Principal N = 497; published frequentist N = 927; enrolled = 1369; analysed = 1362
+
+==============================================================================
+4. Sensitivity (bam_sensitivity)
+==============================================================================
+WARNING [sensitivity]: In 3 scenario(s) ('a0_0.25_both', 'a0_0.5_both', 'a0_1_both') the analysis prior of a used arm already has a prior-only interval width within its target delta: the width criterion is met before any data are observed, so success is dominated by the analysis prior. Use a weaker or flat analysis prior (analysis_prior_se, analysis_prior_sp) if this is not intended. See bam_sample_size() for the detail of each call.
+sensitivity time: 235.9 s
+            block                        scenario delta_se delta_sp
+      a0 x use_in                  a0_0.25_design    0.100    0.050
+      a0 x use_in                    a0_0.25_both    0.100    0.050
+      a0 x use_in                   a0_0.5_design    0.100    0.050
+      a0 x use_in                     a0_0.5_both    0.100    0.050
+      a0 x use_in                     a0_1_design    0.100    0.050
+      a0 x use_in                       a0_1_both    0.100    0.050
+    Se semi-width                        dse_0.05    0.050    0.050
+    Se semi-width                       dse_0.075    0.075    0.050
+    Se semi-width                       dse_0.125    0.125    0.050
+    Se semi-width                        dse_0.15    0.150    0.050
+    Sp semi-width                       dsp_0.025    0.100    0.025
+    Sp semi-width                       dsp_0.075    0.100    0.075
+ assurance target                      target_0.7    0.100    0.050
+ assurance target                      target_0.9    0.100    0.050
+ prevalence prior         prev_init15_n20_updated    0.100    0.050
+ prevalence prior        prev_init15_n100_updated    0.100    0.050
+ prevalence prior           prev_replaced_15_n100    0.100    0.050
+ prevalence prior prev_replaced_10_n100_hindsight    0.100    0.050
+ prevalence prior           prev_replaced_05_n100    0.100    0.050
+ target_assurance prior_prev_a prior_prev_b analysis_prior_se_a
+              0.8         14.5         90.5                1.00
+              0.8         14.5         90.5               11.75
+              0.8         28.0        180.0                1.00
+              0.8         28.0        180.0               22.50
+              0.8         55.0        359.0                1.00
+              0.8         55.0        359.0               44.00
+              0.8         28.0        180.0                1.00
+              0.8         28.0        180.0                1.00
+              0.8         28.0        180.0                1.00
+              0.8         28.0        180.0                1.00
+              0.8         28.0        180.0                1.00
+              0.8         28.0        180.0                1.00
+              0.7         28.0        180.0                1.00
+              0.9         28.0        180.0                1.00
+              0.8         30.0        196.0                1.00
+              0.8         42.0        264.0                1.00
+              0.8         15.0         85.0                1.00
+              0.8         10.0         90.0                1.00
+              0.8          5.0         95.0                1.00
+ analysis_prior_sp_a N_total      A_N A_N_minus_1 target_reached
+                 1.0     520 0.801384    0.799774           TRUE
+                90.5     399 0.801032    0.799019           TRUE
+                 1.0     497 0.800662    0.798535           TRUE
+               180.0     258 0.801234    0.797781           TRUE
+                 1.0     480 0.800357    0.797711           TRUE
+               359.0      12 0.814685    0.787200           TRUE
+                 1.0    1870 0.800412    0.799825           TRUE
+                 1.0     859 0.800868    0.799603           TRUE
+                 1.0     325 0.801652    0.798531           TRUE
+                 1.0     231 0.802051    0.797874           TRUE
+                 1.0     497 0.800661    0.798535           TRUE
+                 1.0     497 0.800662    0.798535           TRUE
+                 1.0     457 0.702447    0.699651           TRUE
+                 1.0     558 0.900623    0.899413           TRUE
+                 1.0     502 0.800372    0.798224           TRUE
+                 1.0     478 0.801222    0.798759           TRUE
+                 1.0     467 0.800528    0.798682           TRUE
+                 1.0     742 0.800909    0.799945           TRUE
+                 1.0    1722 0.800156    0.799862           TRUE
+ N_change_vs_principal
+                    23
+                   -98
+                     0
+                  -239
+                   -17
+                  -485
+                  1373
+                   362
+                  -172
+                  -266
+                     0
+                     0
+                   -40
+                    61
+                     5
+                   -19
+                   -30
+                   245
+                  1225
+Notes: 'prev_init15_*' = flat prevalence prior replaced by a prior centred on
+15% (the value assumed by Bulilete et al.) with effective size 20 or 100,
+THEN updated with the pilot (a0 = 0.5). 'prev_replaced_*' = design prevalence
+prior set directly, no pilot update of prevalence. The 10% row is hindsight
+(the validation observed 10.3%) and is shown only as an illustration.
+
+==============================================================================
+4b. Local sensitivity to the initial prior (Hellinger contour)
+==============================================================================
+H2 = 1 - Bhattacharyya; epsilon = 0.01; n_phi = 24 equally spaced angles; n_ref = 497; a0 = 0.5; use_in = design
+which = se: 171.6 s
+
+Local prior sensitivity (Hellinger contour), exact BAM
+
+  Perturbed initial prior: Se  (one parameter at a time)
+  Distance: H2 = 1 - Bhattacharyya coefficient | epsilon = 0.01 | 24 contour points
+  Pilot re-applied: tp = 43  fn = 11  tn = 358  fp = 0 | a0 = 0.5 | cohort | use_in = design 
+  Conventions: lower_half_width (delta_se = 0.1, delta_sp = 0.05), assurance_for = joint, credible level = 0.95, target assurance = 0.8, total N
+  Reference sample size n_ref = 497 
+
+  Base prior:  A(n_ref) = 0.8007   n* = 497
+  A(n_ref):    min = 0.7840  at (a, b) = (0.9301, 1.2607)
+               max = 0.8152  at (a, b) = (1.1552, 0.8448)
+  n*:          min = 490  at (a, b) = (1.1552, 0.8448)
+               max = 505  at (a, b) = (0.9301, 1.2607)
+
+which = sp: 124.3 s
+
+Local prior sensitivity (Hellinger contour), exact BAM
+
+  Perturbed initial prior: Sp  (one parameter at a time)
+  Distance: H2 = 1 - Bhattacharyya coefficient | epsilon = 0.01 | 24 contour points
+  Pilot re-applied: tp = 43  fn = 11  tn = 358  fp = 0 | a0 = 0.5 | cohort | use_in = design 
+  Conventions: lower_half_width (delta_se = 0.1, delta_sp = 0.05), assurance_for = joint, credible level = 0.95, target assurance = 0.8, total N
+  Reference sample size n_ref = 497 
+
+  Base prior:  A(n_ref) = 0.8007   n* = 497
+  A(n_ref):    min = 0.8007  at (a, b) = (1.2607, 0.9301)
+               max = 0.8007  at (a, b) = (0.7210, 0.9252)
+  n*:          min = 497  at (a, b) = (0.7527, 1.0000)
+               max = 497  at (a, b) = (0.7527, 1.0000)
+
+which = prev: 144.9 s
+
+Local prior sensitivity (Hellinger contour), exact BAM
+
+  Perturbed initial prior: prevalence  (one parameter at a time)
+  Distance: H2 = 1 - Bhattacharyya coefficient | epsilon = 0.01 | 24 contour points
+  Pilot re-applied: tp = 43  fn = 11  tn = 358  fp = 0 | a0 = 0.5 | cohort | use_in = design 
+  Conventions: lower_half_width (delta_se = 0.1, delta_sp = 0.05), assurance_for = joint, credible level = 0.95, target assurance = 0.8, total N
+  Reference sample size n_ref = 497 
+
+  Base prior:  A(n_ref) = 0.8007   n* = 497
+  A(n_ref):    min = 0.7907  at (a, b) = (0.6947, 0.8237)
+               max = 0.8150  at (a, b) = (1.4569, 1.2638)
+  n*:          min = 490  at (a, b) = (1.4569, 1.2638)
+               max = 502  at (a, b) = (0.7210, 0.9252)
+
+
+==============================================================================
+5. Frequentist complement with fixed values (Buderer)
+==============================================================================
+Pilot Se = 0.7963, prevalence = 0.1311; pilot Sp = 1 (FP = 0): Wald-type n = 0 (degenerate).
+Fixed Sp used: lower limit of the two-sided 95% Wilson interval of 358/358 = 0.9894
+                                                                     case
+                       one-sided 95%, Sp = Wilson lower limit (principal)
+                                                 one-sided 95%, Sp = 0.97
+                                                one-sided 95%, Sp = 0.994
+            two-sided 95%, half-widths 0.10/0.05, Sp = Wilson lower limit
+                     one-sided 95%, prevalence 0.15 (Bulilete assumption)
+ REPRODUCTION of published 927: Se 0.90, d 0.05, prev 0.15, two-sided 95%
+     se     sp   prev d_se d_sp alpha n_diseased n_nondiseased N_total
+ 0.7963 0.9894 0.1311 0.10 0.05  0.10         44            12     336
+ 0.7963 0.9700 0.1311 0.10 0.05  0.10         44            32     336
+ 0.7963 0.9940 0.1311 0.10 0.05  0.10         44             7     336
+ 0.7963 0.9894 0.1311 0.10 0.05  0.05         63            17     481
+ 0.7963 0.9894 0.1500 0.10 0.05  0.10         44            12     294
+ 0.9000 0.9894 0.1500 0.05 0.05  0.05        139            17     927
+                                         note
+                                             
+                                             
+                                             
+                                             
+                                             
+ Se arm only; published N = 927; difference 0
+The 927 is reproduced from the inputs quoted in Bulilete Methods with the
+Buderer formula (the exact formula they used is [not verified]; the
+reproduction is a consistency check, not a statement about their method).
+
+==============================================================================
+6. Post-study prior-data conflict check with the validation data
+==============================================================================
+Data: TP=100/140 diseased, TN=1220/1222 non-diseased, 140 diseased of 1362.
+Reference for inference = ANALYSIS prior; calibration of the assurance =
+DESIGN prior. With use_in = 'design' the analysis prior is flat Beta(1,1): the
+analysis-prior row is then a weak check (flat-prior caveat, warning below).
+Prevalence has no analysis prior; its row refers to the design prior.
+WARNING [post-study a0=0.25 use_in=design]: flat Beta(1, 1) prior in: sensitivity (true positives) [analysis]; specificity (true negatives) [analysis]. The predictive is uniform and the smallest possible tail is 1/(n + 1); the check is not informative with a flat prior and only extreme results can be flagged.
+WARNING [post-study a0=0.5 use_in=design]: flat Beta(1, 1) prior in: sensitivity (true positives) [analysis]; specificity (true negatives) [analysis]. The predictive is uniform and the smallest possible tail is 1/(n + 1); the check is not informative with a flat prior and only extreme results can be flagged.
+WARNING [post-study a0=1 use_in=design]: flat Beta(1, 1) prior in: sensitivity (true positives) [analysis]; specificity (true negatives) [analysis]. The predictive is uniform and the smallest possible tail is 1/(n + 1); the check is not informative with a flat prior and only extreme results can be flagged.
+   a0 use_in                     quantity  reference same_as_design x_obs    n
+ 0.25 design        prevalence (diseased) prevalence             NA   140 1362
+ 0.25 design sensitivity (true positives)   analysis          FALSE   100  140
+ 0.25 design sensitivity (true positives)     design          FALSE   100  140
+ 0.25 design specificity (true negatives)   analysis          FALSE  1220 1222
+ 0.25 design specificity (true negatives)     design          FALSE  1220 1222
+ 0.25   both        prevalence (diseased) prevalence             NA   140 1362
+ 0.25   both sensitivity (true positives)   analysis           TRUE   100  140
+ 0.25   both specificity (true negatives)   analysis           TRUE  1220 1222
+ 0.50 design        prevalence (diseased) prevalence             NA   140 1362
+ 0.50 design sensitivity (true positives)   analysis          FALSE   100  140
+ 0.50 design sensitivity (true positives)     design          FALSE   100  140
+ 0.50 design specificity (true negatives)   analysis          FALSE  1220 1222
+ 0.50 design specificity (true negatives)     design          FALSE  1220 1222
+ 0.50   both        prevalence (diseased) prevalence             NA   140 1362
+ 0.50   both sensitivity (true positives)   analysis           TRUE   100  140
+ 0.50   both specificity (true negatives)   analysis           TRUE  1220 1222
+ 1.00 design        prevalence (diseased) prevalence             NA   140 1362
+ 1.00 design sensitivity (true positives)   analysis          FALSE   100  140
+ 1.00 design sensitivity (true positives)     design          FALSE   100  140
+ 1.00 design specificity (true negatives)   analysis          FALSE  1220 1222
+ 1.00 design specificity (true negatives)     design          FALSE  1220 1222
+ 1.00   both        prevalence (diseased) prevalence             NA   140 1362
+ 1.00   both sensitivity (true positives)   analysis           TRUE   100  140
+ 1.00   both specificity (true negatives)   analysis           TRUE  1220 1222
+      a      b p_lower  p_upper p_two_sided flag_lower flag_upper
+  14.50  90.50 0.15657 0.849288    0.313130      FALSE      FALSE
+   1.00   1.00 0.71631 0.290780    0.581560      FALSE      FALSE
+  11.75   3.75 0.33125 0.689221    0.662495      FALSE      FALSE
+   1.00   1.00 0.99836 0.002453    0.004906      FALSE       TRUE
+  90.50   1.00 0.86680 0.193058    0.386117      FALSE      FALSE
+  14.50  90.50 0.15657 0.849288    0.313130      FALSE      FALSE
+  11.75   3.75 0.33125 0.689221    0.662495      FALSE      FALSE
+  90.50   1.00 0.86680 0.193058    0.386117      FALSE      FALSE
+  28.00 180.00 0.10125 0.904536    0.202499      FALSE      FALSE
+   1.00   1.00 0.71631 0.290780    0.581560      FALSE      FALSE
+  22.50   6.50 0.23416 0.788320    0.468317      FALSE      FALSE
+   1.00   1.00 0.99836 0.002453    0.004906      FALSE       TRUE
+ 180.00   1.00 0.75963 0.338039    0.676078      FALSE      FALSE
+  28.00 180.00 0.10125 0.904536    0.202499      FALSE      FALSE
+  22.50   6.50 0.23416 0.788320    0.468317      FALSE      FALSE
+ 180.00   1.00 0.75963 0.338039    0.676078      FALSE      FALSE
+  55.00 359.00 0.05251 0.952031    0.105016      FALSE      FALSE
+   1.00   1.00 0.71631 0.290780    0.581560      FALSE      FALSE
+  44.00  12.00 0.14780 0.873669    0.295600      FALSE      FALSE
+   1.00   1.00 0.99836 0.002453    0.004906      FALSE       TRUE
+ 359.00   1.00 0.59731 0.538496    1.000000      FALSE      FALSE
+  55.00 359.00 0.05251 0.952031    0.105016      FALSE      FALSE
+  44.00  12.00 0.14780 0.873669    0.295600      FALSE      FALSE
+ 359.00   1.00 0.59731 0.538496    1.000000      FALSE      FALSE
+ flag_two_sided
+          FALSE
+          FALSE
+          FALSE
+           TRUE
+          FALSE
+          FALSE
+          FALSE
+          FALSE
+          FALSE
+          FALSE
+          FALSE
+           TRUE
+          FALSE
+          FALSE
+          FALSE
+          FALSE
+          FALSE
+          FALSE
+          FALSE
+           TRUE
+          FALSE
+          FALSE
+          FALSE
+          FALSE
+
+==============================================================================
+7. Assurance curves and figure
+==============================================================================
+WARNING [curve]: The analysis prior for Sp, equal to the design prior, Beta(180, 1) already has a prior-only interval width of 0.0127 <= its target delta (0.05, lower_half_width): the width criterion is met before any data are observed, so success is dominated by the analysis prior. Use a weaker or flat analysis prior (analysis_prior_sp) if this is not intended.
+check: A(N=497) from curve = 0.8006616850; from bam_sensitivity = 0.8006616850; |diff| = 0.00e+00
+  a0 = 0.5, use_in design (principal)      N_first = 497
+  a0 = 0.25, use_in design                 N_first = 520
+  a0 = 1, use_in design                    N_first = 480
+  a0 = 0.5, use_in both                    N_first = 258
+null device 
+          1 
+figure written: applied_example_assurance_curve.png
+
+==============================================================================
+8. Interpretation
+==============================================================================
+1. The principal flow recommends N = 497 total participants (A = 0.8007; A(496) = 0.7985).
+   The published frequentist plan was 927 and 1369 were enrolled (1362 analysed).
+   The recommended N is 54% of the published plan.
+2. Analysis prior: with use_in 'both' N = 258 (Sp updated prior Beta(180, 1) already
+   meets the Sp width before any data are observed, see the warning in section 3),
+   so the Sp criterion stops constraining N and success is driven by the prior.
+   'design' is therefore the principal choice: the analysis does not borrow the pilot.
+3. Two-sided full widths 0.20/0.10 give N = 612; marginal Se only gives N = 497 (one-sided).
+   Se drives N in every scenario: Sp is close to 1 in the pilot (FP = 0).
+4. a0 (use_in design): a0=0.25 -> N=520; a0=0.5 -> N=497; a0=1 -> N=480
+   Se semi-width: 0.05 -> 1870; 0.075 -> 859; 0.125 -> 325; 0.15 -> 231
+   prevalence prior: prev_init15_n20_updated -> 502; prev_init15_n100_updated -> 478; prev_replaced_15_n100 -> 467; prev_replaced_10_n100_hindsight -> 742; prev_replaced_05_n100 -> 1722
+   assurance target: 0.7 -> 457; 0.9 -> 558
+5. Hellinger contour (epsilon 0.01), n* range per perturbed initial prior: se: 490-505; sp: 497-497; prev: 490-502
+6. Frequentist (Buderer, fixed values): principal N = 336 (Se 0.796, Sp 0.989, prev 0.131); it ignores
+   prior uncertainty and the probability of reaching the width, so it is not comparable to an assured N.
+   Reproduction of the published 927 from the Methods inputs: 927.
+7. Post-study check: see section 6 and the CSV; interpret against the ANALYSIS prior (inferential
+   reference) and the DESIGN prior (calibration). It does not choose a0.
+
+==============================================================================
+Done
+==============================================================================
+elapsed: 782.1 s

@@ -1,9 +1,9 @@
-* checking for file '<ARCHIVE>/DESCRIPTION' ... OK
+* checking for file 'C:/dta/check/pkg_src/dtasamplesize/DESCRIPTION' ... OK
 * preparing 'dtasamplesize':
 * checking DESCRIPTION meta-information ... OK
-* installing the package to build vignettes
+* installing the package (it is needed to build vignettes)
 * creating vignettes ... OK
 * checking for LF line-endings in source and make files and shell scripts
 * checking for empty or unneeded directories
-* building 'dtasamplesize_0.6.9.tar.gz'
-built: dtasamplesize_0.6.9.tar.gz, from a git archive of commit 3cd7ebafdb6be2f57176cc5627a106c02d1ae27a, via R CMD build . (R 4.5.2, roxygen2-driven vignette build with RSTUDIO_PANDOC set).
+* building 'dtasamplesize_0.7.0.tar.gz'
+

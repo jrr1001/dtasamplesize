@@ -1,0 +1,279 @@
+2026-11-23 02:03:39 | R version 4.6.2 (2026-10-29 ucrt) | dtasamplesize 0.7.0 at C:/dta/lib/dtasamplesize | tree commit 8fd1faf (+48 uncommitted paths) | script make_manuscript_tables_R1.R | out C:/dta/dtasamplesize/validation/logs/make_manuscript_tables_R1
+
+== Table 2: planning questions ==
+INPUT --assets C:/dta/dtasamplesize/validation/logs/make_manuscript_assets/table4_method_comparison.csv sha256=410938976c1dbe8c6cd8035fff8a9405f2534bc6490d28754656f06242a32d3d
+INPUT --bridge C:/dta/dtasamplesize/validation/logs/bridge_frequentist_bayesian/bridge_table.csv sha256=7b92333a0dccb0195c4dc3573b28854bd54133e632cf7c201eaf5e6eb4fdcacb
+INPUT --assets C:/dta/dtasamplesize/validation/logs/make_manuscript_assets/figure2_exact_curve.csv sha256=afea8b775b8c7271284d308178e942bd242c41e2063d8d7f96d9d5609e6c6438
+INPUT --comparators C:/dta/dtasamplesize/validation/logs/comparator_calls/comparator_calls_results.csv sha256=bc5cbd231d61ed0382797d68c8809da68baad6e942b684463b0d0d704dc8dff0
+Recomputing joint_sample_size() (Monte Carlo, B = 20000, seed 2026, default N_range)...
+joint_sample_size elapsed 0.3 s; fields: method, design, n_total, target_reached, n_diseased, n_non_diseased, joint_prob_se_sp, joint_prob, joint_prob_mcse, search_type, N_range_used, seed, auc_gate_passed, auc_gate, max_joint_prob_evaluated, N_at_max_joint_prob, buderer_N, Se, Sp, AUC, AUC_min, prev, B, call
+search_type: grid_first_candidate 
+Monte Carlo row: N = 580, joint_prob_se_sp = 0.804100, MCSE = 0.002806
+ANCHOR T2-01 Buderer N PASS (500)
+ANCHOR T2-02 point/Wilson N, A PASS (578.000000000, 0.801244683)
+ANCHOR T2-02n point/Wilson N exact PASS (578)
+ANCHOR T2-03 joint_sample_size N PASS (580)
+ANCHOR T2-03p joint_sample_size probability PASS (0.8041)
+ANCHOR T2-03m joint_sample_size MCSE (tolerance 1e-6) PASS (0.002806449625)
+ANCHOR T2-03x recomputed N and probability equal to table4_method_comparison.csv PASS (580.0000, 0.8041)
+ANCHOR T2-04 integer grid 100:800 N (comparator_calls_results.csv, c_joint) PASS (579)
+ANCHOR T2-04p integer grid 100:800 probability and MCSE (comparator_calls_results.csv, c_joint) PASS (0.800300, 0.002827)
+ANCHOR T2-05 point/Jeffreys N, A PASS (576.0000000000, 0.8014445644)
+ANCHOR T2-06 point/uniform N, A PASS (579.0000000000, 0.8025248296)
+ANCHOR T2-07 point/informative N, A PASS (466.0000000000, 0.8002314678)
+ANCHOR T2-08 beta/Wilson N, A PASS (831.0000000000, 0.8004258747)
+ANCHOR T2-09 beta/Jeffreys N, A PASS (824.0000000000, 0.8000427878)
+ANCHOR T2-10 beta/uniform N, A PASS (831.0000000000, 0.8004347172)
+ANCHOR T2-11 beta/informative (BAM) N, A PASS (672.0000000000, 0.8002692084)
+ANCHOR T2-11x BAM row equal to table4_method_comparison.csv (<= 1e-10) PASS (672.0000000000, 0.8002692084)
+ANCHOR T2-12 worked example first N with A >= 0.80, A PASS (678.0000000000, 0.8003489948)
+ANCHOR T2-12x worked example A(678) (<= 1e-10) PASS (0.8003489948)
+ANCHOR T2-13 inputs (Se, Sp, prevalence, half-widths) in table4_method_comparison.csv PASS (0.85, 0.90, 0.20, 0.07, 0.05)
+ANCHOR T2-13b Monte Carlo settings B, seed PASS (20000, 2026)
+Facts for the note of Table 2 (T2-13): planning values Se 0.85, Sp 0.90, prevalence 0.20; half-widths 0.07 and 0.05 (full widths 0.14 and 0.10); target 0.80; equal-tailed 95% intervals; exact rows scan N from 2; Monte Carlo row B = 20000, seed 2026, MCSE 0.002806 
+WROTE R1_Table2_planning_questions.csv (12 rows x 10 cols)
+WROTE R1_Table2_planning_questions_display.csv (12 rows x 9 cols)
+WROTE R1_Table2_planning_questions.md
+
+== Table 3: reproductions ==
+INPUT --wilson C:/dta/dtasamplesize/validation/logs/compare_wilson2022/compare_wilson2022_table.csv sha256=d76d7b6590c8436b2facc8e6406b47661059c36b3172f989307aeee4aee2ea6a
+INPUT --williamson C:/dta/dtasamplesize/validation/logs/compare_williamson2023/f32a_illustrative.csv sha256=2e03ad7719f6081aeadd6f1fff1afa11c5ae813472197912ace57ae15eacb490
+INPUT --williamson C:/dta/dtasamplesize/validation/logs/compare_williamson2023/f32b_figure3.csv sha256=cd120ed94bf30c620f432683e35f2c2ec539cf973984e0a43d96da48ba9bd3c0
+INPUT --williamson C:/dta/dtasamplesize/validation/logs/compare_williamson2023/f32b_figure3_variants.csv sha256=07954821d7ae63d8cb0db9ea765d0a60d5c53be5d40d95991ba692d52659f4ec
+INPUT --williamson C:/dta/dtasamplesize/validation/logs/compare_williamson2023/f33_package_vs_app.csv sha256=33df5628825d752e6ae3a184814675a6c03d8b175e1b52bfddf2b8050784cf2b
+published minus exact (n*) and relative to exact:
+                    case published dtasamplesize_exact published_minus_exact relative_to_exact
+       VAP (Section 5.1)       106                 104                     2        0.01923077
+ Section 6.1, rho = 0.10       681                 661                    20        0.03025719
+ Section 6.1, rho = 0.05      1643                1408                   235        0.16690341
+ANCHOR T3-02 VAP published n*, A(150) PASS (106.00, 0.88)
+ANCHOR T3-03 VAP package n*, A(104), A(106), A(150) PASS (104.0000000000, 0.8004835299, 0.8048777027, 0.8825793850)
+ANCHOR T3-04 VAP programmed rule: emulation n*, Data S2 n*, emulation A(150) PASS (106.0000000000, 106.0000000000, 0.8824776477)
+ANCHOR T3-05 B.4 B4flat: published; package; programmed rule (both keys) PASS (290, 290, 290, 290, 290, 290)
+ANCHOR T3-06 B.4 B4std: published; package; programmed rule (both keys) PASS (106, 106, 104, 104, 106, 106)
+ANCHOR T3-07 6.1 rho 0.10: published; package; rule PASS (681, 661, 681)
+ANCHOR T3-08 6.1 rho 0.05: published; package; rule PASS (1643, 1408, 1643)
+ANCHOR T3-08b 6.1 rho 0.05: Data S2 column empty PASS (NA)
+ANCHOR T3-09 6.1 rho 0.01: published 2770; package n* not reached (NA); max A; A(2770) PASS (2770.0000000000, NA, 0.6917439555, 0.6464631903)
+ANCHOR T3-10 5.3 published percentiles (prevalence; Se) PASS (99, 76)
+ANCHOR T3-11 5.3 package percentiles x 100 (prevalence; Se) PASS (99.12529491, 75.89452653)
+ANCHOR T3-11b 5.3 package upper tails (prevalence; Se) PASS (0.01185290413, 0.38968197040)
+ANCHOR T3-12 Table 2 published: Se A range, n*; prevalence A range, n* PASS (0.73, 0.86, 130.00, 82.00, 0.80, 0.81, 108.00, 104.00)
+ANCHOR T3-13 programmed rule reproduces the eight published values of Table 2 (A to 2 decimals, n* exact) PASS (8)
+ANCHOR T3-14 Table 2 package on the authors' grid: Se A min-max, n*; prevalence PASS (0.7407008893, 0.8612090214, 129.0000000000, 76.0000000000, 0.8004237652, 0.8092666452, 106.0000000000, 102.0000000000)
+ANCHOR T3-15 exact contour (629 directions): Se A range, n* range; prevalence A range, n* range PASS (0.7416357628, 0.8705489888, 73.0000000000, 129.0000000000, 0.8004405709, 0.8091068773, 102.0000000000, 106.0000000000)
+ANCHOR DIS-04a published minus exact n* (VAP; rho 0.10; rho 0.05) PASS (2, 20, 235)
+ANCHOR DIS-04b relative to exact, per cent to 1 decimal PASS (1.9, 3.0, 16.7)
+ANCHOR T3-19 illustrative: published N; package N, A(N), A(N - 1) PASS (321.0000000000, 321.0000000000, 0.8007552287, 0.7985632900)
+ANCHOR T3-21 Figure 3, rho_T = 0.30: published; package PASS (182, 154, 101, 182, 154, 101)
+ANCHOR T3-22 Figure 3, rho_T = 0.05: published; package (unrounded) PASS (1630, 1295, 783, 1628, 1294, 782)
+ANCHOR T3-23a V2a (prevalence prior rounded to 2 decimals) reproduces the three published values PASS (1630, 1295, 783)
+ANCHOR T3-23b derived prevalence priors to 3 decimals (rho_T 0.05; 0.30) PASS (3.433, 65.229, 96.337, 224.786)
+ANCHOR T3-23c rounded prior of the variant V2a PASS (3.43, 65.23)
+ANCHOR T3-24 application A: app N, A; package N, A PASS (321.0000000000, 0.8008000000, 321.0000000000, 0.8007552287)
+ANCHOR T3-25 application B stable: app N, A; package N, A PASS (551.0000000000, 0.8005000000, 551.0000000000, 0.8004911256)
+ANCHOR T3-26 application C stable: app N, A; package N, A PASS (552.0000000000, 0.8007000000, 552.0000000000, 0.8007301523)
+ANCHOR T3-24n application A, B, C: package N exact PASS (321, 551, 552)
+WROTE R1_Table3_reproductions.csv (40 rows x 15 cols)
+WROTE R1_Table3_reproductions_display.csv (16 rows x 12 cols)
+WROTE R1_Table3_reproductions.md
+
+== Table 5: applied example ==
+INPUT --applied C:/dta/dtasamplesize/validation/logs/applied_example/applied_example_main_table.csv sha256=ba65536b7a01a2ae0301d050e05a5ac60a0bc94ac8336b849ffb44e7c6a649c0
+INPUT --applied C:/dta/dtasamplesize/validation/logs/applied_example/applied_example_sensitivity.csv sha256=33058524c2033bfce6d0188e2a7636def61f4717e72cd9cef981a8a0a6423b2a
+INPUT --applied C:/dta/dtasamplesize/validation/logs/applied_example/applied_example_frequentist.csv sha256=c3c5bfe14205ffa8c57108c8e9b20f8c6a083bd22611c013ac4f9ac5dc68afdd
+INPUT --applied C:/dta/dtasamplesize/validation/logs/applied_example/applied_example_published_comparison.csv sha256=3ae63065e7c70cea414dfd6945e1a12901c24f4aeb6d7979e0ed9036f1d8a8d4
+ANCHOR T5-01 pilot counts and prevalence 54/412 PASS (43.0, 11.0, 0.0, 358.0, 412.0, 54.0, 13.1)
+ANCHOR T5-05 design priors read from CSV (Se, Sp, prevalence) = 1 + 0.5 x counts PASS (22.5, 6.5, 180.0, 1.0, 28.0, 180.0)
+ANCHOR T5-05b arithmetic from the pilot counts equals the CSV PASS (22.5, 6.5, 180.0, 1.0, 28.0, 180.0)
+ANCHOR T5-06 principal N, A, A(N - 1) PASS (497.000000000, 0.800661685, 0.798535485)
+ANCHOR T5-07 both one-sided joint N, A PASS (258.000000000, 0.801233699)
+ANCHOR T5-08 two-sided joint N (design; both) PASS (612, 363)
+ANCHOR T5-09 Se-only N (one-sided; two-sided) PASS (497, 612)
+ANCHOR T5-10 a0 = 0.25 and 1 (design) N PASS (520, 480)
+ANCHOR T5-12 Se half-width 0.075 and 0.125 N PASS (859, 325)
+ANCHOR T5-14 assurance target 0.70 and 0.90 N PASS (457, 558)
+ANCHOR T5-17 Buderer formula N with fixed values (one-sided; two-sided) PASS (336, 481)
+ANCHOR T5-03 published frequentist plan PASS (927)
+ANCHOR T5-02 enrolled; analysed PASS (1369, 1362)
+ANCHOR T5-19 principal N as a percentage of 927 PASS (54)
+WROTE R1_Table5_applied_example.csv (22 rows x 10 cols)
+WROTE R1_Table5_applied_example_display.csv (22 rows x 10 cols)
+WROTE R1_Table5_applied_example.md
+
+== Table 6: operating characteristics ==
+INPUT --oc C:/dta/dtasamplesize/validation/logs/operating_characteristics/oc_summary_planning_point.csv sha256=9bb60ba7a777fae4b79107702252c9bc50b71c42a590e4e1ca0fd746c49e64ce
+INPUT --oc C:/dta/dtasamplesize/validation/logs/operating_characteristics/oc_summary_by_design.csv sha256=7e73b28adba15dce42051afc14fdfcc199af7abb399f1d358a47b36e3e14305e
+INPUT --mp C:/dta/dtasamplesize/validation/logs/misspecified_priors/mp_summary.csv sha256=79a356c3e3cb5d813779286de96149640023889c338d48d6c54574d22c065c13
+ANCHOR T6-00 N of the four designs PASS (500, 580, 678, 672)
+ANCHOR T6-01 P(success) at the planning point PASS (0.5264829794, 0.8069808699, 0.9993622077, 0.9991888475)
+ANCHOR T6-02 coverage of the Se interval PASS (0.9363888939, 0.9510600705, 0.9621147875, 0.9622039605)
+ANCHOR T6-03 coverage of the Sp interval PASS (0.9448676660, 0.9503703332, 0.9482617101, 0.9527677439)
+ANCHOR T6-05 P(success), true Se 0.75 PASS (0.01219829095, 0.06658821492, 0.83487480955, 0.81659019700)
+ANCHOR T6-06a P(success), true Se 0.65 (BAM) PASS (0.1649308219, 0.1464402606)
+ANCHOR T6-06b P(success), true Se 0.65 (Buderer; joint) in 1 x 10^-n form PASS (8.044981831, 1.455393434)
+ANCHOR T6-07 P(success), true prevalence 0.08 PASS (0.05648200864, 0.02235582024, 0.14460113928, 0.13985709773)
+ANCHOR T6-08 Se quantity flagged (two-sided, analysis prior) with true Se 0.65 (P1; P2) PASS (0.5210472954, 0.5188293875)
+ANCHOR T6-08a any of the three quantities flagged with true Se 0.65 (P1; P2) PASS (0.6493615462, 0.5188293875)
+ANCHOR T6-08s Sp quantity flagged at the planning point and with true Se 0.65 (P1, S00; P1, S02) PASS (0.2679482347, 0.2679482347)
+ANCHOR T6-08n no detection value for the frequentist designs PASS (NA, NA)
+ANCHOR T6-12 prior predictive: any of three (P1; P2) PASS (0.1332898482, 0.1293500692)
+ANCHOR T6-13 Sp-width attainment at the planning point equals 1 (four designs) PASS (1, 1, 1, 1)
+ANCHOR T6-18 share of the 504-point grid with P(success) >= 0.80 (Buderer Wald; joint; P1; P2) PASS (0.3095238095, 0.4523809524, 0.6428571429, 0.6428571429)
+WROTE R1_Table6_operating_characteristics.csv (4 rows x 13 cols)
+WROTE R1_Table6_operating_characteristics_display.csv (4 rows x 10 cols)
+WROTE R1_Table6_operating_characteristics.md
+
+== Additional file 3 and Additional file 2 tables ==
+ANCHOR S3.1a rows of the Wilson table: main; grid points PASS (88, 126)
+WROTE R1_AF3_S3.1_wilson_reproduction.csv (88 rows x 11 cols)
+WROTE R1_AF3_S3.1_wilson_reproduction.md
+WROTE R1_AF3_S3.1_table2_grid_points.csv (126 rows x 14 cols)
+INPUT --witness C:/dta/dtasamplesize/validation/logs/wilson2022_rule_enumeration/wilson2022_rule_enumeration_enum.log sha256=4a05dc20b53bffcae5354bf9387567fbf61f953a313bd7e6d456cefecd733382
+ANCHOR S3.1b ten witness cases read from the rule-enumeration log; first witness k = 11, x = 11 PASS (10, 11, 11)
+WROTE R1_AF3_S3.1_witness_cases.csv (10 rows x 8 cols)
+WROTE R1_AF3_S3.1_witness_cases.md
+WROTE R1_AF3_S3.2a_williamson_illustrative.csv (3 rows x 11 cols)
+WROTE R1_AF3_S3.2a_williamson_illustrative.md
+WROTE R1_AF3_S3.2a_williamson_figure3.csv (6 rows x 15 cols)
+WROTE R1_AF3_S3.2a_williamson_figure3.md
+WROTE R1_AF3_S3.2a_williamson_figure3_variants.csv (18 rows x 14 cols)
+WROTE R1_AF3_S3.2a_williamson_figure3_variants.md
+Runs in configurations B and C by outcome: match = 6; differs by one participant = 2; error = 1; other = 0 
+ANCHOR T3-29 runs B and C: match / one participant different / error (of 9) PASS (6, 2, 1, 9)
+ANCHOR T3-24r configuration A run in the table PASS (1)
+WROTE R1_AF3_S3.2b_application_runs.csv (9 rows x 21 cols)
+WROTE R1_AF3_S3.2b_application_runs.md
+WROTE R1_AF3_S3.2b_application_all_runs_with_diagnostics.csv (11 rows x 22 cols)
+WROTE R1_AF3_S3.2b_application_all_runs_with_diagnostics.md
+INPUT --williamson C:/dta/dtasamplesize/validation/logs/compare_williamson2023/f33_restrictions.csv sha256=f8589a3cc9a59003e6e83d3e96720e9aaa95b06ebe7fb968aaf864ea7609f1d4
+WROTE R1_AF3_S3.2b_application_restrictions.csv (15 rows x 4 cols)
+WROTE R1_AF3_S3.2b_application_restrictions.md
+WROTE R1_AF3_S3.2b_application_counts.csv (4 rows x 2 cols)
+INPUT (package tree) C:/dta/dtasamplesize/validation/table_cran_feature_matrix_R1_source.csv sha256=5995b764feabfaf000b38e5031446fac241c78199c9bd55bdbf2e1ddba90df6d
+INPUT --assets C:/dta/dtasamplesize/validation/logs/make_manuscript_assets/table3_provenance.csv sha256=1b0df05539a167a9cf754485161cb8a6640f56d92e3fd187e418c860edfe6aa4
+ANCHOR S3.3b capability rows and package columns of the CRAN matrix (Table 4 of v0.6.9; Table S3.3e) PASS (7, 8)
+ANCHOR S3.3b-v package versions in the matrix header equal the versions whose help pages were checked in November 2026 PASS (6)
+WROTE R1_AF3_S3.3b_cran_feature_matrix.csv (7 rows x 8 cols)
+WROTE R1_AF3_S3.3b_cran_feature_matrix.md
+WROTE R1_AF3_S3.3b_cran_feature_matrix_provenance.csv (6 rows x 8 cols)
+WROTE R1_AF3_S3.3b_cran_feature_matrix_provenance.md
+INPUT --width C:/dta/dtasamplesize/validation/logs/width_attainment_exact/width_attainment_summary.csv sha256=0261a2f4e14d7de450af24c10974a0b0a17718d0263435e240f4a097e1387243
+INPUT --width C:/dta/dtasamplesize/validation/logs/width_attainment_exact/width_attainment_cells.csv sha256=9105edbf4d2ecf506efa7acb81bebcd879174fa83a4f1750fa0532ef29257f56
+INPUT --width C:/dta/dtasamplesize/validation/logs/width_attainment_exact/curve_Se085_d007_summary.csv sha256=7de812b765dad1c48a0362c5bbaeed51adfa54be5336a14d55ca88143d14834e
+ANCHOR S3.4a summary rows (8) and cell rows (224) PASS (8, 224)
+ANCHOR S3.4b exact coverage at n = 100 (Wald truncated; Wilson) PASS (0.9330186361, 0.9332462172)
+WROTE R1_AF3_S3.4_width_attainment_summary.csv (8 rows x 10 cols)
+WROTE R1_AF3_S3.4_width_attainment_summary.md
+WROTE R1_AF3_S3.4_width_attainment_cells.csv (224 rows x 18 cols)
+WROTE R1_AF3_S3.4_curve_Se085_d007_summary.csv (2 rows x 8 cols)
+WROTE R1_AF3_S3.4_curve_Se085_d007_summary.md
+ANCHOR S3.5 bridge table rows PASS (16)
+WROTE R1_AF3_S3.5_bridge.csv (16 rows x 9 cols)
+WROTE R1_AF3_S3.5_bridge.md
+INPUT --shortcut C:/dta/dtasamplesize/validation/logs/success_set_shortcut/scenario_summary.csv sha256=d2eb8f7c55d54d63d4a8272d6e1cec1a374e353098f7f6c7348c7df604fd2b33
+INPUT --shortcut C:/dta/dtasamplesize/validation/logs/success_set_shortcut/noncontiguous_arm_sizes.csv sha256=ad0dfa5cd16be622007882f478c48990c53cbf3e6ff2712d673dfb93160f7701
+INPUT --shortcut C:/dta/dtasamplesize/validation/logs/success_set_shortcut/unimodality_stress.csv sha256=20780f723f7940d4c31daf311e87ae22f330a3194c1ccdad29882033eb2b8bc2
+ANCHOR S3.6a noncontiguous arm sizes (rows); unimodality combinations; not quasi-concave PASS (0, 147, 0)
+WROTE R1_AF3_S3.6_shortcut_scenarios.csv (54 rows x 15 cols)
+WROTE R1_AF3_S3.6_shortcut_scenarios.md
+WROTE R1_AF3_S3.6_shortcut_counts.csv (3 rows x 2 cols)
+INPUT --exactmc C:/dta/dtasamplesize/validation/logs/exact_vs_mc_resolution/distances_and_replicates.csv sha256=ae57150ee8b8dc79d2fc1bbf7fdedf29400a30648b830c5143ccc35f3010b9c3
+WROTE R1_AF3_S3.7_exact_distances.csv (2 rows x 15 cols)
+WROTE R1_AF3_S3.7_exact_distances.md
+INPUT --exactmc C:/dta/dtasamplesize/validation/logs/exact_vs_mc_resolution/compatible_range.csv sha256=c73a2b4fd667f5275c4126566ab6e3916c441071121e71c555c2a424d540bbcc
+WROTE R1_AF3_S3.7_compatible_range.csv (6 rows x 9 cols)
+WROTE R1_AF3_S3.7_compatible_range.md
+INPUT --exactmc C:/dta/dtasamplesize/validation/logs/exact_vs_mc_resolution/mc_summary.csv sha256=d8eeb29ea991d988d33ea49c9e85de4afbe893980057bb33713e1c2099535598
+WROTE R1_AF3_S3.7_mc_summary.csv (6 rows x 12 cols)
+WROTE R1_AF3_S3.7_mc_summary.md
+INPUT --exactmc C:/dta/dtasamplesize/validation/logs/exact_vs_mc_resolution/timings.csv sha256=bbac5dda7398e34b7d527e90edbaf659af6b105cbe67da860f4da28c7c4d7ae3
+WROTE R1_AF3_S3.7_timings.csv (20 rows x 6 cols)
+WROTE R1_AF3_S3.7_timings.md
+WROTE R1_AF3_S3.8_sensitivity.csv (19 rows x 25 cols)
+WROTE R1_AF3_S3.8_sensitivity.md
+INPUT --applied C:/dta/dtasamplesize/validation/logs/applied_example/applied_example_hellinger_summary.csv sha256=f00810a83b2195b46422b200428ede1ce55ab51c32fd724d64a98b7380535e30
+WROTE R1_AF3_S3.8_hellinger.csv (3 rows x 21 cols)
+WROTE R1_AF3_S3.8_hellinger.md
+WROTE R1_AF3_S3.8_frequentist.csv (6 rows x 11 cols)
+WROTE R1_AF3_S3.8_frequentist.md
+INPUT --applied C:/dta/dtasamplesize/validation/logs/applied_example/applied_example_postconflict.csv sha256=7f3542a4c608d458643ed760c049f881262dcdc9e42dc6fef5e8b249f4832291
+WROTE R1_AF3_S3.8_postconflict.csv (24 rows x 15 cols)
+WROTE R1_AF3_S3.8_postconflict.md
+INPUT --applied C:/dta/dtasamplesize/validation/logs/applied_example/applied_example_initial_prior_check.csv sha256=d9c64feb8c397fc33226cd19f2fcd6bc4fc3827b4136d5e1bbb3aac5e05f7520
+WROTE R1_AF3_S3.8_initial_prior_check.csv (4 rows x 13 cols)
+WROTE R1_AF3_S3.8_initial_prior_check.md
+ANCHOR S3.9 mp_summary rows PASS (53)
+WROTE R1_AF3_S3.9_oc_by_design.csv (5 rows x 17 cols)
+WROTE R1_AF3_S3.9_oc_by_design.md
+WROTE R1_AF3_S3.9_oc_planning_point.csv (5 rows x 11 cols)
+WROTE R1_AF3_S3.9_oc_planning_point.md
+WROTE R1_AF3_S3.9_mp_summary.csv (53 rows x 15 cols)
+WROTE R1_AF3_S3.9_mp_summary.md
+INPUT --crosscheck C:/dta/dtasamplesize/validation/logs/oc_montecarlo_crosscheck/oc_crosscheck_success_coverage.csv sha256=63433d88009ded2408691881f896aeac19c78b42d1a3860dc40b51fb6d34e540
+INPUT --crosscheck C:/dta/dtasamplesize/validation/logs/oc_montecarlo_crosscheck/oc_crosscheck_conflict_detection.csv sha256=ed3ee024815e1f4e13eebca560ef68dd4afdfb9f2da096bdd4a3ee1953572bd4
+INPUT --oc C:/dta/dtasamplesize/validation/logs/operating_characteristics/oc_cells_wide.csv sha256=e6313e9e13249a6157c7462e3d900923383c4ce00a759a5a8712d62be1248ebf
+ANCHOR S3.9e-a exact success probabilities of the cross-check cells equal those of operating_characteristics.R / misspecified_priors.R at four decimals PASS (0.5265, 0.8070, 0.9994, 0.9992, 0.8349, 0.3572, 0.0561, 0.1649)
+ANCHOR S3.9e-b exact coverage of Se of the first four cells equal those of operating_characteristics.R at four decimals PASS (0.9364, 0.9511, 0.9621, 0.9622)
+ANCHOR S3.9f-a exact detection probabilities of the cross-check scenarios equal those of misspecified_priors.R at four decimals PASS (0.0000, 0.5210, 0.0000, 0.2679, 0.2679, 0.9663, 0.2679, 0.6494, 0.9663)
+ANCHOR S3.9e-z largest |z| over the success and coverage cells PASS (1.655920316)
+ANCHOR S3.9e-n success cells; coverage cells; detection scenarios PASS (8, 4, 3)
+ANCHOR S3.9f-z all |z| <= 3 (success, coverage, detection) PASS (TRUE)
+WROTE R1_AF3_S3.9e_mc_crosscheck_success_coverage.csv (8 rows x 17 cols)
+WROTE R1_AF3_S3.9e_mc_crosscheck_success_coverage_display.csv (8 rows x 8 cols)
+WROTE R1_AF3_S3.9e_mc_crosscheck_success_coverage.md
+WROTE R1_AF3_S3.9f_mc_crosscheck_detection.csv (3 rows x 13 cols)
+WROTE R1_AF3_S3.9f_mc_crosscheck_detection_display.csv (7 rows x 5 cols)
+WROTE R1_AF3_S3.9f_mc_crosscheck_detection.md
+INPUT --negctl C:/dta/dtasamplesize/validation/logs/negative_control_halfwidth/negative_control_halfwidth.csv sha256=6bb87e6357ce53bb672d8e12316743c44e094c35a17ecd22f92b7cf3e9961414
+ANCHOR S2.3a joint assurance at the published N under reading (ii): P1; P2 PASS (0.003177829507, 0.038115031739)
+WROTE R1_AF2_S2.3_negative_controls.csv (6 rows x 14 cols)
+WROTE R1_AF2_S2.3_negative_controls.md
+INPUT (package tree) C:/dta/dtasamplesize/validation/python/logs/conf_PY_05_shared_assumptions.py.log sha256=23d71c3201470fab6284bf9e02a7d6d936581224db6f32cb744711339f6a14c8
+ANCHOR S2.3b constants of conf_PY_05 found in its log (HPD, fixed number of diseased, delta as half width) PASS (6)
+WROTE R1_AF2_S2.3_conf_PY_05_constants.csv (6 rows x 6 cols)
+WROTE R1_AF2_S2.3_conf_PY_05_constants.md
+INPUT --emptyarm C:/dta/dtasamplesize/validation/logs/edge_case_empty_arm/edge_case_empty_arm.csv sha256=1727a5557662f9d3ec35491d9a926cb4d5dc5db8e4f5141d1e93af1288781f81
+WROTE R1_AF2_S2.4_empty_arm.csv (3 rows x 14 cols)
+WROTE R1_AF2_S2.4_empty_arm.md
+
+== INPUT FILES (path, SHA-256) ==
+  --assets C:/dta/dtasamplesize/validation/logs/make_manuscript_assets/table4_method_comparison.csv 410938976c1dbe8c6cd8035fff8a9405f2534bc6490d28754656f06242a32d3d
+  --bridge C:/dta/dtasamplesize/validation/logs/bridge_frequentist_bayesian/bridge_table.csv 7b92333a0dccb0195c4dc3573b28854bd54133e632cf7c201eaf5e6eb4fdcacb
+  --assets C:/dta/dtasamplesize/validation/logs/make_manuscript_assets/figure2_exact_curve.csv afea8b775b8c7271284d308178e942bd242c41e2063d8d7f96d9d5609e6c6438
+  --comparators C:/dta/dtasamplesize/validation/logs/comparator_calls/comparator_calls_results.csv bc5cbd231d61ed0382797d68c8809da68baad6e942b684463b0d0d704dc8dff0
+  --wilson C:/dta/dtasamplesize/validation/logs/compare_wilson2022/compare_wilson2022_table.csv d76d7b6590c8436b2facc8e6406b47661059c36b3172f989307aeee4aee2ea6a
+  --williamson C:/dta/dtasamplesize/validation/logs/compare_williamson2023/f32a_illustrative.csv 2e03ad7719f6081aeadd6f1fff1afa11c5ae813472197912ace57ae15eacb490
+  --williamson C:/dta/dtasamplesize/validation/logs/compare_williamson2023/f32b_figure3.csv cd120ed94bf30c620f432683e35f2c2ec539cf973984e0a43d96da48ba9bd3c0
+  --williamson C:/dta/dtasamplesize/validation/logs/compare_williamson2023/f32b_figure3_variants.csv 07954821d7ae63d8cb0db9ea765d0a60d5c53be5d40d95991ba692d52659f4ec
+  --williamson C:/dta/dtasamplesize/validation/logs/compare_williamson2023/f33_package_vs_app.csv 33df5628825d752e6ae3a184814675a6c03d8b175e1b52bfddf2b8050784cf2b
+  --applied C:/dta/dtasamplesize/validation/logs/applied_example/applied_example_main_table.csv ba65536b7a01a2ae0301d050e05a5ac60a0bc94ac8336b849ffb44e7c6a649c0
+  --applied C:/dta/dtasamplesize/validation/logs/applied_example/applied_example_sensitivity.csv 33058524c2033bfce6d0188e2a7636def61f4717e72cd9cef981a8a0a6423b2a
+  --applied C:/dta/dtasamplesize/validation/logs/applied_example/applied_example_frequentist.csv c3c5bfe14205ffa8c57108c8e9b20f8c6a083bd22611c013ac4f9ac5dc68afdd
+  --applied C:/dta/dtasamplesize/validation/logs/applied_example/applied_example_published_comparison.csv 3ae63065e7c70cea414dfd6945e1a12901c24f4aeb6d7979e0ed9036f1d8a8d4
+  --oc C:/dta/dtasamplesize/validation/logs/operating_characteristics/oc_summary_planning_point.csv 9bb60ba7a777fae4b79107702252c9bc50b71c42a590e4e1ca0fd746c49e64ce
+  --oc C:/dta/dtasamplesize/validation/logs/operating_characteristics/oc_summary_by_design.csv 7e73b28adba15dce42051afc14fdfcc199af7abb399f1d358a47b36e3e14305e
+  --mp C:/dta/dtasamplesize/validation/logs/misspecified_priors/mp_summary.csv 79a356c3e3cb5d813779286de96149640023889c338d48d6c54574d22c065c13
+  --williamson C:/dta/dtasamplesize/validation/logs/compare_williamson2023/f33_restrictions.csv f8589a3cc9a59003e6e83d3e96720e9aaa95b06ebe7fb968aaf864ea7609f1d4
+  --assets C:/dta/dtasamplesize/validation/logs/make_manuscript_assets/table3_provenance.csv 1b0df05539a167a9cf754485161cb8a6640f56d92e3fd187e418c860edfe6aa4
+  --width C:/dta/dtasamplesize/validation/logs/width_attainment_exact/width_attainment_summary.csv 0261a2f4e14d7de450af24c10974a0b0a17718d0263435e240f4a097e1387243
+  --width C:/dta/dtasamplesize/validation/logs/width_attainment_exact/width_attainment_cells.csv 9105edbf4d2ecf506efa7acb81bebcd879174fa83a4f1750fa0532ef29257f56
+  --width C:/dta/dtasamplesize/validation/logs/width_attainment_exact/curve_Se085_d007_summary.csv 7de812b765dad1c48a0362c5bbaeed51adfa54be5336a14d55ca88143d14834e
+  --shortcut C:/dta/dtasamplesize/validation/logs/success_set_shortcut/scenario_summary.csv d2eb8f7c55d54d63d4a8272d6e1cec1a374e353098f7f6c7348c7df604fd2b33
+  --shortcut C:/dta/dtasamplesize/validation/logs/success_set_shortcut/noncontiguous_arm_sizes.csv ad0dfa5cd16be622007882f478c48990c53cbf3e6ff2712d673dfb93160f7701
+  --shortcut C:/dta/dtasamplesize/validation/logs/success_set_shortcut/unimodality_stress.csv 20780f723f7940d4c31daf311e87ae22f330a3194c1ccdad29882033eb2b8bc2
+  --exactmc C:/dta/dtasamplesize/validation/logs/exact_vs_mc_resolution/distances_and_replicates.csv ae57150ee8b8dc79d2fc1bbf7fdedf29400a30648b830c5143ccc35f3010b9c3
+  --exactmc C:/dta/dtasamplesize/validation/logs/exact_vs_mc_resolution/compatible_range.csv c73a2b4fd667f5275c4126566ab6e3916c441071121e71c555c2a424d540bbcc
+  --exactmc C:/dta/dtasamplesize/validation/logs/exact_vs_mc_resolution/mc_summary.csv d8eeb29ea991d988d33ea49c9e85de4afbe893980057bb33713e1c2099535598
+  --exactmc C:/dta/dtasamplesize/validation/logs/exact_vs_mc_resolution/timings.csv bbac5dda7398e34b7d527e90edbaf659af6b105cbe67da860f4da28c7c4d7ae3
+  --applied C:/dta/dtasamplesize/validation/logs/applied_example/applied_example_hellinger_summary.csv f00810a83b2195b46422b200428ede1ce55ab51c32fd724d64a98b7380535e30
+  --applied C:/dta/dtasamplesize/validation/logs/applied_example/applied_example_postconflict.csv 7f3542a4c608d458643ed760c049f881262dcdc9e42dc6fef5e8b249f4832291
+  --applied C:/dta/dtasamplesize/validation/logs/applied_example/applied_example_initial_prior_check.csv d9c64feb8c397fc33226cd19f2fcd6bc4fc3827b4136d5e1bbb3aac5e05f7520
+  --crosscheck C:/dta/dtasamplesize/validation/logs/oc_montecarlo_crosscheck/oc_crosscheck_success_coverage.csv 63433d88009ded2408691881f896aeac19c78b42d1a3860dc40b51fb6d34e540
+  --crosscheck C:/dta/dtasamplesize/validation/logs/oc_montecarlo_crosscheck/oc_crosscheck_conflict_detection.csv ed3ee024815e1f4e13eebca560ef68dd4afdfb9f2da096bdd4a3ee1953572bd4
+  --oc C:/dta/dtasamplesize/validation/logs/operating_characteristics/oc_cells_wide.csv e6313e9e13249a6157c7462e3d900923383c4ce00a759a5a8712d62be1248ebf
+  --negctl C:/dta/dtasamplesize/validation/logs/negative_control_halfwidth/negative_control_halfwidth.csv 6bb87e6357ce53bb672d8e12316743c44e094c35a17ecd22f92b7cf3e9961414
+  --emptyarm C:/dta/dtasamplesize/validation/logs/edge_case_empty_arm/edge_case_empty_arm.csv 1727a5557662f9d3ec35491d9a926cb4d5dc5db8e4f5141d1e93af1288781f81
+
+elapsed: 1.1 s
+SUMMARY: 97 anchors, all PASS

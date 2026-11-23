@@ -1,0 +1,68 @@
+comparator_calls.R
+Date: 2026-11-23 00:50:37 -05 
+R: R version 4.6.2 (2026-10-29 ucrt) 
+  dtasamplesize            0.7.0
+  MKpower                  1.1
+Registered S3 method overwritten by 'MKmisc':
+  method        from   
+  print.confint MKinfer
+  MKmisc                   2.0
+  SampleSizeDiagnostics    0.1.1
+
+== (a) power.diagnostic.test(sens = 0.85, delta = 0.07, power = 0.80, prev = 0.20) ==
+-- MKpower 1.1 --
+
+     Diagnostic test exact power calculation 
+
+           sens = 0.85
+              n = 216
+             n1 = 864
+          delta = 0.07
+      sig.level = 0.05
+          power = 0.8
+           prev = 0.2
+
+NOTE: n is number of cases, n1 is number of controls
+
+names(result): sens, n, n1, delta, sig.level, power, prev, note, method 
+numeric scalars: sens =   0.85; n = 216.00; n1 = 864.00; delta =   0.07; sig.level =   0.05; power =   0.80; prev =   0.20 
+
+-- MKmisc 2.0 --
+
+     Diagnostic test exact power calculation 
+
+           sens = 0.85
+              n = 216
+             n1 = 864
+          delta = 0.07
+      sig.level = 0.05
+          power = 0.8
+           prev = 0.2
+
+NOTE: n is number of cases, n1 is number of controls
+
+names(result): sens, n, n1, delta, sig.level, power, prev, note, method 
+numeric scalars: sens =   0.85; n = 216.00; n1 = 864.00; delta =   0.07; sig.level =   0.05; power =   0.80; prev =   0.20 
+
+== (b) SampleSizeDiagnostics::SampleSizeDiagnostics(sn = 0.85, sp = 0.90, p = 0.20, w = 0.07, CI = 0.95) ==
+  Precision Sensitivity Specificity Prevalence SS_Sensitivity SS_Specificity
+1      0.07        0.85         0.9        0.2            500             89
+  Total_Sample_Size   CI
+1               500 0.95
+
+== (c) dtasamplesize::joint_sample_size(Se = 0.85, Sp = 0.90, delta_se = 0.07, delta_sp = 0.05, prev = 0.20,
+      design = 'cohort', target_prob = 0.80, N_range = 100:800, B = 20000, seed = 2026) ==
+n_total: 579 
+joint_prob_se_sp: 0.8003 
+joint_prob_mcse: 0.00282683 
+search_type: grid_first_candidate 
+
+== (d) Deterministic enumeration of the Wilson joint event (point Se, Sp, prevalence) ==
+Se = 0.85, Sp = 0.90, prevalence = 0.20; full-width targets 0.14 (Se) and 0.10 (Sp); TOL_WIDTH = 1e-12
+First integer N with A(N) >= 0.80: 578  A = 0.801244683 
+A(N-1) at first crossing: 0.7983424783 
+Stable crossing (A >= 0.80 for all N' >= N up to 800): 578  A = 0.801244683 
+Grid points with A >= 0.80 followed by a drop below 0.80: 0 
+First of seq(100, 800, 10) with A >= 0.80: 580 
+
+Wrote results to C:\dta\dtasamplesize\validation\logs\comparator_calls 

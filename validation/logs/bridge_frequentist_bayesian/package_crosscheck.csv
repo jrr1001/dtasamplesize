@@ -1,0 +1,4 @@
+"analysis","package_N_total","package_A","script_N_star","script_A","abs_diff_A","match"
+"informative",672,0.800269208436753,672,0.800269208436753,0,TRUE
+"jeffreys",824,0.800042787753541,824,0.800042787753541,0,TRUE
+"uniform",831,0.800434717150976,831,0.800434717150976,0,TRUE

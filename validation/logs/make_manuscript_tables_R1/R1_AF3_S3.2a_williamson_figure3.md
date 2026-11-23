@@ -1,0 +1,8 @@
+| rho_T | prior_se | prev_prior | published_N | published_source | plan_preliminary_N | plan_source | package_N | package_A | own_N | own_A_at_N | own_A_at_Nminus1 | diff_package_minus_published | P_se_at_M | note |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 0.0500 | Beta(9,3) | Beta(3.433105,65.229000) | 1630 | [M] Results, text on Figure 3 | 1628 | earlier exploratory calculation (not distributed) | 1628 | 0.8001 | 1628 | 0.8001 | 0.7999 | -2 | 1 | see f32b_figure3_variants.csv and the report |
+| 0.0500 | Beta(10,2) | Beta(3.433105,65.229000) | 1295 | [M] Results, text on Figure 3 | 1294 | earlier exploratory calculation (not distributed) | 1294 | 0.8002 | 1294 | 0.8002 | 0.7999 | -1 | 1 | see f32b_figure3_variants.csv and the report |
+| 0.0500 | Beta(11,1) | Beta(3.433105,65.229000) | 783 | [M] Results, text on Figure 3 | 782 | earlier exploratory calculation (not distributed) | 782 | 0.8003 | 782 | 0.8003 | 0.7999 | -1 | 1 | see f32b_figure3_variants.csv and the report |
+| 0.3000 | Beta(9,3) | Beta(96.337064,224.786482) | 182 | [M] Results, text on Figure 3 | 182 | earlier exploratory calculation (not distributed) | 182 | 0.8062 | 182 | 0.8062 | 0.7988 | 0 | 1 | reproduced exactly |
+| 0.3000 | Beta(10,2) | Beta(96.337064,224.786482) | 154 | [M] Results, text on Figure 3 | 154 | earlier exploratory calculation (not distributed) | 154 | 0.8020 | 154 | 0.8020 | 0.7963 | 0 | 1 | reproduced exactly |
+| 0.3000 | Beta(11,1) | Beta(96.337064,224.786482) | 101 | [M] Results, text on Figure 3 | 101 | earlier exploratory calculation (not distributed) | 101 | 0.8043 | 101 | 0.8043 | 0.7997 | 0 | 1 | reproduced exactly |

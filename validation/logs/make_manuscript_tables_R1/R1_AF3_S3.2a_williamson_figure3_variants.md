@@ -1,0 +1,20 @@
+| rho_T | variant | description | prev_prior | N_Se_Beta_9_3 | N_Se_Beta_10_2 | N_Se_Beta_11_1 | published_9_3 | published_10_2 | published_11_1 | diff_9_3 | diff_10_2 | diff_11_1 | reproduces_all_three |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 0.0500 | V0 | base: qbeta, non-strict, unrounded prevalence prior | Beta(3.433105,65.229000) | 1628 | 1294 | 782 | 1630 | 1295 | 783 | -2 | -1 | -1 | FALSE |
+| 0.0500 | V1 | strict success (width < target) | Beta(3.433105,65.229000) | 1628 | 1294 | 782 | 1630 | 1295 | 783 | -2 | -1 | -1 | FALSE |
+| 0.0500 | V2a | prevalence hyperparameters rounded to 2 decimals | Beta(3.430000,65.230000) | 1630 | 1295 | 783 | 1630 | 1295 | 783 | 0 | 0 | 0 | TRUE |
+| 0.0500 | V2b | prevalence hyperparameters rounded to 1 decimal | Beta(3.400000,65.200000) | 1648 | 1310 | 791 | 1630 | 1295 | 783 | 18 | 15 | 8 | FALSE |
+| 0.0500 | V3a | quantiles by uniroot on pbeta, default tolerance (1.2e-4) | Beta(3.433105,65.229000) | 1628 | 1294 | 782 | 1630 | 1295 | 783 | -2 | -1 | -1 | FALSE |
+| 0.0500 | V3b | quantiles by uniroot on pbeta, tolerance 1e-12 | Beta(3.433105,65.229000) | 1628 | 1294 | 782 | 1630 | 1295 | 783 | -2 | -1 | -1 | FALSE |
+| 0.0500 | V4 | prevalence prior moment-matched, mean rho_T, sd = 0.1/(2*1.96) | Beta(3.599520,68.390880) | 1601 | 1274 | 771 | 1630 | 1295 | 783 | -29 | -21 | -12 | FALSE |
+| 0.0500 | V5 | point prevalence: m ~ Bin(N, rho_T), no prior | point (Binomial) | 1083 | 921 | 601 | 1630 | 1295 | 783 | -547 | -374 | -182 | FALSE |
+| 0.0500 | V6 | constant prior size: Beta(321 rho_T, 321 (1 - rho_T)) | Beta(16.050000,304.950000) | 1197 | 988 | 630 | 1630 | 1295 | 783 | -433 | -307 | -153 | FALSE |
+| 0.3000 | V0 | base: qbeta, non-strict, unrounded prevalence prior | Beta(96.337064,224.786482) | 182 | 154 | 101 | 182 | 154 | 101 | 0 | 0 | 0 | TRUE |
+| 0.3000 | V1 | strict success (width < target) | Beta(96.337064,224.786482) | 182 | 154 | 101 | 182 | 154 | 101 | 0 | 0 | 0 | TRUE |
+| 0.3000 | V2a | prevalence hyperparameters rounded to 2 decimals | Beta(96.340000,224.790000) | 182 | 154 | 101 | 182 | 154 | 101 | 0 | 0 | 0 | TRUE |
+| 0.3000 | V2b | prevalence hyperparameters rounded to 1 decimal | Beta(96.300000,224.800000) | 182 | 154 | 101 | 182 | 154 | 101 | 0 | 0 | 0 | TRUE |
+| 0.3000 | V3a | quantiles by uniroot on pbeta, default tolerance (1.2e-4) | Beta(96.337064,224.786482) | 182 | 154 | 101 | 182 | 154 | 101 | 0 | 0 | 0 | TRUE |
+| 0.3000 | V3b | quantiles by uniroot on pbeta, tolerance 1e-12 | Beta(96.337064,224.786482) | 182 | 154 | 101 | 182 | 154 | 101 | 0 | 0 | 0 | TRUE |
+| 0.3000 | V4 | prevalence prior moment-matched, mean rho_T, sd = 0.1/(2*1.96) | Beta(96.508320,225.186080) | 182 | 154 | 101 | 182 | 154 | 101 | 0 | 0 | 0 | TRUE |
+| 0.3000 | V5 | point prevalence: m ~ Bin(N, rho_T), no prior | point (Binomial) | 179 | 153 | 100 | 182 | 154 | 101 | -3 | -1 | -1 | FALSE |
+| 0.3000 | V6 | constant prior size: Beta(321 rho_T, 321 (1 - rho_T)) | Beta(96.300000,224.700000) | 182 | 154 | 101 | 182 | 154 | 101 | 0 | 0 | 0 | TRUE |

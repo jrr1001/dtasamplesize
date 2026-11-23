@@ -1,0 +1,43 @@
+oc_montecarlo_crosscheck.R
+Date: 2026-11-23 00:50:38; dtasamplesize 0.7.0 (C:/dta/lib/dtasamplesize); R version 4.6.2 (2026-10-29 ucrt)
+
+==== Success probability and coverage (R = 20000 per cell) ====
+           label       design   N   Se  Sp prev     R success success_mcse
+  planning point Buderer Wald 500 0.85 0.9  0.2 20000  0.5227    0.0035319
+  planning point Joint Wilson 580 0.85 0.9  0.2 20000  0.8054    0.0027991
+  planning point       BAM P1 678 0.85 0.9  0.2 20000  0.9993    0.0001802
+  planning point       BAM P2 672 0.85 0.9  0.2 20000  0.9990    0.0002235
+         Se 0.75       BAM P1 678 0.75 0.9  0.2 20000  0.8367    0.0026134
+         Se 0.80 Joint Wilson 580 0.80 0.9  0.2 20000  0.3545    0.0033825
+ prevalence 0.10 Buderer Wald 500 0.85 0.9  0.1 20000  0.0567    0.0016353
+   Se 0.65 (S02)       BAM P1 678 0.65 0.9  0.2 20000  0.1613    0.0026008
+ cov_se cov_se_mcse cov_sp cov_sp_mcse exact_success z_success exact_cov_se
+ 0.9383    0.001701 0.9455    0.001605        0.5265   -1.0759       0.9364
+ 0.9509    0.001527 0.9499    0.001542        0.8070   -0.5537       0.9511
+ 0.9598    0.001389 0.9489    0.001556        0.9994   -0.2774       0.9621
+ 0.9620    0.001351 0.9526    0.001503        0.9992   -0.8949       0.9622
+ 0.9404    0.001674 0.9500    0.001541        0.8349    0.7079           NA
+ 0.9543    0.001477 0.9517    0.001515        0.3572   -0.7982           NA
+ 0.9219    0.001897 0.9429    0.001640        0.0561    0.3669           NA
+ 0.9054    0.002069 0.9484    0.001565        0.1649   -1.3842           NA
+ z_cov_se
+  1.11675
+ -0.09822
+ -1.65592
+ -0.11102
+       NA
+       NA
+       NA
+       NA
+
+==== Detection of the conflict check (R = 5000 per scenario) ====
+                     label    R det_se det_sp det_prev det_any mcse_max
+ P1 S00 (0.85, 0.90, 0.20) 5000 0.0000 0.2586        0  0.2586 0.007071
+ P1 S02 (0.65, 0.90, 0.20) 5000 0.5256 0.2604        0  0.6536 0.007071
+ P2 S04 (0.85, 0.70, 0.20) 5000 0.0000 0.9642        0  0.9642 0.007071
+ exact_se exact_sp exact_any   z_se    z_sp   z_any
+    0.000   0.2679    0.2679     NA -1.4849 -1.4849
+    0.521   0.2679    0.6494 0.6511 -1.1975  0.6224
+    0.000   0.9663    0.9663     NA -0.8229 -0.8229
+Detection time: 137 s
+Criterion: |z| <= 3 in each cell (binomial MCSE as declared).

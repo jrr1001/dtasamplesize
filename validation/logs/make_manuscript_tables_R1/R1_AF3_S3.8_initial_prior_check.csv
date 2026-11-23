@@ -1,0 +1,5 @@
+"neff","quantity","reference","x_obs","n","a","b","p_lower","p_upper","p_two_sided","flag_lower","flag_upper","flag_two_sided"
+10,"sensitivity (true positives)","analysis",43,54,9.33,0.669999999999999,0.0827598546393201,0.933379585622337,0.16551970927864,FALSE,FALSE,FALSE
+10,"specificity (true negatives)","analysis",358,358,9.94,0.0600000000000001,1,0.80293375725312,1,FALSE,FALSE,FALSE
+20,"sensitivity (true positives)","analysis",43,54,18.66,1.34,0.0493403028492798,0.964790482344018,0.0986806056985596,TRUE,FALSE,FALSE
+20,"specificity (true negatives)","analysis",358,358,19.88,0.12,1,0.700531141169403,1,FALSE,FALSE,FALSE

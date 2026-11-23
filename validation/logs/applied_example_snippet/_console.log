@@ -1,0 +1,36 @@
+Warning message:
+In 2 scenario(s) ('both_onesided_joint', 'both_twosided_joint') the analysis prior of a used arm already has a prior-only interval width within its target delta: the width criterion is met before any data are observed, so success is dominated by the analysis prior. Use a weaker or flat analysis prior (analysis_prior_se, analysis_prior_sp) if this is not intended. See bam_sample_size() for the detail of each call. 
+               scenario N_total       A_N A_N_minus_1
+1 design_onesided_joint     497 0.8006617   0.7985355
+2   both_onesided_joint     258 0.8012337   0.7977808
+3 design_twosided_joint     612 0.8002254   0.7986951
+4   both_twosided_joint     363 0.8017257   0.7996048
+5    design_onesided_se     497 0.8006617   0.7985355
+6    design_twosided_se     612 0.8002254   0.7986951
+
+== harness ==
+R: R version 4.6.2 (2026-10-29 ucrt) | dtasamplesize 0.7.0 | C:/dta/lib/dtasamplesize 
+               scenario N_total          A_N  A_N_minus_1
+1 design_onesided_joint     497 0.8006616850 0.7985354850
+2   both_onesided_joint     258 0.8012336990 0.7977808281
+3 design_twosided_joint     612 0.8002254430 0.7986951313
+4   both_twosided_joint     363 0.8017256736 0.7996047978
+5    design_onesided_se     497 0.8006616850 0.7985354850
+6    design_twosided_se     612 0.8002254430 0.7986951313
+              scenario N_snippet N_reference diff_N      A_snippet
+ design_onesided_joint       497         497      0 0.800661684969
+   both_onesided_joint       258         258      0 0.801233699004
+ design_twosided_joint       612         612      0 0.800225443032
+   both_twosided_joint       363         363      0 0.801725673611
+    design_onesided_se       497         497      0 0.800661684969
+    design_twosided_se       612         612      0 0.800225443032
+    A_reference         absdiff_A absdiff_A_Nminus1
+ 0.800661684969 2.22044604925e-16 1.11022302463e-16
+ 0.801233699004 2.22044604925e-16 0.00000000000e+00
+ 0.800225443032 3.33066907388e-16 1.11022302463e-16
+ 0.801725673611 3.33066907388e-16 2.22044604925e-16
+ 0.800661684969 2.22044604925e-16 1.11022302463e-16
+ 0.800225443032 2.22044604925e-16 2.22044604925e-16
+
+COMPARISON WITH applied_example_main_table.csv: N identical = TRUE; max|dA| = 3.331e-16; max|dA(N-1)| = 2.220e-16; TOL = 1e-12 -> MATCH
+elapsed: 30.5 s

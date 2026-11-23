@@ -1,0 +1,17 @@
+"design","design_label","analysis","analysis_label","N_star","A_at_N_star","A_at_N_star_minus_1","n_N_above_star_below_target","max_A"
+"point","Point (Se .85, Sp .90, prev .20)","wilson","Frequentist Wilson score (reference)",578,0.801244683022489,0.798342478255535,0,0.999999999999992
+"point","Point (Se .85, Sp .90, prev .20)","jeffreys","Vague, Jeffreys Beta(0.5,0.5)",576,0.801444564400077,0.798569110672314,0,0.999999999999987
+"point","Point (Se .85, Sp .90, prev .20)","uniform","Vague, uniform Beta(1,1)",579,0.802524829648841,0.799659807542563,0,0.99999999999999
+"point","Point (Se .85, Sp .90, prev .20)","informative","Informative (example) Se Beta(17,3), Sp Beta(18,2)",466,0.800231467751098,0.797279480401115,0,1
+"beta","Beta (example: Se B(17,3), Sp B(18,2), prev B(4,16))","wilson","Frequentist Wilson score (reference)",831,0.800425874669976,0.799917197087481,0,0.916814667524232
+"beta","Beta (example: Se B(17,3), Sp B(18,2), prev B(4,16))","jeffreys","Vague, Jeffreys Beta(0.5,0.5)",824,0.800042787753541,0.799536221239104,0,0.917657313823838
+"beta","Beta (example: Se B(17,3), Sp B(18,2), prev B(4,16))","uniform","Vague, uniform Beta(1,1)",831,0.800434717150976,0.79992715745923,0,0.916690920298774
+"beta","Beta (example: Se B(17,3), Sp B(18,2), prev B(4,16))","informative","Informative (example) Se Beta(17,3), Sp Beta(18,2)",672,0.800269208436753,0.799659478037241,0,0.951723966283952
+"beta_prev_only","Extra: only prevalence uncertain (Beta(4,16)); Se, Sp point","wilson","Frequentist Wilson score (reference)",808,0.800248898514031,0.799663110574908,0,0.929558901122819
+"beta_prev_only","Extra: only prevalence uncertain (Beta(4,16)); Se, Sp point","jeffreys","Vague, Jeffreys Beta(0.5,0.5)",801,0.800521027480118,0.799933854462832,0,0.93111195376832
+"beta_prev_only","Extra: only prevalence uncertain (Beta(4,16)); Se, Sp point","uniform","Vague, uniform Beta(1,1)",808,0.800321753394399,0.799736600205979,0,0.929542965063977
+"beta_prev_only","Extra: only prevalence uncertain (Beta(4,16)); Se, Sp point","informative","Informative (example) Se Beta(17,3), Sp Beta(18,2)",637,0.800073746518555,0.799343950426981,0,0.964526857501346
+"beta_meas_only","Extra: only Se and Sp uncertain (Beta); prevalence point .20","wilson","Frequentist Wilson score (reference)",660,0.800077117970795,0.79882854492074,0,0.999999333101559
+"beta_meas_only","Extra: only Se and Sp uncertain (Beta); prevalence point .20","jeffreys","Vague, Jeffreys Beta(0.5,0.5)",661,0.800569556664181,0.79935557984377,0,0.999999000693474
+"beta_meas_only","Extra: only Se and Sp uncertain (Beta); prevalence point .20","uniform","Vague, uniform Beta(1,1)",661,0.80063372839688,0.799380960147149,0,0.99999923018289
+"beta_meas_only","Extra: only Se and Sp uncertain (Beta); prevalence point .20","informative","Informative (example) Se Beta(17,3), Sp Beta(18,2)",540,0.800880041336246,0.799572396927958,0,0.999999999420903

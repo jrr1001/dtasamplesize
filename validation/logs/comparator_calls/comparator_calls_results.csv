@@ -1,0 +1,7 @@
+"id","quantity","manuscript","value","note"
+"a_MKpower","MKpower::power.diagnostic.test","216 diseased / 864 non-diseased","sens=  0.85 | n=216.00 | n1=864.00 | delta=  0.07 | sig.level=  0.05 | power=  0.80 | prev=  0.20","version 1.1; call sens=0.85, delta=0.07, power=0.80, prev=0.20; other arguments at defaults"
+"a_MKmisc","MKmisc::power.diagnostic.test","216 diseased / 864 non-diseased","sens=  0.85 | n=216.00 | n1=864.00 | delta=  0.07 | sig.level=  0.05 | power=  0.80 | prev=  0.20","version 2.0; call sens=0.85, delta=0.07, power=0.80, prev=0.20; other arguments at defaults"
+"b_SSD","SampleSizeDiagnostics::SampleSizeDiagnostics","500","  Precision Sensitivity Specificity Prevalence SS_Sensitivity SS_Specificity ; 1      0.07        0.85         0.9        0.2            500             89 ;   Total_Sample_Size   CI ; 1               500 0.95","version 0.1.1; exact call SampleSizeDiagnostics(sn=0.85, sp=0.90, p=0.20, w=0.07, CI=0.95); w is the half-width"
+"c_joint","joint_sample_size n_total (N_range = 100:800, B = 20000, seed = 2026)","579","579","dtasamplesize 0.7.0; joint_prob_se_sp = 0.800300; mcse = 0.002827; search_type = grid_first_candidate"
+"d_enum_first","Wilson joint-event enumeration: first N with A >= 0.80","578","578","A(first) = 0.8012447; A(N-1) = 0.7983425; tolerance 1e-12 on widths; n = 0 arm fails"
+"d_enum_stable","Wilson joint-event enumeration: stable crossing","578","578","A(stable) = 0.8012447"

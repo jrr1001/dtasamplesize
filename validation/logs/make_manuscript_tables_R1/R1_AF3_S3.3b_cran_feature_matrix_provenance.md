@@ -1,0 +1,8 @@
+| package | version_in_submitted_table | version_reviewed_for_this_matrix | reviewed_on | currently_installed_version | status | version_checked_2026_11 | verification |
+|---|---|---|---|---|---|---|---|
+| presize | 0.3.11 | 0.3.11 | 2026-08-24 | 0.3.11 | installed version equals the version checked | 0.3.11 | cells checked against the help pages of the installed version with tools::Rd_db() under R 4.6.2, November 2026 (version 0.3.11) |
+| pROC | 1.19.1 | 1.19.0.1 | 2026-08-24 | 1.19.1 | installed version equals the version checked | 1.19.1 | cells checked against the help pages of the installed version with tools::Rd_db() under R 4.6.2, November 2026 (version 1.19.1) |
+| MKpower | 1.1 | 1.1 | 2026-08-24 | 1.1 | installed version equals the version checked | 1.1 | cells checked against the help pages of the installed version with tools::Rd_db() under R 4.6.2, November 2026 (version 1.1) |
+| epiR | 3.0.1 | 2.0.95 | 2026-08-24 | 3.0.1 | installed version equals the version checked | 3.0.1 | cells checked against the help pages of the installed version with tools::Rd_db() under R 4.6.2, November 2026 (version 3.0.1) |
+| MKmisc | 2.0 | 2.0 | 2026-08-24 | 2.0 | installed version equals the version checked | 2.0 | cells checked against the help pages of the installed version with tools::Rd_db() under R 4.6.2, November 2026 (version 2.0) |
+| SampleSizeDiagnostics | 0.1.1 |  |  |  | no version recorded by the assets script | 0.1.1 | cells checked against the help pages of the installed version with tools::Rd_db() under R 4.6.2, November 2026 (version 0.1.1) |
